@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staypse | Indicar é emprestar seu nome</title>
+  <meta name="description" content="Plataforma de afiliados com produtos físicos de pequenas fábricas brasileiras. Entre na lista de espera.">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="container">
+      <span class="marca">Staypse</span>
+      <a class="link-fabrica" href="#fabricas">Sou fábrica</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 1. ABERTURA (essencial) -->
+    <section id="abertura" class="secao">
+      <div class="container">
+        <h1>Indicar é emprestar seu nome.</h1>
+        <p class="destaque">Aqui só entra produto que vale o seu.</p>
+        <a class="botao" href="#lista">Quero entrar na lista</a>
+        <p class="atalho"><a href="#fabricas">Tem uma fábrica? Veja aqui</a></p>
+      </div>
+    </section>
+
+    <!-- 2. ESPELHO (essencial) -->
+    <section id="espelho" class="secao">
+      <div class="container">
+        <h2>Você já indicou algo que não usaria e sentiu o peso disso depois.</h2>
+        <!-- TEXTO A ESCREVER: produto milagroso, cliente reclamando no direct, vergonha de ter indicado. -->
+        <p>[Texto a escrever]</p>
+      </div>
+    </section>
+
+    <!-- 3. A VIRADA (opcional) -->
+    <section id="virada" class="secao">
+      <div class="container">
+        <h2>Seu nome vale mais que uma comissão.</h2>
+      </div>
+    </section>
+
+    <!-- 4. O QUE É A STAYPSE (essencial) -->
+    <section id="o-que-e" class="secao">
+      <div class="container">
+        <h2>O que é a Staypse</h2>
+        <p>Uma plataforma de afiliados com produtos físicos de pequenas fábricas brasileiras, feitos por gente de verdade, para você indicar sem medo.</p>
+      </div>
+    </section>
+
+    <!-- 5. COMO ESCOLHEMOS (essencial) -->
+    <section id="curadoria" class="secao">
+      <div class="container">
+        <h2>Não entra qualquer produto, e a gente mostra o porquê.</h2>
+        <!-- PENDENTE: critérios reais de curadoria. Não publicar sem eles. -->
+        <div class="colunas">
+          <div>
+            <h3>O que entra</h3>
+            <ul>
+              <li>[Critério a definir]</li>
+              <li>[Critério a definir]</li>
+              <li>[Critério a definir]</li>
+            </ul>
+          </div>
+          <div>
+            <h3>O que não entra</h3>
+            <ul>
+              <li>[Critério a definir]</li>
+              <li>[Critério a definir]</li>
+              <li>[Critério a definir]</li>
+            </ul>
+          </div>
+        </div>
+        <a class="botao" href="#lista">Quero indicar produtos assim</a>
+      </div>
+    </section>
+
+    <!-- 6. COMO FUNCIONA (essencial) -->
+    <section id="como-funciona" class="secao">
+      <div class="container">
+        <h2>Você escolhe o que indica, do seu jeito, nos canais que já usa.</h2>
+        <ol class="passos">
+          <li><strong>Entra na lista.</strong> [Detalhe a definir]</li>
+          <li><strong>Escolhe os produtos.</strong> [Detalhe a definir]</li>
+          <li><strong>Indica onde já está:</strong> Instagram, TikTok, WhatsApp ou tráfego pago.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 7. PRA QUEM É / NÃO É (opcional) -->
+    <section id="pra-quem" class="secao">
+      <div class="container">
+        <h2>Pra quem é (e pra quem não é)</h2>
+        <p>Se você quer vender qualquer coisa a qualquer custo, aqui não é o seu lugar.</p>
+      </div>
+    </section>
+
+    <!-- 8. FORMULÁRIO DO AFILIADO (essencial, conversão principal) -->
+    <section id="lista" class="secao secao-form">
+      <div class="container">
+        <h2>Entre agora e seja um dos primeiros afiliados da Staypse.</h2>
+        <!-- PENDENTE: confirmar o que acontece depois do cadastro. -->
+        <p>A gente avisa quando abrir.</p>
+
+        <form class="formulario" data-tipo="afiliado" data-endpoint="" novalidate>
+          <label>Nome
+            <input type="text" name="nome" autocomplete="name" required>
+          </label>
+          <label>E-mail
+            <input type="email" name="email" autocomplete="email" required>
+          </label>
+          <label><span>WhatsApp <span class="opcional">(opcional)</span></span>
+            <input type="tel" name="whatsapp" autocomplete="tel">
+          </label>
+          <label>Onde você mais indica?
+            <select name="canal" required>
+              <option value="">Escolha uma opção</option>
+              <option>Instagram</option>
+              <option>TikTok</option>
+              <option>WhatsApp</option>
+              <option>Tráfego pago</option>
+              <option>Outro</option>
+            </select>
+          </label>
+          <button class="botao" type="submit">Entrar na lista de espera</button>
+          <p class="mensagem" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 9. BLOCO DAS FÁBRICAS (essencial, conversão secundária) -->
+    <section id="fabricas" class="secao secao-form secao-fabricas">
+      <div class="container">
+        <p class="rotulo">Para fábricas</p>
+        <h2>Seu produto merece ser indicado por quem acredita nele.</h2>
+        <p>[Texto a escrever: por que vale a pena entrar na Staypse.]</p>
+
+        <!-- PENDENTE: confirmar os campos do formulário da fábrica. -->
+        <form class="formulario" data-tipo="fabrica" data-endpoint="" novalidate>
+          <label>Seu nome
+            <input type="text" name="nome" autocomplete="name" required>
+          </label>
+          <label>Nome da fábrica
+            <input type="text" name="fabrica" autocomplete="organization" required>
+          </label>
+          <label>E-mail
+            <input type="email" name="email" autocomplete="email" required>
+          </label>
+          <label><span>WhatsApp <span class="opcional">(opcional)</span></span>
+            <input type="tel" name="whatsapp" autocomplete="tel">
+          </label>
+          <label>Cidade / UF
+            <input type="text" name="cidade" required>
+          </label>
+          <label>O que vocês produzem?
+            <textarea name="produtos" rows="3" required></textarea>
+          </label>
+          <button class="botao botao-secundario" type="submit">Quero cadastrar minha fábrica</button>
+          <p class="mensagem" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- 10. PERGUNTAS FREQUENTES (opcional: só com respostas já decididas) -->
+    <section id="perguntas" class="secao">
+      <div class="container">
+        <h2>Perguntas frequentes</h2>
+        <details>
+          <summary>Quando a Staypse lança?</summary>
+          <p>[Resposta a definir]</p>
+        </details>
+        <details>
+          <summary>É pago para entrar?</summary>
+          <p>[Resposta a definir]</p>
+        </details>
+        <details>
+          <summary>Preciso ter muitos seguidores?</summary>
+          <p>[Resposta a definir]</p>
+        </details>
+        <details>
+          <summary>Que tipo de produto vai ter?</summary>
+          <p>[Resposta a definir]</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- 11. FECHAMENTO (opcional) -->
+    <section id="fechamento" class="secao">
+      <div class="container">
+        <h2>Indicar é emprestar seu nome. Empreste para quem merece.</h2>
+        <a class="botao" href="#lista">Entrar na lista</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="rodape">
+    <div class="container">
+      <p>Staypse</p>
+    </div>
+  </footer>
+
+  <script src="js/formularios.js"></script>
+</body>
+</html>
