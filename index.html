@@ -106,7 +106,11 @@
         <!-- PENDENTE: confirmar o que acontece depois do cadastro. -->
         <p>A gente avisa quando abrir.</p>
 
-        <form class="formulario" data-tipo="afiliado" data-endpoint="" novalidate>
+        <form class="formulario" data-tabela="afiliados"
+              data-sucesso="Pronto, você está na lista. A gente avisa quando abrir." novalidate>
+          <div class="campo-oculto" aria-hidden="true">
+            <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+          </div>
           <label>Nome
             <input type="text" name="nome" autocomplete="name" required>
           </label>
@@ -140,7 +144,11 @@
         <p>[Texto a escrever: por que vale a pena entrar na Staypse.]</p>
 
         <!-- PENDENTE: confirmar os campos do formulário da fábrica. -->
-        <form class="formulario" data-tipo="fabrica" data-endpoint="" novalidate>
+        <form class="formulario" data-tabela="fabricas"
+              data-sucesso="Recebemos o cadastro da sua fábrica. Obrigado!" novalidate>
+          <div class="campo-oculto" aria-hidden="true">
+            <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+          </div>
           <label>Seu nome
             <input type="text" name="nome" autocomplete="name" required>
           </label>
@@ -204,6 +212,7 @@
     </div>
   </footer>
 
+  <script src="js/config.js"></script>
   <script src="js/formularios.js"></script>
 </body>
 </html>
