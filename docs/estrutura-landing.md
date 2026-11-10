@@ -91,7 +91,13 @@
 - **10 Perguntas frequentes:** só com respostas já decididas.
 - **11 Fechamento:** barata de fazer; vale incluir se der.
 
-## Pendências antes da próxima etapa
-1. **Critérios reais de curadoria** (seção 5). Sem eles, a promessa vira só mais uma promessa.
-2. **O que acontece depois do cadastro** (seções 8 e 10). Qualquer prazo ou comissão citado tem que ser verdadeiro.
-3. **Campos do formulário da fábrica** (ex.: categoria de produto, cidade, capacidade de produção).
+## Pendências antes de publicar
+No código, procure por `PROPOSTA` (texto escrito, falta confirmar) e `PENDENTE` (falta decidir).
+
+1. **Critérios de curadoria** (seção 5): há uma proposta no `index.html`. Confirme ou troque cada item, porque viram promessa pública.
+2. **Passo 2 de "Como funciona"**: confirmar que o afiliado vai ver quem fabrica, onde e o que o produto entrega.
+3. **Bloco das fábricas**: confirmar a frase "Estamos montando a primeira seleção de produtos" e os campos do formulário.
+4. **Perguntas sem resposta**: "É pago para entrar?" e "Preciso ter muitos seguidores?" estão escondidas até haver resposta.
+5. **Política de privacidade** (`privacidade.html`): preencher razão social, CNPJ, e-mail de contato e data. Ideal: revisão de um advogado.
+6. **Supabase**: criar o projeto e preencher `js/config.js` (ver `docs/supabase-setup.md`).
+7. **Etapa visual**: identidade (cores, fontes), imagem de compartilhamento (`og:image`) e domínio.
