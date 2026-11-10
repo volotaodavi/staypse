@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entregar com a Staypse</title>
+  <!-- Página de teste de interesse: fora do Google e só acessível pelo rodapé. -->
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body data-pagina="entregador">
+
+  <main class="secao">
+    <div class="container">
+      <p><a href="index.html">← Staypse</a></p>
+      <h1>Quer entregar com a Staypse?</h1>
+      <p class="aviso">Ainda estamos avaliando a entrega local. Vamos te chamar se ela chegar na sua região.</p>
+
+      <form class="formulario" data-tipo="entregador" novalidate
+            data-sucesso="Anotado. Se a entrega local chegar na sua região, você é dos primeiros a saber.">
+        <div class="campo-oculto" aria-hidden="true">
+          <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+        </div>
+
+        <div class="campo" data-validar="nome">
+          <label for="en-nome">Nome</label>
+          <input id="en-nome" name="nome" type="text" autocomplete="name" maxlength="120">
+        </div>
+        <div class="campo" data-validar="whatsapp">
+          <label for="en-whatsapp">WhatsApp</label>
+          <input id="en-whatsapp" name="whatsapp" type="tel" inputmode="numeric"
+                 autocomplete="tel-national" placeholder="(11) 98765-4321" data-mascara="telefone">
+        </div>
+        <div class="campo" data-validar="obrigatorio" data-mensagem="Digite sua cidade.">
+          <label for="en-cidade">Cidade</label>
+          <input id="en-cidade" name="cidade" type="text" autocomplete="address-level2" maxlength="120">
+        </div>
+        <div class="campo" data-validar="obrigatorio" data-mensagem="Escolha o estado.">
+          <label for="en-uf">Estado (UF)</label>
+          <select id="en-uf" name="uf" autocomplete="address-level1" data-uf>
+            <option value="">Escolha</option>
+          </select>
+        </div>
+        <div class="campo" data-validar="obrigatorio" data-mensagem="Digite seu bairro.">
+          <label for="en-bairro">Bairro</label>
+          <input id="en-bairro" name="bairro" type="text" maxlength="120">
+        </div>
+
+        <fieldset class="campo" data-validar="grupo">
+          <legend>Veículo</legend>
+          <label class="opcao"><input type="radio" name="veiculo" value="moto"> Moto</label>
+          <label class="opcao"><input type="radio" name="veiculo" value="bicicleta"> Bicicleta</label>
+          <label class="opcao"><input type="radio" name="veiculo" value="carro"> Carro</label>
+        </fieldset>
+
+        <div class="campo campo-aceite" data-validar="aceite">
+          <label class="opcao">
+            <input type="checkbox" name="aceite_privacidade" value="sim">
+            Li e aceito a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+          </label>
+        </div>
+
+        <button class="botao" type="submit" data-evento="enviar_entregador">Quero ser avisado</button>
+        <p class="mensagem" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/rastreamento.js"></script>
+  <script src="js/formularios.js"></script>
+</body>
+</html>

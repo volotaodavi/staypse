@@ -4,257 +4,300 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Staypse | Indicar é emprestar seu nome</title>
-  <meta name="description" content="Plataforma de afiliados com produtos físicos de pequenas fábricas brasileiras. Só entra produto que vale o seu nome. Entre na lista de espera.">
-  <meta name="theme-color" content="#1a1a1a">
+  <meta name="description" content="A plataforma de afiliados para produtos físicos de fábricas e pequenas lojas brasileiras. Aqui só entra o que você teria orgulho de indicar. Entre na lista de espera.">
 
-  <!-- Compartilhamento (WhatsApp, Instagram, LinkedIn etc.) -->
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
   <meta property="og:site_name" content="Staypse">
   <meta property="og:title" content="Staypse | Indicar é emprestar seu nome">
-  <meta property="og:description" content="Plataforma de afiliados com produtos físicos de pequenas fábricas brasileiras. Entre na lista de espera.">
-  <!-- PENDENTE (etapa visual): og:image com a imagem de compartilhamento e og:url com o domínio. -->
+  <meta property="og:description" content="A plataforma de afiliados para produtos físicos de fábricas e pequenas lojas brasileiras. Entre na lista de espera.">
+  <!-- [A DEFINIR] na etapa de design: og:image (imagem de compartilhamento), og:url (domínio) e ícone. -->
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='23' font-family='system-ui,sans-serif' font-size='20' font-weight='700' fill='%23fff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/base.css">
 </head>
-<body>
+<body data-pagina="inicio">
 
-  <a class="pular" href="#lista">Pular para o cadastro</a>
-
-  <header class="topo">
-    <div class="container">
-      <span class="marca">Staypse</span>
-      <a class="link-fabrica" href="#fabricas">Sou fábrica</a>
-    </div>
-  </header>
+  <a class="pular" href="#cadastro">Pular para o cadastro</a>
 
   <main>
 
-    <!-- 1. ABERTURA (essencial) -->
-    <section id="abertura" class="secao">
+    <!-- 1. TOPO -->
+    <section id="topo" class="secao">
       <div class="container">
+        <p class="marca">Staypse</p>
         <h1>Indicar é emprestar seu nome.</h1>
-        <p class="destaque">Aqui só entra produto que vale o seu.</p>
-        <a class="botao" href="#lista">Quero entrar na lista</a>
-        <p class="atalho"><a href="#fabricas">Tem uma fábrica? Veja aqui</a></p>
+        <p class="destaque">A Staypse é a plataforma de afiliados para produtos físicos de fábricas e pequenas lojas brasileiras. Aqui só entra o que você teria orgulho de indicar.</p>
+        <p class="acoes">
+          <a class="botao" href="#cadastro" data-abrir-aba="afiliado" data-evento="topo_entrar_lista">Entrar na lista</a>
+          <a class="link-secundario" href="#cadastro" data-abrir-aba="fornecedor" data-evento="topo_fornecedor">Tenho uma fábrica ou loja →</a>
+        </p>
       </div>
     </section>
 
-    <!-- 2. ESPELHO (essencial) -->
-    <section id="espelho" class="secao">
+    <!-- 2. A DOR -->
+    <section id="dor" class="secao">
       <div class="container">
-        <h2>Você já indicou algo que não usaria e sentiu o peso disso depois.</h2>
-        <p>Era pra ser só mais um post. Um creme que “resolvia tudo”, um aparelho que “todo mundo estava comprando”. A comissão caiu.</p>
-        <p>Depois vieram as mensagens. O produto que demorou a chegar. O que quebrou na primeira semana. O que não fazia nada do que prometia.</p>
-        <p>Quem respondeu foi você. Porque quem comprou não confiou na marca. Confiou em você.</p>
+        <h2>Você já indicou algo e depois torceu pro cliente esquecer?</h2>
+        <p>O produto chegou diferente da foto. A promessa não se cumpriu. E quem ouviu a reclamação foi você, porque foi o seu nome que fez a venda.</p>
       </div>
     </section>
 
-    <!-- 3. A VIRADA (opcional) -->
-    <section id="virada" class="secao">
+    <!-- 3. NO QUE ACREDITAMOS -->
+    <section id="crencas" class="secao">
       <div class="container">
         <h2>Seu nome vale mais que uma comissão.</h2>
-        <p>Cada indicação gasta um pouco da confiança que você levou tempo para construir. Faz sentido gastar só com o que você defenderia de cara limpa.</p>
+        <p>Por isso, todo produto passa por nós antes de chegar até você. Se a gente não indicaria pra própria família, ele não entra.</p>
+        <p class="rotulo">Fica de fora</p>
+        <ul class="fica-de-fora">
+          <li>cápsula milagrosa</li>
+          <li>produto sem registro</li>
+          <li>promessa de cura</li>
+          <li>“resultado garantido em 7 dias”</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 4. O QUE É A STAYPSE (essencial) -->
-    <section id="o-que-e" class="secao">
-      <div class="container">
-        <h2>O que é a Staypse</h2>
-        <p>Uma plataforma de afiliados com produtos físicos de pequenas fábricas brasileiras, feitos por gente de verdade, para você indicar sem medo.</p>
-        <p>Do outro lado de cada produto tem uma fábrica com nome, endereço e gente que responde.</p>
-      </div>
-    </section>
-
-    <!-- 5. COMO ESCOLHEMOS (essencial) -->
-    <section id="curadoria" class="secao">
-      <div class="container">
-        <h2>Não entra qualquer produto, e a gente mostra o porquê.</h2>
-        <!-- PROPOSTA: CONFIRMAR antes de publicar. Cada item vira uma promessa pública
-             que a Staypse precisa cumprir. Troque o que não for verdade. -->
-        <div class="colunas">
-          <div>
-            <h3>O que entra</h3>
-            <ul>
-              <li>Fábrica que a gente sabe quem é: CNPJ ativo e endereço de verdade.</li>
-              <li>Produto que alguém da equipe usou antes de liberar.</li>
-              <li>Produto que cumpre o que diz, descrito sem exagero.</li>
-            </ul>
-          </div>
-          <div>
-            <h3>O que não entra</h3>
-            <ul>
-              <li>Produto “milagroso” ou com resultado garantido.</li>
-              <li>Revenda sem procedência clara.</li>
-              <li>Fábrica que some quando o cliente precisa.</li>
-            </ul>
-          </div>
-        </div>
-        <a class="botao" href="#lista">Quero indicar produtos assim</a>
-      </div>
-    </section>
-
-    <!-- 6. COMO FUNCIONA (essencial) -->
+    <!-- 4. COMO FUNCIONA -->
     <section id="como-funciona" class="secao">
       <div class="container">
-        <h2>Você escolhe o que indica, do seu jeito, nos canais que já usa.</h2>
-        <!-- PROPOSTA: CONFIRMAR o passo 2 (o que o afiliado vai ver de cada produto). -->
+        <h2>Do jeito que sempre deveria ter sido.</h2>
         <ol class="passos">
-          <li><strong>Entra na lista.</strong> Você deixa seu contato e a gente avisa quando abrir.</li>
-          <li><strong>Escolhe os produtos.</strong> Antes de indicar, você vê quem fabrica, onde e o que o produto entrega.</li>
-          <li><strong>Indica onde já está:</strong> Instagram, TikTok, WhatsApp ou tráfego pago.</li>
+          <li><strong>Escolha.</strong> Produtos de fábricas e lojas reais, com ficha completa.</li>
+          <li><strong>Indique.</strong> Com seu link, onde você já vende.</li>
+          <li><strong>Receba.</strong> A venda acontece e a sua parte chega até você.</li>
         </ol>
+        <a class="botao" href="#cadastro" data-abrir-aba="afiliado" data-evento="como_funciona_entrar_lista">Entrar na lista</a>
       </div>
     </section>
 
-    <!-- 7. PRA QUEM É / NÃO É (opcional) -->
-    <section id="pra-quem" class="secao">
+    <!-- 5. UMA VENDA. DUAS PARTES. -->
+    <section id="duas-partes" class="secao">
       <div class="container">
-        <h2>Pra quem é (e pra quem não é)</h2>
-        <div class="colunas">
-          <div>
-            <h3>É pra você se</h3>
-            <ul>
-              <li>Você só quer indicar o que usaria.</li>
-              <li>Você cuida de quem te segue e quer continuar sendo ouvido.</li>
-              <li>Você quer ter orgulho do que aparece no seu perfil.</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Não é pra você se</h3>
-            <ul>
-              <li>Você quer vender qualquer coisa a qualquer custo.</li>
-              <li>Você precisa de promessa exagerada para vender.</li>
-            </ul>
-          </div>
-        </div>
+        <h2>Uma venda. Duas partes.</h2>
+        <p>Quem fabrica ou vende e quem indica crescem juntos. Se você fabrica ou tem uma loja, a Staypse conecta seu produto a afiliados que vendem com o próprio nome. E quem vende com o próprio nome cuida do que vende.</p>
+        <a class="botao botao-secundario" href="#cadastro" data-abrir-aba="fornecedor" data-evento="duas_partes_cadastrar_fornecedor">Cadastrar minha fábrica ou loja</a>
       </div>
     </section>
 
-    <!-- 8. FORMULÁRIO DO AFILIADO (essencial, conversão principal) -->
-    <section id="lista" class="secao secao-form">
+    <!-- 6. POR QUE ENTRAR AGORA -->
+    <section id="por-que-agora" class="secao">
       <div class="container">
-        <h2>Entre agora e seja um dos primeiros afiliados da Staypse.</h2>
-        <p>A gente avisa por e-mail quando abrir.</p>
-
-        <form class="formulario" data-tabela="afiliados"
-              data-sucesso="Pronto, você está na lista. A gente avisa quando abrir." novalidate>
-          <div class="campo-oculto" aria-hidden="true">
-            <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
-          </div>
-          <label>Nome
-            <input type="text" name="nome" autocomplete="name" maxlength="120" required>
-          </label>
-          <label>E-mail
-            <input type="email" name="email" autocomplete="email" maxlength="254" required>
-          </label>
-          <label><span>WhatsApp <span class="opcional">(opcional)</span></span>
-            <input type="tel" name="whatsapp" autocomplete="tel" maxlength="30">
-          </label>
-          <label>Onde você mais indica?
-            <select name="canal" required>
-              <option value="">Escolha uma opção</option>
-              <option>Instagram</option>
-              <option>TikTok</option>
-              <option>WhatsApp</option>
-              <option>Tráfego pago</option>
-              <option>Outro</option>
-            </select>
-          </label>
-          <button class="botao" type="submit">Entrar na lista de espera</button>
-          <p class="aviso-dados">Usamos seus dados só para falar com você sobre a Staypse. Veja a <a href="privacidade.html">política de privacidade</a>.</p>
-          <p class="mensagem" role="status" aria-live="polite"></p>
-        </form>
+        <h2>Quem chega primeiro monta a vitrine.</h2>
+        <p>Antes do lançamento, quem está na lista vota nos produtos que vão estrear na Staypse. Você escolhe o que vai vender.</p>
+        <a class="botao" href="#cadastro" data-abrir-aba="afiliado" data-evento="agora_escolher_produtos">Quero escolher os produtos</a>
       </div>
     </section>
 
-    <!-- 9. BLOCO DAS FÁBRICAS (essencial, conversão secundária) -->
-    <section id="fabricas" class="secao secao-form secao-fabricas">
-      <div class="container">
-        <p class="rotulo">Para fábricas</p>
-        <h2>Seu produto merece ser indicado por quem acredita nele.</h2>
-        <p>Pequenas fábricas fazem produto bom e quase nunca têm quem conte essa história. A Staypse liga você a afiliados que só indicam o que defendem.</p>
-        <!-- PROPOSTA: CONFIRMAR a frase abaixo e os campos do formulário. -->
-        <p>Estamos montando a primeira seleção de produtos. Deixe seu contato.</p>
-
-        <form class="formulario" data-tabela="fabricas"
-              data-sucesso="Recebemos o cadastro da sua fábrica. Obrigado!" novalidate>
-          <div class="campo-oculto" aria-hidden="true">
-            <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
-          </div>
-          <label>Seu nome
-            <input type="text" name="nome" autocomplete="name" maxlength="120" required>
-          </label>
-          <label>Nome da fábrica
-            <input type="text" name="fabrica" autocomplete="organization" maxlength="160" required>
-          </label>
-          <label>E-mail
-            <input type="email" name="email" autocomplete="email" maxlength="254" required>
-          </label>
-          <label><span>WhatsApp <span class="opcional">(opcional)</span></span>
-            <input type="tel" name="whatsapp" autocomplete="tel" maxlength="30">
-          </label>
-          <label>Cidade / UF
-            <input type="text" name="cidade" maxlength="120" required>
-          </label>
-          <label>O que vocês produzem?
-            <textarea name="produtos" rows="3" maxlength="1000" required></textarea>
-          </label>
-          <button class="botao botao-secundario" type="submit">Quero cadastrar minha fábrica</button>
-          <p class="aviso-dados">Usamos seus dados só para falar com você sobre a Staypse. Veja a <a href="privacidade.html">política de privacidade</a>.</p>
-          <p class="mensagem" role="status" aria-live="polite"></p>
-        </form>
-      </div>
-    </section>
-
-    <!-- 10. PERGUNTAS FREQUENTES (só com respostas já decididas) -->
+    <!-- 7. PERGUNTAS FREQUENTES -->
     <section id="perguntas" class="secao">
       <div class="container">
         <h2>Perguntas frequentes</h2>
         <details>
-          <summary>Quando a Staypse lança?</summary>
-          <p>Ainda não tem data fechada. Quem está na lista fica sabendo primeiro, por e-mail.</p>
+          <summary>Quanto custa?</summary>
+          <p>Entrar é grátis. A Staypse só ganha quando você vende.</p>
         </details>
         <details>
-          <summary>Que tipo de produto vai ter?</summary>
-          <p>Produtos físicos feitos por pequenas fábricas brasileiras, que passaram pela nossa seleção.</p>
+          <summary>Quando lança?</summary>
+          <p><mark class="a-definir">[DATA A DEFINIR]</mark>. Quem está na lista fica sabendo primeiro.</p>
         </details>
         <details>
-          <summary>O que vocês fazem com meus dados?</summary>
-          <p>Usamos só para falar com você sobre a Staypse. Não vendemos nem repassamos. Você pode pedir para sair da lista quando quiser. Detalhes na <a href="privacidade.html">política de privacidade</a>.</p>
-        </details>
-        <!-- PENDENTE: só publicar quando a resposta estiver decidida.
-        <details>
-          <summary>É pago para entrar?</summary>
-          <p></p>
+          <summary>Quem pode ser afiliado?</summary>
+          <p><mark class="a-definir">[A DEFINIR]</mark></p>
         </details>
         <details>
-          <summary>Preciso ter muitos seguidores?</summary>
-          <p></p>
+          <summary>Que produtos vão ter?</summary>
+          <p>Produtos físicos de fábricas e pequenas lojas brasileiras, aprovados pela curadoria. E você ajuda a escolher os primeiros.</p>
         </details>
-        -->
+        <details>
+          <summary>Como eu recebo?</summary>
+          <p>Pelo Pix, direto na sua conta. <mark class="a-definir">[CONFIRMAR]</mark></p>
+        </details>
+        <details>
+          <summary>Tenho uma fábrica ou loja. Como entro?</summary>
+          <p>Faça o <a href="#cadastro" data-abrir-aba="fornecedor" data-evento="faq_cadastrar_fornecedor">cadastro</a>. Nossa equipe analisa seu produto e fala com você.</p>
+        </details>
       </div>
     </section>
 
-    <!-- 11. FECHAMENTO (opcional) -->
-    <section id="fechamento" class="secao">
+    <!-- 8. FORMULÁRIO -->
+    <section id="cadastro" class="secao">
       <div class="container">
-        <h2>Indicar é emprestar seu nome. Empreste para quem merece.</h2>
-        <a class="botao" href="#lista">Entrar na lista</a>
+        <h2>Sua vaga. Seu voto.</h2>
+        <p>Entre na lista e ajude a escolher os primeiros produtos da Staypse.</p>
+
+        <div class="abas" role="tablist" aria-label="Tipo de cadastro">
+          <button type="button" role="tab" id="aba-afiliado" data-aba="afiliado"
+                  aria-controls="painel-afiliado" aria-selected="true"
+                  data-evento="aba_afiliado">Sou afiliado</button>
+          <button type="button" role="tab" id="aba-fornecedor" data-aba="fornecedor"
+                  aria-controls="painel-fornecedor" aria-selected="false" tabindex="-1"
+                  data-evento="aba_fornecedor">Tenho fábrica ou loja</button>
+        </div>
+
+        <!-- Aba: afiliado -->
+        <div role="tabpanel" id="painel-afiliado" aria-labelledby="aba-afiliado">
+          <form class="formulario" data-tipo="afiliado" novalidate
+                data-sucesso="Pronto, você está na lista. A votação dos produtos vai chegar no seu WhatsApp.">
+            <div class="campo-oculto" aria-hidden="true">
+              <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+            </div>
+
+            <div class="campo" data-validar="nome-completo">
+              <label for="af-nome">Nome completo</label>
+              <input id="af-nome" name="nome" type="text" autocomplete="name" maxlength="120">
+            </div>
+            <div class="campo" data-validar="whatsapp">
+              <label for="af-whatsapp">WhatsApp</label>
+              <input id="af-whatsapp" name="whatsapp" type="tel" inputmode="numeric"
+                     autocomplete="tel-national" placeholder="(11) 98765-4321" data-mascara="telefone">
+            </div>
+            <div class="campo" data-validar="email">
+              <label for="af-email">E-mail</label>
+              <input id="af-email" name="email" type="email" autocomplete="email" maxlength="254">
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Digite sua cidade.">
+              <label for="af-cidade">Cidade</label>
+              <input id="af-cidade" name="cidade" type="text" autocomplete="address-level2" maxlength="120">
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Escolha o estado.">
+              <label for="af-uf">Estado (UF)</label>
+              <select id="af-uf" name="uf" autocomplete="address-level1" data-uf>
+                <option value="">Escolha</option>
+              </select>
+            </div>
+
+            <fieldset class="campo" data-validar="grupo" data-mensagem="Marque pelo menos uma opção.">
+              <legend>Onde você vende?</legend>
+              <p class="dica">Marque todas que valem.</p>
+              <label class="opcao"><input type="checkbox" name="canais" value="Instagram"> Instagram</label>
+              <label class="opcao"><input type="checkbox" name="canais" value="TikTok"> TikTok</label>
+              <label class="opcao"><input type="checkbox" name="canais" value="WhatsApp"> WhatsApp</label>
+              <label class="opcao"><input type="checkbox" name="canais" value="Tráfego pago"> Tráfego pago</label>
+              <label class="opcao"><input type="checkbox" name="canais" value="Outro"> Outro</label>
+            </fieldset>
+
+            <fieldset class="campo" data-validar="grupo">
+              <legend>Já vende produto físico?</legend>
+              <label class="opcao"><input type="radio" name="vende_fisico" value="sim"> Sim</label>
+              <label class="opcao"><input type="radio" name="vende_fisico" value="nao"> Não</label>
+            </fieldset>
+
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Conte que tipo de produto você gostaria de vender.">
+              <label for="af-produto">Que tipo de produto você gostaria de vender?</label>
+              <p class="dica" id="af-produto-dica">Sua resposta ajuda a montar a votação.</p>
+              <input id="af-produto" name="produto_interesse" type="text" maxlength="160"
+                     placeholder="Ex.: cosméticos naturais, utensílios de cozinha"
+                     aria-describedby="af-produto-dica">
+            </div>
+
+            <div class="campo campo-aceite" data-validar="aceite">
+              <label class="opcao">
+                <input type="checkbox" name="aceite_privacidade" value="sim">
+                Li e aceito a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+              </label>
+            </div>
+
+            <button class="botao" type="submit" data-evento="enviar_afiliado">Entrar na lista</button>
+            <p class="mensagem" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <!-- Aba: fábrica ou loja -->
+        <div role="tabpanel" id="painel-fornecedor" aria-labelledby="aba-fornecedor">
+          <form class="formulario" data-tipo="fornecedor" novalidate
+                data-sucesso="Recebemos seu cadastro. Nossa equipe vai analisar e falar com você.">
+            <div class="campo-oculto" aria-hidden="true">
+              <label>Site <input type="text" name="site" tabindex="-1" autocomplete="off"></label>
+            </div>
+
+            <fieldset class="campo" data-validar="grupo">
+              <legend>Você é:</legend>
+              <label class="opcao"><input type="radio" name="tipo_empresa" value="fabrica"> Fábrica</label>
+              <label class="opcao"><input type="radio" name="tipo_empresa" value="loja"> Loja</label>
+            </fieldset>
+
+            <div class="campo" data-validar="nome-completo">
+              <label for="fo-nome">Nome do responsável</label>
+              <input id="fo-nome" name="nome" type="text" autocomplete="name" maxlength="120">
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Digite o nome da empresa.">
+              <label for="fo-empresa">Nome da empresa</label>
+              <input id="fo-empresa" name="empresa" type="text" autocomplete="organization" maxlength="160">
+            </div>
+            <div class="campo" data-validar="cnpj">
+              <label for="fo-cnpj">CNPJ</label>
+              <input id="fo-cnpj" name="cnpj" type="text" inputmode="text" autocapitalize="characters"
+                     autocomplete="off" placeholder="00.000.000/0000-00" data-mascara="cnpj">
+            </div>
+            <div class="campo" data-validar="whatsapp">
+              <label for="fo-whatsapp">WhatsApp</label>
+              <input id="fo-whatsapp" name="whatsapp" type="tel" inputmode="numeric"
+                     autocomplete="tel-national" placeholder="(11) 98765-4321" data-mascara="telefone">
+            </div>
+            <div class="campo" data-validar="email">
+              <label for="fo-email">E-mail</label>
+              <input id="fo-email" name="email" type="email" autocomplete="email" maxlength="254">
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Digite a cidade.">
+              <label for="fo-cidade">Cidade</label>
+              <input id="fo-cidade" name="cidade" type="text" autocomplete="address-level2" maxlength="120">
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Escolha o estado.">
+              <label for="fo-uf">Estado (UF)</label>
+              <select id="fo-uf" name="uf" autocomplete="address-level1" data-uf>
+                <option value="">Escolha</option>
+              </select>
+            </div>
+            <div class="campo" data-validar="obrigatorio" data-mensagem="Conte o que você vende.">
+              <label for="fo-vende">O que você vende?</label>
+              <input id="fo-vende" name="o_que_vende" type="text" maxlength="160"
+                     placeholder="Ex.: calçados de couro, doces artesanais">
+            </div>
+
+            <fieldset class="campo" data-validar="grupo">
+              <legend>Já trabalha com afiliados?</legend>
+              <label class="opcao"><input type="radio" name="trabalha_afiliados" value="sim"> Sim</label>
+              <label class="opcao"><input type="radio" name="trabalha_afiliados" value="nao"> Não</label>
+            </fieldset>
+
+            <fieldset class="campo" data-validar="grupo">
+              <legend>Você entrega na sua região?</legend>
+              <label class="opcao"><input type="radio" name="entrega_regiao" value="sim"> Sim</label>
+              <label class="opcao"><input type="radio" name="entrega_regiao" value="nao"> Não</label>
+              <label class="opcao"><input type="radio" name="entrega_regiao" value="as_vezes"> Às vezes</label>
+            </fieldset>
+
+            <div class="campo campo-aceite" data-validar="aceite">
+              <label class="opcao">
+                <input type="checkbox" name="aceite_privacidade" value="sim">
+                Li e aceito a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.
+              </label>
+            </div>
+
+            <button class="botao" type="submit" data-evento="enviar_fornecedor">Cadastrar minha fábrica ou loja</button>
+            <p class="mensagem" role="status" aria-live="polite"></p>
+          </form>
+        </div>
       </div>
     </section>
 
   </main>
 
+  <!-- 9. RODAPÉ -->
   <footer class="rodape">
     <div class="container">
-      <p>Staypse · <a href="privacidade.html">Política de privacidade</a></p>
+      <ul class="rodape-links">
+        <li><a href="https://www.instagram.com/staypse/" target="_blank" rel="noopener" data-evento="rodape_instagram">@staypse</a></li>
+        <li><a href="privacidade.html" data-evento="rodape_privacidade">Política de privacidade</a></li>
+        <li><a class="link-discreto" href="entregador.html" data-evento="rodape_entregador">Quer entregar com a Staypse?</a></li>
+        <li>Staypse © 2026</li>
+      </ul>
     </div>
   </footer>
 
   <script src="js/config.js"></script>
+  <script src="js/rastreamento.js"></script>
+  <script src="js/abas.js"></script>
   <script src="js/formularios.js"></script>
 </body>
 </html>
