@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Staypse: plano do produto</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  :root { --tinta: #1c2333; --suave: #5b6272; --linha: #d9dce3; --destaque: #1f3a68; --acento: #c8553d; --fundo: #f4f5f8; }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: var(--tinta); font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 26pt; line-height: 1.1; margin: 0 0 6px; color: var(--destaque); }
+  h2 { font-size: 14pt; color: var(--destaque); margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--destaque); }
+  h3 { font-size: 11pt; margin: 14px 0 4px; }
+  p { margin: 0 0 8px; }
+  .capa { padding: 40px 0 24px; border-bottom: 4px solid var(--acento); margin-bottom: 8px; }
+  .subtitulo { font-size: 13pt; color: var(--suave); margin: 0 0 18px; }
+  .lema { font-size: 15pt; font-weight: 700; margin: 0; }
+  .nota { font-size: 9pt; color: var(--suave); margin-top: 14px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 9.8pt; page-break-inside: avoid; }
+  th { text-align: left; background: var(--destaque); color: #fff; padding: 6px 8px; font-weight: 600; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--fundo); }
+  td:first-child { font-weight: 600; width: 24%; }
+  ul { margin: 4px 0 8px; padding-left: 18px; }
+  li { margin-bottom: 3px; }
+  .caixa { background: var(--fundo); border-left: 4px solid var(--acento); padding: 10px 14px; margin: 10px 0; page-break-inside: avoid; }
+  .caixa strong { color: var(--acento); }
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cartao { border: 1px solid var(--linha); border-radius: 6px; padding: 10px 12px; page-break-inside: avoid; }
+  .cartao h3 { margin-top: 0; color: var(--destaque); }
+  h2 { page-break-after: avoid; }
+  .capa { padding-top: 24px; }
+  .rodape { margin-top: 28px; font-size: 8.5pt; color: var(--suave); border-top: 1px solid var(--linha); padding-top: 8px; }
+</style>
+</head>
+<body>
+
+<section class="capa">
+  <h1>Staypse</h1>
+  <p class="subtitulo">Plano do produto · versão 1 · novembro de 2026</p>
+  <p class="lema">Tudo da sua moradia em um só lugar.</p>
+  <p class="nota">“Staypse” é um nome provisório e pode mudar. As cores deste documento são neutras e não definem a identidade visual.</p>
+</section>
+
+<h2>1. A ideia</h2>
+<p>A Staypse é um hub da moradia. Ela conecta, numa plataforma só, <strong>quem mora</strong> (condômino, inquilino), <strong>quem recebe</strong> (proprietário, condomínio) e <strong>quem administra</strong> (síndico, administradora, corretor, imobiliária).</p>
+<p>Hoje cada uma dessas relações vive espalhada em grupos de WhatsApp, papel, planilhas, sites de banco e sistemas diferentes. A Staypse junta tudo e funciona direto no navegador do celular, sem treinamento.</p>
+
+<h2>2. O que a Staypse oferece para cada público</h2>
+<table>
+  <tr><th>Público</th><th>O que recebe</th></tr>
+  <tr><td>Morador / condômino</td><td>Avisos do condomínio · reserva da área de lazer · votação em assembleia pelo celular · visitas com QR Code · aviso de encomenda · chamados de manutenção · enquetes · classificados entre vizinhos</td></tr>
+  <tr><td>Síndico</td><td>Comunicação com todos num clique · assembleia digital com ata automática · controle de reservas, visitas e chamados · enquetes rápidas · financeiro e prestação de contas</td></tr>
+  <tr><td>Administradora</td><td>Painel com vários condomínios · cobrança e repasse automáticos · prestação de contas digital · opção de usar a própria marca</td></tr>
+  <tr><td>Proprietário</td><td>Cobrança do aluguel com repasse automático · contrato com assinatura digital · reajuste automático · aviso de atraso · só paga quando recebe</td></tr>
+  <tr><td>Inquilino</td><td>Aluguel + condomínio num Pix só · contrato e recibos no app · tudo da casa no mesmo lugar</td></tr>
+  <tr><td>Corretor / imobiliária</td><td>Anúncio de residências e comércios · aluguel tradicional e por temporada (estilo Airbnb) direto no app · ganho por indicação</td></tr>
+</table>
+
+<h2>3. Diferenciais</h2>
+<div class="grade">
+  <div class="cartao"><h3>Tudo num lugar</h3><p>Condomínio, aluguel e moradia na mesma plataforma. Os concorrentes cobrem uma parte só.</p></div>
+  <div class="cartao"><h3>Aluguel + condomínio num Pix só</h3><p>O inquilino paga uma vez e a Staypse divide: aluguel para o proprietário, taxa para o condomínio.</p></div>
+  <div class="cartao"><h3>Simples</h3><p>Abre no navegador do celular, sem baixar app e sem treinamento.</p></div>
+  <div class="cartao"><h3>Cobrança justa</h3><p>Quem é pequeno só paga quando recebe. Sem mensalidade com imóvel vazio.</p></div>
+</div>
+
+<section class="quebra">
+<h2>4. O que será construído</h2>
+<p>Todos os módulos abaixo fazem parte do produto principal. Eles são construídos nesta ordem, e cada bloco é entregue funcionando.</p>
+<table>
+  <tr><th>Bloco</th><th>O que entra</th><th style="width:16%">Prazo estimado</th></tr>
+  <tr><td>1. Fundação</td><td>Login, perfis (morador, síndico, administradora, proprietário, inquilino, corretor), condomínios, unidades e imóveis</td><td>1 a 2 semanas</td></tr>
+  <tr><td>2. Vida no condomínio</td><td>Avisos, reservas da área de lazer, assembleia com votação e ata, visitas com QR Code, encomendas, chamados de manutenção, enquetes e classificados</td><td>3 a 4 semanas</td></tr>
+  <tr><td>3. Financeiro</td><td>Cobrança de condomínio e aluguel, repasse automático, aluguel + condomínio num Pix só, controle de inadimplência e prestação de contas</td><td>3 a 4 semanas</td></tr>
+  <tr><td>4. Aluguel</td><td>Anúncios de residências e comércios, aluguel tradicional e por temporada (estilo Airbnb), calendário, reserva, contrato digital e vistoria com fotos</td><td>4 a 5 semanas</td></tr>
+  <tr><td>5. Painéis profissionais</td><td>Painéis para síndico, administradora (vários condomínios), proprietário e corretor</td><td>2 a 3 semanas</td></tr>
+</table>
+<div class="caixa"><strong>Total estimado do produto principal:</strong> de 3,5 a 4,5 meses. São estimativas, não prazos garantidos; as partes que dependem de parceiros (seção 6) entram em funcionamento quando cada parceiro liberar.</div>
+
+<h2>5. Extras</h2>
+<p>Funções que aumentam a atratividade e a receita. Entram depois do produto principal, estimadas em 4 a 6 semanas.</p>
+<ul>
+  <li><strong>Marketplace de serviços:</strong> eletricista, faxina, mudança, com avaliação e comissão.</li>
+  <li><strong>Seguros:</strong> fiança, residencial e condomínio, com comissão.</li>
+  <li><strong>Assistente no WhatsApp:</strong> 2ª via, reservas e avisos por mensagem.</li>
+  <li><strong>Landing e ferramentas gratuitas:</strong> calculadora de reajuste de aluguel e simulador de rateio, para atrair síndicos e proprietários.</li>
+  <li><strong>App nas lojas:</strong> versões para Android e iPhone.</li>
+</ul>
+
+<h2>6. Fora deste momento</h2>
+<ul>
+  <li><strong>Contas de consumo</strong> (luz, água, gás) dentro do app. A pesquisa já foi feita; o caminho mais estável é a fatura digital por e-mail, e o Open Energy da ANEEL deve permitir o status oficial por volta de 2028.</li>
+  <li>Energia solar, medição individual de água e o painel “Quanto custa morar aqui”.</li>
+</ul>
+</section>
+
+<section class="quebra">
+<h2>7. Como a Staypse ganha dinheiro</h2>
+<table>
+  <tr><th>Fonte</th><th>Como funciona</th></tr>
+  <tr><td>Por transação</td><td>Taxa pequena por aluguel ou condomínio recebido</td></tr>
+  <tr><td>Por condomínio ou unidade</td><td>Plano mensal para síndicos e administradoras</td></tr>
+  <tr><td>Por comissão</td><td>Aluguel por temporada, serviços do marketplace e seguros</td></tr>
+  <tr><td>Por contrato empresarial</td><td>Módulos com a marca de administradoras grandes</td></tr>
+</table>
+
+<h2>8. Parceiros e dependências</h2>
+<table>
+  <tr><th>O quê</th><th>Para quê</th></tr>
+  <tr><td>Lytex</td><td>Cobrança, Pix, boleto, repasse e divisão de valores. Confirmar split, subcontas, Pix Automático e taxas.</td></tr>
+  <tr><td>Assinatura digital</td><td>Contratos de aluguel no app (ex.: Clicksign, ZapSign, D4Sign)</td></tr>
+  <tr><td>WhatsApp oficial (Meta)</td><td>Avisos e assistente por WhatsApp</td></tr>
+  <tr><td>Advogado</td><td>LGPD, aluguel por temporada em condomínio, CRECI e guarda de dinheiro de terceiros</td></tr>
+  <tr><td>Dev revisor (meio período)</td><td>Revisar a segurança antes de dinheiro real passar pela plataforma</td></tr>
+</table>
+
+<h2>9. Riscos e cuidados</h2>
+<ul>
+  <li><strong>Dinheiro de terceiros:</strong> usar as subcontas ou o split da Lytex para não precisar de autorização do Banco Central.</li>
+  <li><strong>Aluguel por temporada:</strong> o condomínio pode proibir, se a convenção prever. O síndico liga ou desliga a função.</li>
+  <li><strong>Intermediação de aluguel:</strong> exige parceria com corretor ou imobiliária credenciados no CRECI.</li>
+  <li><strong>LGPD:</strong> a plataforma guarda dados pessoais e financeiros; precisa de política de privacidade e de consentimento claros.</li>
+  <li><strong>Mercado competitivo:</strong> Superlógica, uCondo, TownSq, QuintoAndar e outros. A vantagem está em juntar tudo e em ser simples.</li>
+</ul>
+
+<h2>10. Próximos passos</h2>
+<ul>
+  <li>Começar a construção pelo bloco 1 (Fundação).</li>
+  <li>Encontrar um condomínio piloto.</li>
+  <li>Reunião com a Lytex.</li>
+  <li>Consulta com advogado.</li>
+  <li>Definir o nome final e a identidade visual.</li>
+</ul>
+
+<p class="rodape">Documento de planejamento interno. Prazos e valores são estimativas. Concorrentes e informações de mercado vêm de pesquisa pública em novembro de 2026.</p>
+</section>
+
+</body>
+</html>
