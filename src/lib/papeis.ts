@@ -1,5 +1,6 @@
 // Quem está logado, quais papéis tem e para qual página deve ir.
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 export type Papel = "produtor" | "revendedor" | "admin";
@@ -15,6 +16,9 @@ export type UsuarioAtual = {
 // Os papéis vêm do BANCO (tabela user_roles, protegida por RLS), nunca do
 // navegador — assim ninguém se faz de admin mexendo no cookie.
 export async function usuarioAtual(): Promise<UsuarioAtual | null> {
+  // Marca a página como "do momento do pedido": a validação da sessão usa a
+  // hora atual (expiração do token), o que o Next não aceita em pré-renderização.
+  await connection();
   const supabase = await criarClienteServidor();
   const { data } = await supabase.auth.getClaims();
   const id = data?.claims?.sub;

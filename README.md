@@ -79,6 +79,7 @@ npm run build                  # checa tipos e compila
    `supabase/migrations/`:
    1. `20261116000001_fundacao.sql`
    2. `20261117000001_lista_espera.sql`
+   3. `20261118000001_area_produtor.sql`
 
    (ou, de uma vez: `npx supabase link --project-ref SEU_ID && npx supabase db push`)
 3. **Autenticação** (Authentication → URL Configuration):
@@ -108,8 +109,37 @@ npm run build                  # checa tipos e compila
       próprio, confirmações de cadastro e links mágicos deixam de chegar.
       Configure também os textos dos e-mails em português (passo 6 acima).
 - [ ] Dados reais em `src/config/empresa.ts` (rodapé legal).
+- [ ] Contrato do Produtor (`/contrato-produtor`) revisado por advogado; ao mudar o texto,
+      trocar `CONTRATO_PRODUTOR_VERSAO` em `src/config/empresa.ts`.
 - [ ] SVGs oficiais em `public/brand/`.
 - [ ] Termos de Uso e Política de Privacidade revisados por advogado.
+
+---
+
+## Melhorias previstas para o beta
+
+- **Recuperar o link de indicação por e-mail** (para quem perdeu a página de
+  obrigado). Só depois do SMTP próprio configurado.
+- Consulta automática do CNPJ (situação na Receita) no cadastro do produtor —
+  hoje o admin confere manualmente pelo link oficial da Receita.
+- Preenchimento do endereço pelo CEP.
+
+---
+
+## Área do produtor (Etapa 3)
+
+- Cadastro em 5 passos (`/painel/produtor/cadastro`): empresa (CNPJ alfanumérico
+  aceito), endereço de envio, documentos em bucket **privado**, aceite do
+  Contrato do Produtor (versão + data do servidor) e envio para análise.
+- Status do produtor: rascunho → em análise → aprovado / recusado (motivo visível).
+- Itens físicos e digitais, 1 a 6 fotos comprimidas no celular, comissão de
+  10% a 70%, declaração "emito nota fiscal de todas as vendas" registrada.
+  Mudar preço, comissão ou descrição de item aprovado → volta para análise.
+- Alerta de palavras proibidas: marca o item para revisão (não bloqueia). Os
+  termos ficam na tabela `palavras_proibidas` (editar pelo SQL Editor).
+- Admin: `/admin/produtores` e `/admin/itens`, com documentos (links
+  temporários), aprovação/recusa com motivo e histórico (`audit_log`).
+  O id do recebedor na Lytex é preenchido manualmente pelo admin nesta fase.
 
 ---
 

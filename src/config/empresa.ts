@@ -26,3 +26,7 @@ export const EMPRESA = {
 // no banco com a versão vigente.
 // =========================================================================
 export const TERMOS_VERSAO = "2026-11-16";
+
+// Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
+// troque a versão: o produtor precisará aceitar de novo.
+export const CONTRATO_PRODUTOR_VERSAO = "2026-11-18";

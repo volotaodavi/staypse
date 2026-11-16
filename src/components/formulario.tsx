@@ -1,6 +1,10 @@
 "use client";
 // Peças de formulário reutilizadas em login, cadastro e painel.
+import { createContext, useActionState, useContext, useTransition } from "react";
 import { useFormStatus } from "react-dom";
+
+// "Enviando..." para formulários que usam <FormAcao> (sem action no <form>)
+const EnviandoContexto = createContext(false);
 
 // Resultado que toda ação de formulário devolve para a tela.
 // "valores": o que a pessoa digitou (NUNCA a senha). O React 19 limpa o
@@ -31,11 +35,18 @@ export function Campo({
 export function BotaoEnviar({
   children,
   variante = "destaque",
+  name,
+  value,
 }: {
   children: React.ReactNode;
   variante?: "destaque" | "base";
+  // para formulários com mais de um botão (ex.: "Salvar rascunho" / "Enviar")
+  name?: string;
+  value?: string;
 }) {
-  const { pending } = useFormStatus();
+  const { pending: pendenteForm } = useFormStatus();
+  const pendenteFormAcao = useContext(EnviandoContexto);
+  const pending = pendenteForm || pendenteFormAcao;
   const cores =
     variante === "destaque"
       ? "bg-ciano text-petroleo hover:brightness-95"
@@ -43,6 +54,8 @@ export function BotaoEnviar({
   return (
     <button
       type="submit"
+      name={name}
+      value={value}
       disabled={pending}
       className={`w-full rounded-full px-6 py-3 font-medium transition disabled:opacity-60 ${cores}`}
     >
@@ -64,5 +77,38 @@ export function Aviso({ estado }: { estado: EstadoFormulario }) {
     >
       {estado.erro ?? estado.sucesso}
     </p>
+  );
+}
+
+// Formulário que chama uma ação do servidor SEM apagar os campos depois.
+// (o React 19 limpa formulários que usam action={...}; aqui enviamos "na mão")
+// Também informa qual botão foi tocado (ex.: intencao=rascunho/analise).
+export function FormAcao({
+  acao,
+  children,
+  className = "flex flex-col gap-4",
+}: {
+  acao: (anterior: EstadoFormulario, dados: FormData) => Promise<EstadoFormulario>;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [estado, despachar] = useActionState(acao, undefined);
+  const [enviando, iniciar] = useTransition();
+
+  return (
+    <form
+      className={className}
+      onSubmit={(evento) => {
+        evento.preventDefault();
+        const botao = (evento.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+        const dados = new FormData(evento.currentTarget, botao);
+        iniciar(() => despachar(dados));
+      }}
+    >
+      <EnviandoContexto value={enviando}>
+        {children}
+        <Aviso estado={estado} />
+      </EnviandoContexto>
+    </form>
   );
 }

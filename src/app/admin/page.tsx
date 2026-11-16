@@ -19,7 +19,7 @@ export default async function Admin() {
 
   const [usuarios, produtoresPendentes, itensEmAnalise, listaEspera] = await Promise.all([
     contar("profiles"),
-    contar("producers").eq("status_verificacao", "pendente"),
+    contar("producers").eq("status_verificacao", "em_analise"),
     contar("items").eq("status_aprovacao", "em_analise"),
     contar("waitlist"),
   ]);
@@ -43,12 +43,21 @@ export default async function Admin() {
           </div>
         ))}
       </div>
-      <Link
-        href="/admin/lista"
-        className="mt-6 inline-block rounded-full bg-ciano px-6 py-3 font-medium text-petroleo hover:brightness-95"
-      >
-        Ver lista de espera →
-      </Link>
+      <nav className="mt-6 flex flex-col gap-3 sm:flex-row" aria-label="Áreas do admin">
+        {[
+          ["/admin/produtores", "Analisar produtores →"],
+          ["/admin/itens", "Analisar itens →"],
+          ["/admin/lista", "Lista de espera →"],
+        ].map(([href, rotulo]) => (
+          <Link
+            key={href}
+            href={href}
+            className="rounded-full bg-ciano px-6 py-3 text-center font-medium text-petroleo hover:brightness-95"
+          >
+            {rotulo}
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }

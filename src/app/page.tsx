@@ -23,7 +23,7 @@ export default function Inicio() {
             <h1 className="text-[2.1rem] leading-[1.1] sm:text-5xl">
               Plataforma de afiliados para produtos físicos e digitais
             </h1>
-            <p className="text-lg text-gelo/85">Indique, venda e receba direto na plataforma.</p>
+            <p className="text-lg text-gelo/85">Indique, venda e receba sua parte no split automático.</p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <a
                 href="#revender"

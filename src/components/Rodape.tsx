@@ -32,6 +32,9 @@ export function Rodape() {
           <Link href="/privacidade#canal-lgpd" className="hover:text-ciano">
             Canal de privacidade (LGPD)
           </Link>
+          <Link href="/produtos-proibidos" className="hover:text-ciano">
+            Produtos proibidos
+          </Link>
         </nav>
       </div>
       <p className="border-t border-gelo/10 px-4 py-4 text-center text-xs text-gelo/60">

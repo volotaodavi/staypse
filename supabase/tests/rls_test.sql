@@ -116,7 +116,7 @@ select teste.bloqueia($$insert into public.user_roles values ('00000000-0000-000
                       'usuário não mexe em papéis de outro');
 
 -- =========================================================================
--- 3. Produtor (REGRA 2)
+-- 3. Produtor (REGRA 2) — cadastro em passos + decisão do admin (Etapa 3)
 -- =========================================================================
 :comoD
 select teste.bloqueia($$insert into public.producers (user_id, razao_social, cnpj)
@@ -130,25 +130,73 @@ select teste.bloqueia($$insert into public.producers (user_id, razao_social, cnp
 select teste.bloqueia($$insert into public.producers (user_id, razao_social, cnpj, status_verificacao)
                         values ('00000000-0000-0000-0000-00000000000a', 'Ana ME', '11222333000181', 'aprovado')$$,
                       'produtor não se cadastra já aprovado');
-insert into public.producers (user_id, razao_social, cnpj)
-  values ('00000000-0000-0000-0000-00000000000a', 'Ana Cosméticos ME', '11222333000181');
-select teste.ok((select status_verificacao from public.producers) = 'pendente', 'produtor começa pendente');
-select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado'$$,
-                      'produtor não se aprova');
-select teste.bloqueia($$update public.producers set lytex_recebedor_id = 'x'$$,
-                      'produtor não altera id da Lytex');
+insert into public.producers (user_id, razao_social, cnpj, inscricao_estadual, whatsapp, email_contato)
+  values ('00000000-0000-0000-0000-00000000000a', 'Ana Cosméticos ME', '11222333000181', 'ISENTO',
+          '81998765432', 'contato@anacosmeticos.com');
+select teste.ok((select status_verificacao from public.producers) = 'rascunho', 'produtor começa em rascunho');
+select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado'$$, 'produtor não se aprova');
+select teste.bloqueia($$update public.producers set lytex_recebedor_id = 'x'$$, 'produtor não altera id da Lytex');
+select teste.bloqueia($$update public.producers set inscricao_estadual = '12.345'$$, 'inscrição estadual com pontuação recusada');
+select teste.bloqueia($$update public.producers set documento_path = '00000000-0000-0000-0000-00000000000b/doc.pdf'$$,
+                      'documento precisa estar na pasta do próprio produtor');
+
+-- envio para análise: precisa de tudo
+select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem aceitar o Contrato do Produtor não envia');
+insert into public.terms_acceptances (user_id, documento, versao)
+  values ('00000000-0000-0000-0000-00000000000a', 'termos_produtor', '2026-11-18');
+select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem endereço e documentos não envia');
+update public.producers set cep = '50030230', logradouro = 'Rua do Bom Jesus', numero = '100', bairro = 'Recife',
+       cidade = 'Recife', uf = 'PE',
+       documento_path = '00000000-0000-0000-0000-00000000000a/cartao-cnpj.pdf';
+select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem documento do responsável não envia');
+update public.producers set documento_responsavel_path = '00000000-0000-0000-0000-00000000000a/rg.jpg';
+select public.enviar_produtor_para_analise();
+select teste.ok((select status_verificacao from public.producers) = 'em_analise', 'cadastro completo vai para análise');
+select teste.ok(teste.linhas($$update public.producers set razao_social = 'Outro'$$) = 0,
+                'em análise, o produtor não edita o cadastro');
 
 :comoB
 select teste.ok((select count(*) from public.producers) = 0, 'outro usuário não vê dados do produtor');
+select teste.bloqueia($$select public.admin_decidir_produtor((select id from public.producers limit 1), true, null, true)$$,
+                      'não admin não decide');
+select teste.ok((select count(*) from public.audit_log) = 0, 'não admin não lê o log de auditoria');
 
--- aprovação pelo servidor
 :comoServidor
 select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado', aprovado_em = now()$$,
-                      'aprovação sem documento e sem CNPJ ativo verificado');
-update public.producers set status_verificacao = 'aprovado', aprovado_em = now(),
-       documento_path = '00000000-0000-0000-0000-00000000000a/cartao-cnpj.pdf',
-       cnpj_ativo_verificado_em = now();
-select teste.ok(true, 'aprovação com documento + CNPJ ativo verificado');
+                      'aprovado sem CNPJ ativo confirmado é recusado pelo banco');
+
+-- admin recusa com motivo
+:comoC
+create temp table prod as select id from public.producers;
+grant select on prod to authenticated, anon, service_role;
+select teste.bloqueia($$select public.admin_decidir_produtor((select id from prod), false, '')$$,
+                      'recusa sem motivo não é aceita');
+select public.admin_decidir_produtor((select id from prod), false, 'Cartão CNPJ ilegível, envie de novo.');
+
+:comoA
+select teste.ok((select status_verificacao = 'recusado' and motivo_rejeicao = 'Cartão CNPJ ilegível, envie de novo.'
+                 from public.producers), 'produtor vê a recusa e o motivo');
+update public.producers set documento_path = '00000000-0000-0000-0000-00000000000a/cartao-cnpj-v2.pdf';
+select public.enviar_produtor_para_analise();
+select teste.ok((select status_verificacao = 'em_analise' and motivo_rejeicao is null from public.producers),
+                'depois de corrigir, reenvia para análise');
+
+-- admin aprova: precisa confirmar o CNPJ ativo
+:comoC
+select teste.bloqueia($$select public.admin_decidir_produtor((select id from prod), true)$$,
+                      'aprovação sem confirmar CNPJ ativo é recusada');
+select public.admin_decidir_produtor((select id from prod), true, null, true);
+select teste.ok((select status_verificacao = 'aprovado' and cnpj_ativo_verificado_em is not null
+                        and aprovado_por = '00000000-0000-0000-0000-00000000000c'
+                 from public.producers), 'admin aprova com CNPJ ativo confirmado');
+select public.admin_definir_recebedor_lytex((select id from prod), 'rec_teste_123');
+select teste.ok((select lytex_recebedor_id from public.producers) = 'rec_teste_123', 'admin preenche id do recebedor Lytex');
+select teste.ok((select string_agg(acao, ',' order by id) from public.audit_log where entidade = 'producer')
+                = 'enviado_para_analise,produtor_recusado,enviado_para_analise,produtor_aprovado,recebedor_lytex_definido',
+                'log de auditoria registra cada passo');
+select teste.ok((select bool_and(ator_id is not null) from public.audit_log), 'log guarda quem fez cada ação');
+select teste.bloqueia($$update public.audit_log set acao = 'x'$$, 'nem o admin altera o log');
+select teste.bloqueia($$delete from public.audit_log$$, 'nem o admin apaga o log');
 
 :comoA
 select teste.ok(teste.linhas($$update public.producers set razao_social = 'Outro Nome'$$) = 0,
@@ -164,20 +212,37 @@ select teste.bloqueia($$insert into public.items (producer_id, nome, preco_centa
 select teste.bloqueia($$insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
                         select id, 'Sérum', 8990, 'ingresso', 20 from public.producers$$,
                       'tipo ingresso ainda não liberado');
+select teste.bloqueia($$insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
+                        select id, 'Sérum', 8990, 'fisico', 9 from public.producers$$,
+                      'comissão abaixo de 10% recusada');
+select teste.bloqueia($$insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
+                        select id, 'Sérum', 8990, 'fisico', 71 from public.producers$$,
+                      'comissão acima de 70% recusada');
 insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
   select id, 'Sérum Facial', 8990, 'fisico', 20 from public.producers;
 select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise'$$,
-                      'item físico sem peso/medidas/estoque não vai para análise');
-update public.items set status_aprovacao = 'em_analise', peso_gramas = 150,
-       altura_cm = 12, largura_cm = 4, comprimento_cm = 4, estoque = 30;
+                      'item sem fotos/descrição/medidas não vai para análise');
+update public.items set descricao = 'Sérum facial com vitamina C, 30 ml.', categoria = 'beleza',
+       fotos = array['00000000-0000-0000-0000-00000000000a/serum-1.webp'],
+       peso_gramas = 150, altura_cm = 12, largura_cm = 4, comprimento_cm = 4, estoque = 30, prazo_postagem_dias = 2;
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise'$$,
+                      'sem a declaração "emito nota fiscal" não vai para análise');
+select teste.bloqueia($$update public.items set declaracao_nf_em = '2020-01-01'$$,
+                      'data da declaração de NF não vem do produtor');
+update public.items set declaracao_nf = true;
+select teste.ok((select declaracao_nf_em is not null from public.items), 'declaração de NF registrada com data do servidor');
+select teste.bloqueia($$update public.items set fotos = array['a','b','c','d','e','f','g']$$, 'mais de 6 fotos recusado');
+update public.items set status_aprovacao = 'em_analise';
 select teste.ok(true, 'item físico completo vai para análise');
 select teste.bloqueia($$update public.items set status_aprovacao = 'aprovado'$$, 'produtor não aprova item');
 
 :comoAnon
 select teste.ok((select count(*) from public.items) = 0, 'visitante não vê item em análise');
 
-:comoServidor
-update public.items set status_aprovacao = 'aprovado', aprovado_em = now();
+:comoC
+create temp table serum as select id from public.items;
+grant select on serum to authenticated, anon, service_role;
+select public.admin_decidir_item((select id from serum), true);
 
 :comoAnon
 select teste.ok((select count(*) from public.items) = 1, 'visitante vê item aprovado de produtor aprovado');
@@ -187,15 +252,18 @@ update public.items set status_aprovacao = 'pausado';
 select teste.ok((select status_aprovacao from public.items) = 'pausado', 'produtor pausa item aprovado');
 update public.items set status_aprovacao = 'aprovado';
 select teste.ok((select status_aprovacao from public.items) = 'aprovado', 'produtor despausa sem nova análise');
+update public.items set estoque = 25;
+select teste.ok((select status_aprovacao from public.items) = 'aprovado', 'mudar só o estoque não pede nova análise');
 update public.items set preco_centavos = 9990;
 select teste.ok((select status_aprovacao from public.items) = 'em_analise',
                 'mudou o preço → item volta para análise');
 select teste.bloqueia($$update public.items set status_aprovacao = 'aprovado'$$,
                       'depois de editar, produtor não reaprova sozinho');
 
-:comoServidor
-update public.items set status_aprovacao = 'aprovado', aprovado_em = now();
+:comoC
+select public.admin_decidir_item((select id from serum), true);
 -- um segundo item, em rascunho
+:comoServidor
 insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
   select id, 'E-book de Skincare', 2990, 'digital', 40 from public.producers;
 
@@ -479,6 +547,89 @@ select teste.ok((select indicacoes from public.waitlist_com_indicacoes where nom
 select teste.bloqueia($$insert into public.storefronts (revendedor_id, slug)
                         values ('00000000-0000-0000-0000-00000000000a', 'lista')$$,
                       'slug "lista" (rota da lista de espera) é reservado');
+
+-- =========================================================================
+-- 11. Área do produtor (Etapa 3): digital, alertas, recusa, arquivos
+-- =========================================================================
+:comoA
+-- item digital
+insert into public.items (producer_id, nome, descricao, preco_centavos, tipo, comissao_percentual, categoria,
+                          fotos, tipo_digital, declaracao_nf, status_aprovacao)
+  select id, 'Curso de Maquiagem', 'Curso completo em vídeo, 20 aulas.', 19700, 'digital', 50, 'cursos_digitais',
+         array['00000000-0000-0000-0000-00000000000a/curso.webp'], 'curso', true, 'rascunho'
+  from public.producers;
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise' where nome = 'Curso de Maquiagem'$$,
+                      'digital sem arquivo/link e instruções não vai para análise');
+select teste.bloqueia($$update public.items set link_acesso = 'http://curso.com' where nome = 'Curso de Maquiagem'$$,
+                      'link de acesso sem https recusado');
+select teste.bloqueia($$update public.items set arquivo_path = '00000000-0000-0000-0000-00000000000b/x.pdf'
+                        where nome = 'Curso de Maquiagem'$$,
+                      'arquivo digital precisa estar na pasta do próprio produtor');
+update public.items set link_acesso = 'https://cursos.exemplo.com/maquiagem',
+       instrucoes_pos_compra = 'Você receberá o acesso por e-mail em até 24h.', status_aprovacao = 'em_analise'
+  where nome = 'Curso de Maquiagem';
+select teste.ok((select status_aprovacao from public.items where nome = 'Curso de Maquiagem') = 'em_analise',
+                'item digital completo vai para análise');
+
+-- alerta de palavras proibidas (marca, não bloqueia)
+insert into public.items (producer_id, nome, descricao, preco_centavos, tipo, comissao_percentual)
+  select id, 'Chá Emagrecedor', 'Remédio natural, cura em 7 dias. Fique rico revendendo!', 4990, 'fisico', 30
+  from public.producers;
+select teste.ok((select alerta_palavras from public.items where nome = 'Chá Emagrecedor')
+                = array['cura','emagrecedor','fique rico','remedio'],
+                'alerta encontra termos proibidos sem diferenciar acento e maiúsculas');
+select teste.ok((select alerta_palavras = '{}' from public.items where nome = 'Sérum Facial'),
+                'item normal não recebe alerta');
+update public.items set descricao = 'Organizador para armário de cozinha.' where nome = 'Chá Emagrecedor';
+select teste.ok((select alerta_palavras from public.items where nome = 'Chá Emagrecedor') = array['emagrecedor'],
+                'alerta é recalculado a cada edição ("armário" não dispara "arma")');
+
+-- admin recusa item com motivo, produtor vê e reenvia
+:comoC
+select teste.bloqueia($$select public.admin_decidir_item((select id from public.items where nome = 'Curso de Maquiagem'), false, 'ruim')$$,
+                      'recusa de item com motivo curto demais');
+select public.admin_decidir_item((select id from public.items where nome = 'Curso de Maquiagem'), false,
+                                 'Inclua o conteúdo das aulas na descrição.');
+select teste.ok((select count(*) from public.audit_log where entidade = 'item' and acao = 'item_recusado') = 1,
+                'recusa do item registrada no log');
+:comoA
+select teste.ok((select motivo_rejeicao from public.items where nome = 'Curso de Maquiagem')
+                = 'Inclua o conteúdo das aulas na descrição.', 'produtor vê o motivo da recusa do item');
+update public.items set descricao = 'Curso em vídeo: pele, olhos e boca. 20 aulas.', status_aprovacao = 'em_analise'
+  where nome = 'Curso de Maquiagem';
+select teste.ok((select status_aprovacao = 'em_analise' and motivo_rejeicao is null
+                 from public.items where nome = 'Curso de Maquiagem'), 'item corrigido volta para análise');
+
+-- item aprovado exige produtor aprovado (vale até para o servidor)
+:comoServidor
+insert into public.user_roles values ('00000000-0000-0000-0000-00000000000d', 'produtor');
+insert into public.producers (user_id, razao_social, cnpj)
+  values ('00000000-0000-0000-0000-00000000000d', 'Davi ME', '12ABC34501DE35');
+select teste.ok((select status_verificacao from public.producers where cnpj = '12ABC34501DE35') = 'rascunho',
+                'CNPJ alfanumérico aceito no cadastro do produtor');
+insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
+  select id, 'Produto do Davi', 1000, 'digital', 10 from public.producers where cnpj = '12ABC34501DE35';
+select teste.bloqueia($$update public.items set status_aprovacao = 'aprovado', aprovado_em = now()
+                        where nome = 'Produto do Davi'$$,
+                      'item não fica aprovado se o produtor não estiver aprovado');
+
+-- arquivos privados
+reset role;
+select teste.ok((select bool_and(not public) from storage.buckets
+                 where id in ('documentos-produtores', 'arquivos-digitais')),
+                'buckets de documentos e arquivos digitais são privados');
+:comoA
+insert into storage.objects (bucket_id, name) values ('arquivos-digitais', '00000000-0000-0000-0000-00000000000a/ebook.pdf');
+:comoAnon
+select teste.ok((select count(*) from storage.objects
+                 where bucket_id in ('documentos-produtores', 'arquivos-digitais')) = 0,
+                'visitante não vê documentos nem arquivos digitais');
+:comoB
+select teste.ok((select count(*) from storage.objects where bucket_id = 'arquivos-digitais') = 0,
+                'outro usuário não vê o arquivo digital do produtor');
+:comoC
+select teste.ok((select count(*) from storage.objects where bucket_id = 'arquivos-digitais') = 1,
+                'admin vê o arquivo digital para análise');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
