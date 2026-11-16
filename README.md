@@ -65,7 +65,7 @@ E-mails de teste (confirmação e link mágico) chegam em http://127.0.0.1:54324
 ### Testes
 
 ```bash
-bash supabase/tests/rodar.sh   # 78 testes das regras do banco (RLS, permissões, conformidade)
+npm run test:db               # testes das regras do banco (RLS, permissões, conformidade)
 npm run build                  # checa tipos e compila
 ```
 
@@ -75,16 +75,20 @@ npm run build                  # checa tipos e compila
 
 1. **Criar o projeto:** supabase.com → New project → nome `staypse`,
    região **South America (São Paulo)**. Guarde a senha do banco.
-2. **Criar o banco:** SQL Editor → cole o arquivo
-   `supabase/migrations/20261116000001_fundacao.sql` → Run.
-   (ou: `npx supabase link --project-ref SEU_ID && npx supabase db push`)
+2. **Criar o banco:** SQL Editor → cole e rode, **nesta ordem**, cada arquivo de
+   `supabase/migrations/`:
+   1. `20261116000001_fundacao.sql`
+   2. `20261117000001_lista_espera.sql`
+
+   (ou, de uma vez: `npx supabase link --project-ref SEU_ID && npx supabase db push`)
 3. **Autenticação** (Authentication → URL Configuration):
    - Site URL: `https://staypse.com.br` (enquanto não tiver domínio, a URL da Vercel)
    - Redirect URLs: `https://staypse.com.br/**`, `http://localhost:3000/**`
    - Em Authentication → Providers → Email: deixe **Confirm email** ligado e
      senha mínima de **8** caracteres.
-4. **Variáveis:** Project Settings → API → copie a URL e a *Publishable key* para
-   o `.env.local` (e depois para a Vercel).
+4. **Variáveis:** Project Settings → API → copie a URL, a *Publishable key* e a
+   *Secret key* para o `.env.local` (e depois para a Vercel). Gere o
+   `HASH_IP_SEGREDO` com `openssl rand -hex 32`. Veja `.env.example`.
 5. **Tornar-se admin:** crie sua conta pelo site e rode no SQL Editor:
    ```sql
    insert into public.user_roles (user_id, papel)
@@ -94,5 +98,28 @@ npm run build                  # checa tipos e compila
    Para o link funcionar mesmo se aberto em outro navegador/celular, use no
    botão dos templates *Confirm signup* e *Magic Link*:
    `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=email&proximo=/painel`
-7. **SMTP próprio:** o e-mail padrão do Supabase tem limite baixo de envios por
-   hora. Antes de abrir para o público, configure um SMTP (Authentication → SMTP).
+
+---
+
+## ⚠️ Obrigatório antes de abrir o beta ao público
+
+- [ ] **E-mail próprio (SMTP) no Supabase** — Authentication → SMTP Settings.
+      O envio padrão do Supabase tem limite muito baixo por hora: sem SMTP
+      próprio, confirmações de cadastro e links mágicos deixam de chegar.
+      Configure também os textos dos e-mails em português (passo 6 acima).
+- [ ] Dados reais em `src/config/empresa.ts` (rodapé legal).
+- [ ] SVGs oficiais em `public/brand/`.
+- [ ] Termos de Uso e Política de Privacidade revisados por advogado.
+
+---
+
+## Lista de espera (Etapa 2)
+
+- Página inicial `staypse.com.br` com formulários de revendedor e produtor.
+- Cada inscrito recebe `staypse.com.br/?ref=CODIGO` e acompanha a posição em
+  `/lista/CODIGO`. Quem indica mais entra primeiro no acesso antecipado
+  (sem sorteio e sem prêmio em dinheiro). Só contam indicações vindas de
+  outra conexão (evita autoindicação).
+- Anti-spam: honeypot + máximo de 5 inscrições por IP por hora.
+- Admin em `/admin/lista`: filtros, contadores, status do contato com
+  produtores e exportação CSV (abre direto no Excel).

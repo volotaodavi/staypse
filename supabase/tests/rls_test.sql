@@ -271,7 +271,22 @@ select teste.bloqueia($$insert into public.orders (producer_id, comprador_nome, 
                       'pedido sem resumo aceito (REGRA 4) recusado');
 
 :comoB
-select teste.ok((select count(*) from public.orders) = 1, 'revendedor vê a própria venda');
+-- LGPD (Etapa 2): revendedor NÃO vê o pedido com dados do comprador...
+select teste.ok((select count(*) from public.orders) = 0, 'LGPD: revendedor não lê o pedido (dados do comprador)');
+select teste.ok((select count(*) from public.order_items) = 0, 'LGPD: revendedor não lê itens do pedido direto');
+-- ...mas vê a venda resumida: data, produto, valor, comissão e status
+select teste.ok((select count(*) from public.minhas_vendas()) = 1, 'revendedor vê a própria venda em minhas_vendas()');
+select teste.ok((select produto = 'Sérum Facial' and valor_centavos = 9990 and comissao_centavos = 1998
+                        and status = 'aguardando_pagamento'
+                 from public.minhas_vendas()),
+                'minhas_vendas: produto, valor, comissão (20%) e status corretos');
+select teste.ok(not exists (
+                  select 1
+                  from unnest((select proargnames from pg_proc where proname = 'minhas_vendas')) as coluna
+                  where coluna ilike any (array['%comprador%','%email%','%telefone%','%endereco%','%whatsapp%'])),
+                'LGPD: minhas_vendas não devolve nome/e-mail/telefone/endereço do comprador');
+:comoD
+select teste.ok((select count(*) from public.minhas_vendas()) = 0, 'outro usuário não vê vendas alheias');
 :comoA
 select teste.ok((select count(*) from public.orders) = 1, 'produtor vê o pedido do seu produto');
 :comoD
@@ -331,8 +346,14 @@ insert into public.terms_acceptances (user_id, documento, versao)
 select teste.ok(true, 'usuário registra novo aceite');
 
 :comoAnon
-insert into public.waitlist (email, interesse) values ('visitante@teste.com', 'revendedor');
-select teste.ok(true, 'visitante entra na lista de espera');
+-- Etapa 2: visitante não grava direto; inscrição só pelo servidor (seção 10)
+select teste.bloqueia($$insert into public.waitlist (email, interesse) values ('visitante@teste.com', 'revendedor')$$,
+                      'visitante não grava direto na lista de espera');
+:comoServidor
+select public.inscrever_na_lista(
+  '{"email":"visitante@teste.com","nome":"Visitante","interesse":"revendedor","whatsapp":"11987654321",
+    "cidade":"Recife","uf":"PE","nichos":["beleza"],"consentimento_versao":"2026-11-16"}', 'ip-visitante');
+:comoAnon
 select teste.bloqueia($$select * from public.waitlist$$, 'visitante não lê a lista de espera');
 select teste.bloqueia($$insert into public.clicks (storefront_id) select id from public.storefronts$$,
                       'visitante não grava clique direto (só o servidor)');
@@ -356,6 +377,108 @@ select teste.bloqueia($$insert into storage.objects (bucket_id, name)
 select teste.ok((select count(*) from storage.objects) = 0, 'outro usuário não vê documento do produtor');
 :comoC
 select teste.ok((select count(*) from storage.objects) = 1, 'admin vê documentos de produtores');
+
+-- =========================================================================
+-- 10. Lista de espera com indicação (Etapa 2)
+-- =========================================================================
+\set REV '{"interesse":"revendedor","whatsapp":"81998765432","cidade":"Recife","uf":"PE","nichos":["beleza","moda"],"consentimento_versao":"2026-11-16"'
+\set PROD '{"interesse":"produtor","whatsapp":"1133334444","empresa":"Doces da Vó","tipo_produto":"fisico","o_que_vende":"Doces caseiros","consentimento_versao":"2026-11-16"'
+
+-- inscrição que DEVE ser recusada (mostra o motivo, para conferir que é o certo)
+reset role;
+create function teste.inscricao_recusada(p jsonb, ip text, msg text) returns void language plpgsql as $$
+begin
+  begin
+    perform public.inscrever_na_lista(p, ip);
+  exception when others then
+    raise notice 'ok: % (bloqueado: %)', msg, sqlerrm;
+    return;
+  end;
+  raise exception 'FALHOU: % — a inscrição passou e não devia', msg;
+end $$;
+grant execute on function teste.inscricao_recusada(jsonb, text, text) to service_role;
+
+:comoAnon
+select teste.bloqueia($$select public.inscrever_na_lista('{}', 'x')$$,
+                      'visitante não chama a função de inscrição direto (só o servidor)');
+select teste.bloqueia($$select * from public.waitlist_com_indicacoes$$, 'visitante não lê a visão com indicações');
+
+:comoServidor
+-- inscrições válidas
+create temp table codigos (quem text, codigo text);
+grant all on codigos to anon, authenticated, service_role;
+insert into codigos select 'rita', public.inscrever_na_lista((:'REV' || ',"email":"Rita@Teste.com ","nome":"Rita"}')::jsonb, 'ip-rita');
+select teste.ok((select email from public.waitlist where nome = 'Rita') = 'rita@teste.com', 'e-mail salvo em minúsculas e sem espaços');
+select teste.ok((select codigo ~ '^[0-9a-f]{8}$' from codigos where quem = 'rita'), 'inscrito recebe código de indicação de 8 caracteres');
+select teste.ok((select consentimento_versao = '2026-11-16' and consentimento_em is not null
+                 from public.waitlist where nome = 'Rita'), 'consentimento gravado com data e versão');
+
+-- validações
+select teste.inscricao_recusada((:'REV' || ',"email":"x1@teste.com","nome":"Xis"}')::jsonb || '{"consentimento_versao":""}', 'ip-x',
+                                'sem consentimento LGPD não inscreve');
+select teste.inscricao_recusada((:'REV' || ',"email":"x2@teste.com","nome":"Xis"}')::jsonb || '{"nichos":[]}', 'ip-x',
+                                'revendedor sem nicho não inscreve');
+select teste.inscricao_recusada((:'REV' || ',"email":"x3@teste.com","nome":"Xis"}')::jsonb || '{"nichos":["armas"]}', 'ip-x',
+                                'nicho fora da lista recusado');
+select teste.inscricao_recusada((:'REV' || ',"email":"x4@teste.com","nome":"Xis"}')::jsonb || '{"whatsapp":"123"}', 'ip-x',
+                                'WhatsApp inválido recusado');
+select teste.inscricao_recusada((:'PROD' || ',"email":"x5@teste.com","nome":"Xis"}')::jsonb || '{"empresa":""}', 'ip-x',
+                                'produtor sem empresa não inscreve');
+select teste.inscricao_recusada((:'PROD' || ',"email":"x6@teste.com","nome":"Xis"}')::jsonb || '{"cnpj":"11222333000182"}', 'ip-x',
+                                'CNPJ informado precisa ser válido');
+select teste.inscricao_recusada((:'REV' || ',"email":"rita@teste.com","nome":"Rita Dois"}')::jsonb, 'ip-x',
+                                'e-mail repetido não inscreve de novo');
+insert into codigos select 'doces', public.inscrever_na_lista((:'PROD' || ',"email":"doces@teste.com","nome":"Dona Ana"}')::jsonb, 'ip-doces');
+select teste.ok(true, 'produtor sem CNPJ inscreve (CNPJ opcional nesta fase)');
+
+-- indicação: Rita indica duas pessoas de outros IPs e "se indica" uma vez do próprio IP
+select public.inscrever_na_lista((:'REV' || ',"email":"amiga1@teste.com","nome":"Amiga Um","ref":"' || (select codigo from codigos where quem = 'rita') || '"}')::jsonb, 'ip-amiga1');
+select public.inscrever_na_lista((:'REV' || ',"email":"amiga2@teste.com","nome":"Amiga Dois","ref":"' || (select codigo from codigos where quem = 'rita') || '"}')::jsonb, 'ip-amiga2');
+select public.inscrever_na_lista((:'REV' || ',"email":"rita.fake@teste.com","nome":"Rita Fake","ref":"' || (select codigo from codigos where quem = 'rita') || '"}')::jsonb, 'ip-rita');
+select public.inscrever_na_lista((:'REV' || ',"email":"semref@teste.com","nome":"Sem Ref","ref":"naoexiste"}')::jsonb, 'ip-semref');
+select teste.ok((select indicado_por is null from public.waitlist where email = 'semref@teste.com'),
+                'código de indicação inexistente é ignorado');
+
+-- posição: pública, sem dados pessoais
+:comoAnon
+select teste.ok((select indicacoes from public.posicao_na_lista((select codigo from codigos where quem = 'rita'))) = 2,
+                'indicação do mesmo IP (autoindicação) não conta: Rita tem 2, não 3');
+select teste.ok((select posicao from public.posicao_na_lista((select codigo from codigos where quem = 'rita'))) = 1,
+                'quem indica mais fica na frente da fila (Rita passa o visitante que chegou antes)');
+select teste.ok((select total from public.posicao_na_lista((select codigo from codigos where quem = 'rita'))) = 6,
+                'fila separada por tipo: 6 revendedores');
+select teste.ok((select posicao = 1 and total = 1 and interesse = 'produtor'
+                 from public.posicao_na_lista((select codigo from codigos where quem = 'doces'))),
+                'produtor tem a própria fila');
+select teste.ok((select count(*) from public.posicao_na_lista('naoexiste')) = 0, 'código inexistente não devolve nada');
+
+-- limite por IP: 5 por hora
+:comoServidor
+select public.inscrever_na_lista((:'REV' || ',"email":"s' || n || '@teste.com","nome":"Spam ' || n || '"}')::jsonb, 'ip-spam')
+from generate_series(1, 5) n;
+select teste.inscricao_recusada((:'REV' || ',"email":"s6@teste.com","nome":"Spam 6"}')::jsonb, 'ip-spam',
+                                'sexta inscrição do mesmo IP em 1 hora é bloqueada');
+
+-- admin: status do contato
+:comoB
+select teste.ok(teste.linhas($$update public.waitlist set status_contato = 'aprovado'$$) = 0,
+                'usuário comum não altera status da lista');
+select teste.ok((select count(*) from public.waitlist_com_indicacoes) = 0, 'usuário comum não lê a visão com indicações');
+:comoC
+select teste.ok(teste.linhas($$update public.waitlist set status_contato = 'contatado' where email = 'doces@teste.com'$$) = 1,
+                'admin marca produtor como contatado');
+select teste.bloqueia($$update public.waitlist set status_contato = 'vip' where email = 'doces@teste.com'$$,
+                      'status de contato fora da lista recusado');
+select teste.bloqueia($$update public.waitlist set email = 'outro@teste.com' where email = 'doces@teste.com'$$,
+                      'admin não altera e-mail do inscrito pelo site');
+select teste.ok((select indicacoes from public.waitlist_com_indicacoes where nome = 'Rita') = 2,
+                'admin vê o número de indicações válidas');
+
+-- vitrine não pode usar as rotas novas
+:comoA
+select teste.bloqueia($$insert into public.storefronts (revendedor_id, slug)
+                        values ('00000000-0000-0000-0000-00000000000a', 'lista')$$,
+                      'slug "lista" (rota da lista de espera) é reservado');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas

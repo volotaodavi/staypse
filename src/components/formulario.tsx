@@ -16,11 +16,11 @@ export function Campo({
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string }) {
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium">
+    <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
       {rotulo}
       <input
         {...props}
-        className="rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
+        className="w-full min-w-0 rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
       />
       {dica && <span className="text-xs font-normal text-petroleo/70">{dica}</span>}
     </label>

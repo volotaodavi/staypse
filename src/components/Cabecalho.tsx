@@ -5,9 +5,12 @@ import { Logo } from "./Logo";
 type Props = {
   // Se houver alguém logado, mostra "Sair" no lugar de "Entrar".
   logado?: boolean;
+  // Página de pré-lançamento: esconde "Criar conta" para o foco ficar na
+  // lista de espera (o "Entrar" fica discreto para a equipe).
+  preLancamento?: boolean;
 };
 
-export function Cabecalho({ logado = false }: Props) {
+export function Cabecalho({ logado = false, preLancamento = false }: Props) {
   return (
     <header className="border-b border-gelo bg-branco">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -27,12 +30,14 @@ export function Cabecalho({ logado = false }: Props) {
             <Link href="/entrar" className="rounded-full px-4 py-2 hover:bg-gelo">
               Entrar
             </Link>
-            <Link
-              href="/cadastro"
-              className="rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95"
-            >
-              Criar conta
-            </Link>
+            {!preLancamento && (
+              <Link
+                href="/cadastro"
+                className="rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95"
+              >
+                Criar conta
+              </Link>
+            )}
           </nav>
         )}
       </div>

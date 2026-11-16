@@ -11,14 +11,26 @@ const outfit = Outfit({
   display: "swap",
 });
 
+// SEO + prévia de compartilhamento (WhatsApp/Instagram).
+// A imagem de prévia é gerada por src/app/opengraph-image.tsx.
+const descricao =
+  "Plataforma de afiliados para produtos físicos e digitais. Produtores cadastram, revendedores indicam pelo próprio link e o pagamento é dividido na hora da venda. Entre na lista de espera.";
+
 export const metadata: Metadata = {
   title: {
-    default: "Staypse — indique produtos e ganhe por venda",
+    default: "Staypse — plataforma de afiliados para produtos físicos e digitais",
     template: "%s | Staypse",
   },
-  description:
-    "Produtores cadastram produtos, revendedores indicam pela própria vitrine e ganham comissão em cada venda. Sem estoque e sem precisar de seguidores.",
+  description: descricao,
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://staypse.com.br"),
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Staypse",
+    title: "Staypse — plataforma de afiliados para produtos físicos e digitais",
+    description: descricao,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

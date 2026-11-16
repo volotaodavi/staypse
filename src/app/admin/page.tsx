@@ -1,6 +1,7 @@
 // Painel administrativo (Etapa 1: números gerais).
 // Os números vêm direto do banco com a sessão do admin: a RLS libera
 // "admin vê tudo". Se um não-admin chegar aqui, exigirPapel o devolve.
+import Link from "next/link";
 import { exigirPapel } from "@/lib/papeis";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -42,6 +43,12 @@ export default async function Admin() {
           </div>
         ))}
       </div>
+      <Link
+        href="/admin/lista"
+        className="mt-6 inline-block rounded-full bg-ciano px-6 py-3 font-medium text-petroleo hover:brightness-95"
+      >
+        Ver lista de espera →
+      </Link>
     </>
   );
 }
