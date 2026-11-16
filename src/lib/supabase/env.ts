@@ -1,0 +1,30 @@
+// Lê as variáveis de ambiente do Supabase e avisa com clareza se faltarem.
+// As chaves NUNCA ficam no código: vêm do arquivo .env.local (ver .env.example)
+// ou das variáveis de ambiente da Vercel.
+
+function exigir(valor: string | undefined, nome: string): string {
+  if (!valor) {
+    throw new Error(
+      `Variável de ambiente ${nome} não configurada. Copie .env.example para .env.local e preencha.`,
+    );
+  }
+  return valor;
+}
+
+// Obs.: o Next só consegue embutir variáveis NEXT_PUBLIC_ quando escritas
+// por extenso (process.env.NOME), por isso uma função para cada uma.
+export function supabaseUrl() {
+  return exigir(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL");
+}
+
+export function supabaseChavePublica() {
+  return exigir(
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  );
+}
+
+// Endereço público do site, usado nos links enviados por e-mail.
+export function urlDoSite() {
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+}

@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   IDENTIDADE VISUAL STAYPSE
+   Gera as classes: bg-petroleo, text-ciano, border-gelo, etc.
+   REGRA: nunca usar texto ciano sobre fundo branco/gelo (fica ilegível).
+   Ciano é para: fundo de botão (com texto petróleo) ou texto sobre petróleo.
+   ========================================================================= */
+@theme {
+  --color-petroleo: #062c30; /* base */
+  --color-ciano: #14d6c4; /* destaque */
+  --color-gelo: #eef6f5; /* fundos */
+  --color-branco: #ffffff;
+
+  /* Outfit, carregada em layout.tsx */
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+}
+
+html {
+  /* evita zoom automático em campos no iPhone */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-branco);
+  color: var(--color-petroleo);
+}
+
+/* Títulos sempre em Outfit ExtraBold 800 */
+h1,
+h2,
+h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
