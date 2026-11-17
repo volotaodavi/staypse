@@ -63,7 +63,7 @@ export default async function Afiliados({ searchParams }: PageProps<"/painel/pro
               <div className="min-w-0 flex-1">
                 <p className="font-medium">
                   {l.storefronts ? (
-                    <Link href={`/v/${l.storefronts.slug}`} className="underline">
+                    <Link href={`/@${l.storefronts.slug}`} className="underline">
                       {l.storefronts.nome_exibicao || l.storefronts.slug}
                     </Link>
                   ) : (

@@ -15,12 +15,12 @@ export async function GET(request: Request) {
   const mes = mesDoParametro(new URL(request.url).searchParams.get("mes"));
   const linhas = await lerRelatorio(mes);
 
-  const cabecalho = ["Vendedor", "E-mail", "@", "Forma de pagamento", "Comissão (%)", "Situação", "Cliques", "Pedidos pagos", "Total vendido (R$)", "Comissão (R$)"];
+  const cabecalho = ["Vendedor", "E-mail", "Usuário (@)", "Forma de pagamento", "Comissão (%)", "Situação", "Cliques", "Pedidos pagos", "Total vendido (R$)", "Comissão (R$)"];
   const corpo = linhas.map((l) =>
     [
       l.nome ?? "",
       l.email,
-      l.arroba ? `@${l.arroba}` : "",
+      l.arroba ?? "", // sem o "@" na frente: o Excel trataria como fórmula
       FORMA_RELATORIO[l.forma_pagamento] ?? l.forma_pagamento,
       String(Number(l.comissao_percentual)).replace(".", ","),
       l.status === "ativo" ? "Ativo" : "Desativado",

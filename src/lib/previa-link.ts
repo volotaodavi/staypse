@@ -109,8 +109,10 @@ export function lerMetas(html: string): Previa {
   const imagem = meta(html, ["og:image", "og:image:secure_url", "twitter:image"]);
   const preco = meta(html, ["og:price:amount", "product:price:amount", "price"]);
   const valor = preco ? Number(preco.replace(/[^\d.,]/g, "").replace(/\.(?=\d{3}\b)/g, "").replace(",", ".")) : NaN;
+  // título que é só o nome do site (página de bloqueio/genérica) não serve
+  const generico = /^(mercado\s*(livre|libre)|shopee(\s*brasil)?|tiktok(\s*shop)?)\b.{0,20}$/i.test(titulo ?? "");
   return {
-    titulo: titulo ? titulo.slice(0, 140) : undefined,
+    titulo: titulo && !generico ? titulo.slice(0, 140) : undefined,
     imagem: imagem?.startsWith("https://") && imagem.length <= 2000 ? imagem : undefined,
     precoCentavos: Number.isFinite(valor) && valor > 0 ? Math.round(valor * 100) : undefined,
   };
