@@ -632,6 +632,23 @@ select teste.ok((select count(*) from storage.objects where bucket_id = 'arquivo
                 'admin vê o arquivo digital para análise');
 
 -- =========================================================================
+-- 12. Quem executa cada função (endurecimento)
+-- =========================================================================
+:comoAnon
+select teste.bloqueia($$select public.is_admin()$$, 'visitante não executa is_admin');
+select teste.bloqueia($$select public.tem_papel('admin')$$, 'visitante não executa tem_papel');
+select teste.bloqueia($$select public.palavras_proibidas_em('remédio')$$, 'visitante não descobre a lista de palavras proibidas');
+select teste.bloqueia($$select public.pode_ver_pedido(gen_random_uuid())$$, 'visitante não executa pode_ver_pedido');
+select teste.ok((select count(*) from public.posicao_na_lista('naoexiste')) = 0, 'visitante continua consultando a posição na fila');
+select teste.ok((select count(*) from public.items where status_aprovacao = 'aprovado') >= 1,
+                'visitante continua vendo itens aprovados (regra pública intacta)');
+:comoA
+select teste.ok(public.palavras_proibidas_em('remédio') = array['remedio'], 'usuário logado usa o alerta de palavras (gatilho do item)');
+reset role;
+select teste.ok(not has_function_privilege('authenticated', 'public.handle_new_user()', 'execute'),
+                'ninguém chama a função interna do cadastro diretamente');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

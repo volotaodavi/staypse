@@ -80,6 +80,7 @@ npm run build                  # checa tipos e compila
    1. `20261116000001_fundacao.sql`
    2. `20261117000001_lista_espera.sql`
    3. `20261118000001_area_produtor.sql`
+   4. `20261119000001_endurece_funcoes.sql`
 
    (ou, de uma vez: `npx supabase link --project-ref SEU_ID && npx supabase db push`)
 3. **Autenticação** (Authentication → URL Configuration):
@@ -113,6 +114,16 @@ npm run build                  # checa tipos e compila
       trocar `CONTRATO_PRODUTOR_VERSAO` em `src/config/empresa.ts`.
 - [ ] SVGs oficiais em `public/brand/`.
 - [ ] Termos de Uso e Política de Privacidade revisados por advogado.
+
+---
+
+## Análise de segurança do Supabase
+
+O analisador do Supabase (Advisors → Security) mostra avisos do tipo
+"security definer function executable". Eles são **esperados** para as funções
+listadas em `supabase/migrations/20261119000001_endurece_funcoes.sql` (as regras
+de acesso dependem delas) e para `rls_auto_enable` (criada pelo próprio
+Supabase). Qualquer aviso fora dessa lista deve ser investigado.
 
 ---
 
