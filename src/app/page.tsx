@@ -7,11 +7,12 @@ import { Suspense } from "react";
 import { BarraFixa } from "@/components/BarraFixa";
 import { Cabecalho } from "@/components/Cabecalho";
 import { IconeCheck, IconePessoa, IconeSelo, IconeSplit, IconeVolta, Perguntas, VitrineSplit } from "@/components/inicio";
+import { urlDoSite } from "@/lib/supabase/env";
 import { FormLista } from "./lista/FormLista";
 
 const PASSOS = [
   ["O produtor cadastra", "Fábricas, lojas e criadores cadastram produtos físicos ou digitais e definem a comissão de cada um."],
-  ["Você indica pelo seu link", "Você monta a sua vitrine em staypse.com.br/seu-nome e compartilha onde quiser. Sem estoque."],
+  ["Você indica pelo seu link", "Você monta a sua vitrine com um endereço só seu e compartilha onde quiser. Sem estoque."],
   ["O pagamento é dividido na hora", "Quando alguém compra, o valor é dividido automaticamente entre produtor, revendedor e Staypse."],
 ] as const;
 
@@ -52,7 +53,7 @@ export default function Inicio() {
                 ))}
               </ul>
             </div>
-            <VitrineSplit />
+            <VitrineSplit host={urlDoSite().replace(/^https?:\/\//, "")} />
           </div>
         </section>
 

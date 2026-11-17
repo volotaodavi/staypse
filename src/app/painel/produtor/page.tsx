@@ -124,6 +124,26 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
         )}
       </section>
 
+      {aviso.loja && (
+        <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">
+          ✓ Loja salva.
+        </p>
+      )}
+
+      {/* Loja pública e afiliados */}
+      {produtor && (
+        <nav className="mt-6 grid grid-cols-2 gap-3" aria-label="Loja e afiliados">
+          <Link href="/painel/produtor/loja" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-extrabold">Sua loja</span>
+            <span className="text-sm text-petroleo/75">Endereço, foto e descrição</span>
+          </Link>
+          <Link href="/painel/produtor/afiliados" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-extrabold">Afiliados</span>
+            <span className="text-sm text-petroleo/75">Quem indica seus itens</span>
+          </Link>
+        </nav>
+      )}
+
       {/* Itens */}
       {produtor && (
         <section className="mt-6" data-secao="itens">

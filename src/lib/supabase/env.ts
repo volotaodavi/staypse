@@ -26,7 +26,7 @@ export function supabaseChavePublica() {
 
 // Endereço público do site, usado nos links enviados por e-mail, no link de
 // indicação e nas prévias de compartilhamento. Ordem:
-//  1. NEXT_PUBLIC_SITE_URL, se definido (ex.: https://staypse.com.br, quando houver domínio);
+//  1. NEXT_PUBLIC_SITE_URL, se definido (o domínio próprio, quando houver);
 //  2. na Vercel, o endereço de produção que ela fornece (ex.: staypse.vercel.app);
 //  3. no computador, http://localhost:3000.
 export function urlDoSite() {

@@ -37,7 +37,8 @@ export const IconeCheck = ({ className = "h-5 w-5 shrink-0" }: IconeProps) => (
 );
 
 // ---------- vitrine no celular + barra do split ----------
-export function VitrineSplit() {
+// "host": endereço do site sem https:// (vem de urlDoSite — nunca fixo no código)
+export function VitrineSplit({ host }: { host: string }) {
   return (
     <figure className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
       {/* celular */}
@@ -46,7 +47,9 @@ export function VitrineSplit() {
           {/* endereço da vitrine */}
           <div className="flex items-center gap-2 bg-gelo px-4 py-2.5 text-[11px] text-petroleo/70">
             <span className="h-2 w-2 rounded-full bg-petroleo/30" />
-            staypse.com.br/<span className="font-medium text-petroleo">ana</span>
+            <span className="truncate">
+              {host}/v/<span className="font-medium text-petroleo">ana</span>
+            </span>
           </div>
 
           <div className="px-4 pt-4 pb-5">

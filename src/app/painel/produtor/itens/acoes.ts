@@ -3,12 +3,13 @@
 // pausar/ativar e atualizar estoque. O banco garante as regras:
 // comissão 10–70%, item completo para análise, edição de preço/comissão/
 // descrição de item aprovado → volta para análise.
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
 import { NICHOS } from "@/lib/lista";
 import { exigirPapel } from "@/lib/papeis";
 import { MAX_FOTOS, TIPOS_DIGITAIS, lerPreco, pendenciasItem, type DadosItem } from "@/lib/produtor";
+import { ETIQUETA_VITRINES } from "@/lib/publico";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
@@ -68,6 +69,8 @@ export async function salvarItem(_a: EstadoFormulario, f: FormData): Promise<Est
     preco_centavos: preco,
     comissao_percentual: comissao,
     categoria: NICHOS.some((n) => n.valor === categoria) ? categoria : null,
+    // afiliação: automática (entra na vitrine na hora) ou aprovada pelo produtor
+    aprovacao_afiliacao: texto(f, "aprovacao_afiliacao") === "manual" ? "manual" : "automatica",
     tipo,
     declaracao_nf: f.get("declaracao_nf") === "sim",
     // físico (digital: tudo vazio; estoque vazio = ilimitado)
@@ -111,6 +114,8 @@ export async function salvarItem(_a: EstadoFormulario, f: FormData): Promise<Est
     if (error) return { erro: mensagemDeErro(error.message, dados) };
   }
 
+  // item que voltou para análise sai das vitrines (cache público renovado na hora)
+  updateTag(ETIQUETA_VITRINES);
   revalidatePath("/painel/produtor");
   redirect("/painel/produtor?item=salvo");
 }
@@ -126,6 +131,7 @@ export async function alternarPausa(f: FormData) {
     .from("items")
     .update({ status_aprovacao: item.status_aprovacao === "aprovado" ? "pausado" : "aprovado" })
     .eq("id", id);
+  updateTag(ETIQUETA_VITRINES); // pausado some das vitrines na hora
   revalidatePath("/painel/produtor");
 }
 

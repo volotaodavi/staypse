@@ -14,6 +14,7 @@ export type ItemInicial = {
   fotos: string[];
   preco_centavos: number;
   comissao_percentual: number;
+  aprovacao_afiliacao: string;
   categoria: string | null;
   tipo: string;
   estoque: number | null;
@@ -100,6 +101,34 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
       <p className="-mt-2 text-xs text-petroleo/70">
         A comissão vai de {COMISSAO_MINIMA}% a {COMISSAO_MAXIMA}% do preço. Ela é paga ao revendedor só nas vendas feitas por ele.
       </p>
+
+      {/* quem pode se afiliar a este item */}
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium">Afiliação de revendedores</legend>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {[
+            ["automatica", "Aprovação automática", "O item entra na vitrine do revendedor na hora."],
+            ["manual", "Aprovo manualmente", "Você aprova ou recusa cada revendedor."],
+          ].map(([v, rotulo, dica]) => (
+            <label
+              key={v}
+              className="flex flex-1 cursor-pointer flex-col rounded-2xl border border-petroleo/20 px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <input
+                  type="radio"
+                  name="aprovacao_afiliacao"
+                  value={v}
+                  defaultChecked={(item?.aprovacao_afiliacao ?? "automatica") === v}
+                  className="h-4 w-4 accent-petroleo"
+                />
+                {rotulo}
+              </span>
+              <span className="pl-6 text-xs text-petroleo/70">{dica}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         Categoria

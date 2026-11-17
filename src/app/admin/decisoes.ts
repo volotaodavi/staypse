@@ -1,9 +1,10 @@
 "use server";
 // Decisões do admin sobre produtores e itens. Cada uma chama uma função do
 // banco que confere se é admin e grava o log de auditoria na mesma operação.
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { exigirPapel } from "@/lib/papeis";
+import { ETIQUETA_VITRINES } from "@/lib/publico";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
@@ -21,6 +22,8 @@ const MENSAGENS: Record<string, string> = {
 function voltar(caminho: string, erro: { message: string } | null, sucesso: string): never {
   const chave = erro ? Object.keys(MENSAGENS).find((k) => erro.message.includes(k)) : null;
   const msg = erro ? (chave ? MENSAGENS[chave] : "Não foi possível concluir.") : sucesso;
+  // aprovar/recusar muda o que aparece nas vitrines e lojas públicas (cache)
+  if (!erro) updateTag(ETIQUETA_VITRINES);
   revalidatePath(caminho);
   redirect(`${caminho}?msg=${encodeURIComponent(msg)}${erro ? "&tipo=erro" : ""}`);
 }

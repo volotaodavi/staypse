@@ -6,33 +6,12 @@
 //     robôs preenchem tudo. Se vier preenchido, fingimos sucesso e não gravamos.
 //  2. Limite por IP: no banco (função inscrever_na_lista), máx. 5 por hora.
 //     O IP vira um hash com segredo antes de sair daqui (LGPD).
-import { createHmac } from "node:crypto";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
 import { TERMOS_VERSAO } from "@/config/empresa";
+import { hashDoIp } from "@/lib/ip";
 import { NICHOS, TIPOS_PRODUTO, UFS, codigoValido, normalizarCnpj, normalizarWhatsapp } from "@/lib/lista";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-
-// IP de quem enviou. Na Vercel, x-forwarded-for é preenchido pela própria
-// Vercel (o visitante não consegue falsificar o primeiro valor).
-async function hashDoIp(): Promise<string> {
-  const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "desconhecido";
-  return createHmac("sha256", segredoDoHash()).update(ip).digest("hex");
-}
-
-// Segredo usado para embaralhar o IP. HASH_IP_SEGREDO é OPCIONAL: se não
-// existir, derivamos um segredo próprio a partir da chave secreta do Supabase
-// (HMAC com um rótulo fixo — o valor final não é a chave em si).
-// Atenção: trocar a chave secreta (ou este segredo) "zera" o limite por IP e a
-// detecção de autoindicação das inscrições antigas.
-function segredoDoHash(): string {
-  if (process.env.HASH_IP_SEGREDO) return process.env.HASH_IP_SEGREDO;
-  const chave = process.env.SUPABASE_SECRET_KEY;
-  if (!chave) throw new Error("Configure SUPABASE_SECRET_KEY (ver .env.example).");
-  return createHmac("sha256", chave).update("staypse:hash-ip:v1").digest("hex");
-}
 
 const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
 

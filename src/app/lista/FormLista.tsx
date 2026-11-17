@@ -14,7 +14,7 @@ const ABA_POR_HASH: Record<string, TipoInscricao> = {
 };
 
 export function FormLista() {
-  const ref = useSearchParams().get("ref") ?? ""; // quem indicou (staypse.com.br/?ref=...)
+  const ref = useSearchParams().get("ref") ?? ""; // quem indicou (<endereço do site>/?ref=...)
   const [estado, acao] = useActionState(inscrever, undefined);
   const [tipo, setTipo] = useState<TipoInscricao>("revendedor");
 
