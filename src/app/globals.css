@@ -26,6 +26,33 @@ body {
   color: var(--color-petroleo);
 }
 
+/* Foco visível para quem navega pelo teclado */
+:focus-visible {
+  outline: 3px solid var(--color-ciano);
+  outline-offset: 2px;
+}
+
+/* A única animação automática da página inicial: a barra do split se divide
+   ao abrir. Quem pediu "reduzir movimento" no aparelho vê a barra pronta. */
+@keyframes split-cresce {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.split-segmento {
+  display: block;
+  transform-origin: left;
+  animation: split-cresce 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 400ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .split-segmento {
+    animation: none;
+  }
+}
+
 /* Títulos sempre em Outfit ExtraBold 800 */
 h1,
 h2,
