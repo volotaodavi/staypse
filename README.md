@@ -118,6 +118,18 @@ npm run build                  # checa tipos e compila
 
 ---
 
+## Skills do projeto (Claude Code)
+
+- **first-customer-finder** (`.claude/skills/first-customer-finder/`, licença MIT,
+  de github.com/carolinacherry/claude-first-customer-finder-skill): pesquisa
+  possíveis primeiros clientes a partir de sinais públicos, verifica cada fonte,
+  dá nota e **só rascunha** mensagens — nunca envia nada. Use com o resumo
+  `docs/brief-staypse.md`. Os relatórios vão para `outputs/` (fora do git).
+  Precisa de acesso amplo à internet para pesquisar: rode no seu Claude Code
+  local ou num ambiente da nuvem com rede liberada.
+
+---
+
 ## Análise de segurança do Supabase
 
 O analisador do Supabase (Advisors → Security) mostra avisos do tipo

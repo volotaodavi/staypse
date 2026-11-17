@@ -41,3 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# relatórios da skill first-customer-finder (têm nomes/links de perfis públicos)
+outputs/
