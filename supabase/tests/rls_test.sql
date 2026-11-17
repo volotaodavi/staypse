@@ -652,10 +652,12 @@ select teste.ok(not has_function_privilege('authenticated', 'public.handle_new_u
 -- 13. Vitrines e afiliação (Etapa 4)
 -- =========================================================================
 reset role;
-select teste.ok((select slug like 'serum-facial-%' from public.items where nome = 'Sérum Facial'), 'item ganha slug automático a partir do nome');
+select teste.ok((select slug = 'serum-facial' from public.items where nome = 'Sérum Facial'), 'item ganha slug curto a partir do nome');
+select teste.ok((select loja_slug is not null from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'),
+                'produtor aprovado ganha endereço de loja automático');
 :comoA
-select teste.bloqueia($$select public.salvar_minha_loja('admin', 'Ana', null, null)$$, 'slug de loja reservado recusado');
-select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null);
+select teste.bloqueia($$select public.salvar_minha_loja('admin', 'Ana', null, null, null, null, null, null)$$, 'slug de loja reservado recusado');
+select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null, null, null, null, null);
 :comoC
 select public.admin_decidir_item((select id from public.items where nome = 'Curso de Maquiagem'), true);
 :comoA
@@ -682,13 +684,17 @@ select public.decidir_afiliacao((select id from public.afiliacoes where status =
 select teste.ok((select count(*) from public.afiliacoes) = 0, 'outro usuário não vê afiliações alheias');
 :comoAnon
 select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia')) = 2, 'após aprovação do produtor, item aparece na vitrine');
-select teste.bloqueia($$select public.registrar_clique('loja-da-bia', 'x', null, null, 'h', null)$$, 'visitante não grava clique direto');
+select teste.bloqueia($$select * from public.abrir_link_afiliado('loja-da-bia', 'serum-facial', 'h', null, true)$$, 'visitante não grava clique direto');
 :comoServidor
-select teste.ok(public.registrar_clique('loja-da-bia', (select slug from public.items where nome = 'Sérum Facial'), null, null, 'ip-1', 'instagram.com'), 'servidor registra clique');
-select teste.ok(not public.registrar_clique('loja-da-bia', (select slug from public.items where nome = 'Sérum Facial'), null, null, 'ip-1', null), 'mesmo IP e item em 10 min não conta de novo');
-select teste.ok(public.registrar_clique(null, (select slug from public.items where nome = 'Sérum Facial'), null,
-                (select a.codigo from public.afiliacoes a join public.items i on i.id = a.item_id where i.nome = 'Sérum Facial'), 'ip-2', null),
-                'clique pelo link do afiliado (?a=código) é atribuído à vitrine');
+select teste.ok((select atribuido and clique_registrado and loja_slug = 'ana-cosmeticos'
+                 from public.abrir_link_afiliado('loja-da-bia', 'serum-facial', 'ip-1', 'instagram.com', true)),
+                'link curto /@bia/serum-facial: atribui, registra clique e leva à loja');
+select teste.ok((select atribuido and not clique_registrado from public.abrir_link_afiliado('loja-da-bia', 'serum-facial', 'ip-1', null, true)),
+                'mesmo IP e item em 10 min não conta de novo (mas continua atribuindo)');
+select teste.ok((select clique_registrado from public.abrir_link_afiliado('loja-da-bia', 'serum-facial', 'ip-2', null, true)),
+                'outro IP conta outro clique');
+select teste.ok((select not clique_registrado from public.abrir_link_afiliado('loja-da-bia', 'serum-facial', 'ip-robo', null, false)),
+                'robô de prévia (WhatsApp) não conta clique');
 :comoB
 select teste.ok((select cliques_30d from public.meus_cliques() where titulo = 'Sérum Facial') = 2, 'afiliado vê os cliques no painel');
 :comoD
@@ -697,7 +703,126 @@ select teste.ok((select count(*) from public.meus_cliques()) = 0, 'outro usuári
 update public.items set preco_centavos = 10990 where nome = 'Sérum Facial';
 :comoAnon
 select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia')) = 1, 'item que volta para análise some da vitrine');
-select teste.ok((select count(*) from public.item_publico((select slug from public.items where nome = 'Curso de Maquiagem'))) = 1, 'página do produto aprovado é pública');
+select teste.ok((select count(*) from public.produto_da_loja('ana-cosmeticos', 'curso-de-maquiagem')) = 1, 'página do produto aprovado é pública (dentro da loja)');
+select teste.ok((select count(*) from public.produto_da_loja('ana-cosmeticos', 'serum-facial')) = 0, 'produto em análise não abre');
+
+-- =========================================================================
+-- 14. Links curtos, identidade visual e vendedores próprios (Etapa 4 — complemento)
+-- =========================================================================
+:comoServidor
+select teste.ok((select not atribuido and loja_slug = 'ana-cosmeticos'
+                 from public.abrir_link_afiliado('ninguem', 'curso-de-maquiagem', 'ip-5', null, true)),
+                'afiliado inexistente: leva ao produto SEM atribuir');
+select teste.ok((select count(*) from public.abrir_link_afiliado('loja-da-bia', 'nao-existe', 'ip-5', null, true)) = 0,
+                'produto inexistente: nenhum destino');
+:comoA
+insert into public.items (producer_id, nome, preco_centavos, tipo, comissao_percentual)
+  select id, 'Sérum Facial', 5000, 'fisico', 20 from public.producers where user_id = '00000000-0000-0000-0000-00000000000a';
+select teste.ok((select count(*) from public.items where slug = 'serum-facial-2') = 1, 'mesmo nome na mesma loja ganha -2');
+select teste.bloqueia($$update public.items set slug = 'Com Espaço' where slug = 'serum-facial-2'$$, 'endereço de produto inválido recusado');
+select teste.bloqueia($$update public.items set slug = 'serum-facial' where slug = 'serum-facial-2'$$, 'endereço repetido na loja recusado');
+update public.items set slug = 'serum-mini' where slug = 'serum-facial-2';
+select teste.ok((select count(*) from public.items where slug = 'serum-mini') = 1, 'loja edita o endereço do produto');
+
+-- identidade visual
+select teste.bloqueia($$select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', null, null, 'azul', null, null, null)$$, 'cor inválida recusada');
+select teste.bloqueia($$select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', null, null, null, null, 'comic-sans', null)$$, 'fonte fora da lista recusada');
+select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null, '#7A1F3D', '#F2C14E', 'playfair', 'destaque');
+:comoAnon
+select teste.ok((select cor_principal = '#7a1f3d' and fonte = 'playfair' and layout = 'destaque' and cnpj is not null
+                 from public.loja_publica('ana-cosmeticos')), 'loja pública traz cores, fonte, layout e dados do vendedor');
+:comoB
+update public.storefronts set modelo_visual = 'proprio', cor_principal = '#14d6c4' where slug = 'loja-da-bia';
+select teste.ok((select modelo_visual = 'proprio' from public.storefronts where slug = 'loja-da-bia'), 'afiliado escolhe "minhas cores"');
+select teste.bloqueia($$update public.storefronts set cor_principal = 'verde' where slug = 'loja-da-bia'$$, 'cor da vitrine inválida recusada');
+
+-- links externos: clique só pelo servidor, e só se o link é daquela vitrine
+insert into public.external_links (storefront_id, url, titulo, plataforma)
+  select id, 'https://shopee.com.br/fone-xyz', 'Fone sem fio', 'shopee' from public.storefronts where slug = 'loja-da-bia';
+:comoServidor
+select teste.ok(public.registrar_clique_externo('loja-da-bia', (select id from public.external_links where titulo = 'Fone sem fio'), 'ip-7'),
+                'clique em link externo registrado');
+select teste.ok(not public.registrar_clique_externo('outra-vitrine', (select id from public.external_links where titulo = 'Fone sem fio'), 'ip-8'),
+                'link externo de outra vitrine não conta');
+
+-- vendedores próprios: convite
+:comoB
+select teste.bloqueia($$select public.convidar_vendedor('x@teste.com', 10, 'folha', false)$$, 'quem não tem loja não convida');
+:comoA
+select teste.bloqueia($$select public.convidar_vendedor('bia@teste.com', 25, 'split_direto', false)$$,
+                      'split direto exige a declaração "não é meu empregado"');
+select public.convidar_vendedor('Davi@Teste.com', 15, 'folha', false) as token_davi \gset
+select public.convidar_vendedor('bia@teste.com', 25, 'split_direto', true) as token_bia \gset
+reset role;
+select teste.ok((select count(*) from public.loja_vendedores where convite_token_hash = :'token_davi') = 0,
+                'o link do convite não fica guardado puro (só o hash)');
+:comoAnon
+select teste.ok((select loja_nome = 'Ana Cosméticos' and not expirado from public.ver_convite(:'token_davi')), 'convite mostra a loja');
+select teste.bloqueia($$select * from public.loja_vendedores$$, 'visitante não lê vendedores');
+:comoD
+select teste.bloqueia($$insert into public.user_roles (user_id, papel) values ('00000000-0000-0000-0000-00000000000d', 'vendedor_proprio')$$,
+                      'ninguém se dá o papel de vendedor próprio sozinho');
+:comoB
+select teste.bloqueia(format('select public.aceitar_convite(%L, %L)', :'token_davi', 'bia2'), 'convite de outro e-mail recusado');
+:comoD
+select public.aceitar_convite(:'token_davi', 'davi-vendas');
+select teste.ok(public.tem_papel('vendedor_proprio'), 'aceite dá o papel de vendedor próprio');
+select teste.ok((select count(*) from public.afiliacoes where origem = 'vendedor_proprio' and status = 'aprovada') = 1,
+                'vendedor afiliado automaticamente aos itens aprovados da loja');
+select teste.ok((select not publicada from public.storefronts where slug = 'davi-vendas'), 'vendedor pode só usar os links (vitrine não publicada)');
+select teste.bloqueia(format('select public.aceitar_convite(%L, %L)', :'token_davi', 'davi2'), 'convite não é usado duas vezes');
+:comoB
+select public.aceitar_convite(:'token_bia', 'ignorado');
+select teste.ok((select origem = 'vendedor_proprio' from public.afiliacoes a join public.items i on i.id = a.item_id
+                 where i.slug = 'curso-de-maquiagem'), 'afiliado do catálogo que vira vendedor próprio passa a usar o contrato');
+-- privacidade entre vendedores
+:comoD
+select teste.ok((select count(*) from public.loja_vendedores) = 1, 'vendedor vê só o próprio vínculo');
+select teste.ok((select count(*) from public.meus_vendedores()) = 0, 'vendedor não lista os colegas');
+select teste.ok((select count(*) from public.relatorio_comissoes(current_date)) = 0, 'vendedor não vê relatório da loja');
+select teste.ok((select count(*) from public.loja_vendedores_historico) = 0, 'vendedor não vê o histórico da loja');
+select teste.bloqueia(format('select public.atualizar_vendedor(%L, 90, %L, false)',
+                      (select id from public.loja_vendedores), 'folha'), 'vendedor não muda a própria comissão');
+delete from public.afiliacoes;
+select teste.ok((select count(*) from public.afiliacoes) = 1, 'vendedor não apaga o vínculo da loja');
+:comoA
+select teste.ok((select count(*) from public.meus_vendedores()) = 2, 'loja lista seus vendedores');
+-- clique atribuído ao vendedor
+:comoServidor
+select teste.ok((select atribuido from public.abrir_link_afiliado('davi-vendas', 'curso-de-maquiagem', 'ip-10', null, true)),
+                'link do vendedor próprio atribui');
+:comoD
+select teste.ok((select cliques_30d from public.meus_cliques() where titulo = 'Curso de Maquiagem') = 1, 'vendedor vê o clique dele');
+-- item aprovado depois entra sozinho para o vendedor
+:comoC
+select public.admin_decidir_item((select id from public.items where slug = 'serum-facial'), true);
+:comoD
+select teste.ok((select count(*) from public.afiliacoes where status = 'aprovada') = 2, 'item aprovado depois entra para o vendedor');
+-- comissão conforme contrato + histórico
+:comoA
+select public.atualizar_vendedor((select id from public.loja_vendedores where email = 'davi@teste.com'), 18, 'folha', false);
+select teste.ok((select valor_antigo = '15.00' and valor_novo = '18.00' and alterado_por = '00000000-0000-0000-0000-00000000000a'
+                 from public.loja_vendedores_historico where campo = 'comissao_percentual' and valor_antigo is not null),
+                'histórico guarda quem mudou e os valores antigo/novo');
+select teste.bloqueia(format('select public.atualizar_vendedor(%L, 18, %L, false)',
+                      (select id from public.loja_vendedores where email = 'davi@teste.com'), 'split_direto'),
+                      'trocar para split direto exige a declaração');
+select teste.ok((select count(*) from public.relatorio_comissoes(current_date)) = 2, 'relatório mensal lista os vendedores');
+-- desativar: links param de atribuir, histórico fica
+select public.definir_status_vendedor((select id from public.loja_vendedores where email = 'davi@teste.com'), false);
+:comoServidor
+select teste.ok((select not atribuido from public.abrir_link_afiliado('davi-vendas', 'curso-de-maquiagem', 'ip-11', null, true)),
+                'vendedor desativado: link leva ao produto mas não atribui');
+reset role;
+select teste.ok((select count(*) from public.afiliacoes a join public.storefronts s on s.revendedor_id = a.afiliado_id
+                 where s.slug = 'davi-vendas') = 2, 'histórico de afiliações continua');
+select teste.ok((select count(*) from public.loja_vendedores_historico where campo = 'status' and valor_novo = 'desativado') = 1,
+                'desativação fica no histórico');
+:comoA
+select public.definir_status_vendedor((select id from public.loja_vendedores where email = 'davi@teste.com'), true);
+:comoServidor
+select teste.ok((select atribuido from public.abrir_link_afiliado('davi-vendas', 'curso-de-maquiagem', 'ip-12', null, true)),
+                'vendedor reativado volta a atribuir');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
