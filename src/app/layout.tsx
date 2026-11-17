@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import { Rodape } from "@/components/Rodape";
+import { urlDoSite } from "@/lib/supabase/env";
 import "./globals.css";
 
 // Fonte da marca: 400/500 para textos, 800 (ExtraBold) para títulos.
@@ -22,7 +23,8 @@ export const metadata: Metadata = {
     template: "%s | Staypse",
   },
   description: descricao,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://staypse.com.br"),
+  // endereço do site (domínio próprio ou, enquanto não houver, o da Vercel)
+  metadataBase: new URL(urlDoSite()),
   openGraph: {
     type: "website",
     locale: "pt_BR",

@@ -24,7 +24,14 @@ export function supabaseChavePublica() {
   );
 }
 
-// Endereço público do site, usado nos links enviados por e-mail.
+// Endereço público do site, usado nos links enviados por e-mail, no link de
+// indicação e nas prévias de compartilhamento. Ordem:
+//  1. NEXT_PUBLIC_SITE_URL, se definido (ex.: https://staypse.com.br, quando houver domínio);
+//  2. na Vercel, o endereço de produção que ela fornece (ex.: staypse.vercel.app);
+//  3. no computador, http://localhost:3000.
 export function urlDoSite() {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const url =
+    process.env.NEXT_PUBLIC_SITE_URL || (vercel ? `https://${vercel}` : "") || "http://localhost:3000";
+  return url.replace(/\/$/, "");
 }
