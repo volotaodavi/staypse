@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
-import { Rodape } from "@/components/Rodape";
 import { urlDoSite } from "@/lib/supabase/env";
 import "./globals.css";
 
@@ -42,11 +41,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${outfit.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans">
-        <div className="flex flex-1 flex-col">{children}</div>
-        {/* Regra de conformidade 3: rodapé legal em TODAS as páginas */}
-        <Rodape />
-      </body>
+      {/* O rodapé legal (regra 3) fica nos layouts dos grupos:
+          (site) = rodapé da Staypse; (lojas) = rodapé discreto nas lojas e vitrines. */}
+      <body className="flex min-h-full flex-col font-sans">{children}</body>
     </html>
   );
 }

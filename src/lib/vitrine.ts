@@ -16,16 +16,13 @@ export const ROTULO_NICHO_VITRINE: Record<string, string> = Object.fromEntries(
   NICHOS_VITRINE.map((n) => [n.valor, n.rotulo]),
 );
 
-// Os 3 modelos visuais: cores da marca no topo da vitrine.
-// (nunca texto ciano sobre fundo claro — no modelo "ciano" o texto é petróleo)
+// Visual da vitrine: padrão Staypse (petróleo/ciano, Outfit) ou "minhas cores"
+// (cor principal + foto/logo do afiliado). O contraste é ajustado em lib/tema.ts.
 export const MODELOS_VISUAIS = {
-  petroleo: { rotulo: "Petróleo", topo: "bg-petroleo text-branco", detalhe: "text-gelo/80", selo: "bg-ciano text-petroleo" },
-  gelo: { rotulo: "Gelo", topo: "bg-gelo text-petroleo", detalhe: "text-petroleo/70", selo: "bg-petroleo text-branco" },
-  ciano: { rotulo: "Ciano", topo: "bg-ciano text-petroleo", detalhe: "text-petroleo/80", selo: "bg-petroleo text-branco" },
+  staypse: { rotulo: "Usar padrão Staypse", dica: "Petróleo, ciano e a fonte Outfit." },
+  proprio: { rotulo: "Minhas cores", dica: "Sua cor principal e sua foto ou logo." },
 } as const;
 export type ModeloVisual = keyof typeof MODELOS_VISUAIS;
-export const modeloVisual = (m: string | null | undefined): ModeloVisual =>
-  m && m in MODELOS_VISUAIS ? (m as ModeloVisual) : "petroleo";
 
 export const PLATAFORMAS: Record<string, string> = {
   shopee: "Shopee",

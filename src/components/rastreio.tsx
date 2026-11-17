@@ -2,11 +2,10 @@
 // Peças que rodam no navegador nas páginas públicas:
 //  - LinkRastreado: link externo que registra o clique SEM mudar o endereço
 //    (o href continua exatamente o link que o revendedor colou).
-//  - RegistraVisita: na página do produto aberta por link de afiliado, conta o clique.
 //  - CopiarLink: copia um endereço com um toque.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-type Clique = { vitrine?: string; item?: string; link?: string; codigo?: string; origem?: string };
+type Clique = { vitrine: string; link: string };
 
 // sendBeacon: o navegador entrega mesmo se a pessoa já saiu da página.
 function enviarClique(dados: Clique) {
@@ -36,22 +35,11 @@ export function LinkRastreado({
       // publicidade: buscadores não seguem; o outro site não controla esta aba
       rel="nofollow sponsored noopener noreferrer"
       className={className}
-      onClick={() => enviarClique({ vitrine, link: linkId, origem: "vitrine" })}
+      onClick={() => enviarClique({ vitrine, link: linkId })}
     >
       {children}
     </a>
   );
-}
-
-// Lê o ?a= da própria barra de endereço (assim a página continua em cache).
-export function RegistraVisita({ item }: { item: string }) {
-  useEffect(() => {
-    const codigo = new URLSearchParams(window.location.search).get("a");
-    if (!codigo) return;
-    const veioDaVitrine = document.referrer.includes("/v/");
-    enviarClique({ item, codigo, origem: veioDaVitrine ? "vitrine" : "link_direto" });
-  }, [item]);
-  return null;
 }
 
 export function CopiarLink({ url, rotulo = "Copiar link", className }: { url: string; rotulo?: string; className?: string }) {

@@ -12,6 +12,16 @@ const AREAS_LOGADAS = ["/painel", "/admin"];
 const PAGINAS_DE_ENTRADA = ["/entrar", "/cadastro"];
 
 export async function proxy(request: NextRequest) {
+  // Links curtos do afiliado (no Next, pasta com "@" é reservada, por isso a
+  // reescrita): /@ana → vitrine; /@ana/tenis-runner → abre o link (clique +
+  // atribuição + redirecionamento para a loja). A barra de endereço não muda.
+  const arroba = request.nextUrl.pathname.match(/^\/(?:@|%40)([^/]+)(?:\/([^/]+))?\/?$/i);
+  if (arroba) {
+    const url = request.nextUrl.clone();
+    url.pathname = arroba[2] ? `/ir/${arroba[1]}/${arroba[2]}` : `/v/${arroba[1].toLowerCase()}`;
+    return NextResponse.rewrite(url);
+  }
+
   let resposta = NextResponse.next({ request });
 
   const supabase = createServerClient(supabaseUrl(), supabaseChavePublica(), {
@@ -51,24 +61,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Link de afiliado: /p/[item]?a=[codigo] guarda o código por 30 dias, para a
-  // venda futura (Etapa 6) ser atribuída a quem indicou. O cookie só tem o
-  // código curto — nenhum dado pessoal.
-  const codigo = request.nextUrl.searchParams.get("a");
-  if (caminho.startsWith("/p/") && codigo && /^[0-9a-f]{8}$/.test(codigo)) {
-    resposta.cookies.set(COOKIE_AFILIADO, codigo, {
-      maxAge: 60 * 60 * 24 * 30,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: request.nextUrl.protocol === "https:",
-      path: "/",
-    });
-  }
-
   return resposta;
 }
-
-const COOKIE_AFILIADO = "staypse_afiliado";
 
 export const config = {
   // Não roda em arquivos estáticos, imagens e na pasta /brand (logos).

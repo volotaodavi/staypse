@@ -1,7 +1,7 @@
-// Leituras PÚBLICAS (vitrine, produto, loja) com cache: as páginas abrem
+// Leituras PÚBLICAS (vitrine, loja e produto) com cache: as páginas abrem
 // rápido e o banco não é consultado a cada visita. O cache leva a etiqueta
 // "vitrines" e é renovado na hora (updateTag) quando algo muda: item aprovado,
-// pausado ou recusado, afiliação, links externos.
+// pausado ou recusado, afiliação, links externos, dados da loja.
 import { createClient } from "@supabase/supabase-js";
 import { cacheLife, cacheTag } from "next/cache";
 import { supabaseChavePublica, supabaseUrl } from "./supabase/env";
@@ -18,7 +18,6 @@ export type ItemVitrine = {
   preco_centavos: number;
   tipo: string;
   produtor_nome: string;
-  codigo: string;
 };
 export type LinkExterno = {
   id: string;
@@ -33,6 +32,8 @@ export type Vitrine = {
   nome_exibicao: string | null;
   nicho: string | null;
   modelo_visual: string;
+  cor_principal: string | null;
+  foto_path: string | null;
   bio: string | null;
 };
 
@@ -43,7 +44,7 @@ export async function buscarVitrine(slug: string) {
   const sb = publico();
   const { data: vitrine } = await sb
     .from("storefronts")
-    .select("id, slug, nome_exibicao, nicho, modelo_visual, bio")
+    .select("id, slug, nome_exibicao, nicho, modelo_visual, cor_principal, foto_path, bio")
     .eq("slug", slug)
     .maybeSingle<Vitrine & { id: string }>();
   if (!vitrine) return null;
@@ -55,7 +56,35 @@ export async function buscarVitrine(slug: string) {
   return { vitrine, itens: (itens ?? []) as ItemVitrine[], links: (links ?? []) as LinkExterno[] };
 }
 
-export type ItemPublico = {
+export type Loja = {
+  id: string;
+  loja_slug: string;
+  loja_nome: string;
+  loja_descricao: string | null;
+  loja_foto_path: string | null;
+  cor_principal: string | null;
+  cor_destaque: string | null;
+  fonte: string | null;
+  layout: string | null;
+  razao_social: string;
+  cnpj: string;
+  cidade: string | null;
+  uf: string | null;
+};
+export type ItemLoja = { slug: string; nome: string; fotos: string[]; preco_centavos: number; tipo: string };
+
+export async function buscarLoja(slug: string) {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(ETIQUETA_VITRINES);
+  const sb = publico();
+  const { data: loja } = await sb.rpc("loja_publica", { p_slug: slug }).maybeSingle<Loja>();
+  if (!loja) return null;
+  const { data: itens } = await sb.rpc("itens_da_loja", { p_loja_slug: slug });
+  return { loja, itens: (itens ?? []) as ItemLoja[] };
+}
+
+export type Produto = {
   id: string;
   slug: string;
   nome: string;
@@ -67,27 +96,12 @@ export type ItemPublico = {
   categoria: string | null;
   prazo_postagem_dias: number | null;
   retirada_local: boolean;
-  produtor_nome: string;
-  loja_slug: string | null;
 };
 
-export async function buscarItem(slug: string) {
+export async function buscarProduto(loja: string, produto: string) {
   "use cache";
   cacheLife("minutes");
   cacheTag(ETIQUETA_VITRINES);
-  const { data } = await publico().rpc("item_publico", { p_slug: slug }).maybeSingle<ItemPublico>();
+  const { data } = await publico().rpc("produto_da_loja", { p_loja: loja, p_produto: produto }).maybeSingle<Produto>();
   return data ?? null;
-}
-
-export async function buscarLoja(slug: string) {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(ETIQUETA_VITRINES);
-  const sb = publico();
-  const { data: loja } = await sb.rpc("loja_publica", { p_slug: slug }).maybeSingle<{
-    id: string; loja_slug: string; loja_nome: string; loja_descricao: string | null; loja_foto_path: string | null;
-  }>();
-  if (!loja) return null;
-  const { data: itens } = await sb.rpc("itens_da_loja", { p_loja_slug: slug });
-  return { loja, itens: (itens ?? []) as Omit<ItemVitrine, "produtor_nome" | "codigo">[] };
 }

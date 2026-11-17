@@ -8,9 +8,15 @@ import { headers } from "next/headers";
 // do Supabase (HMAC com rótulo fixo — o valor final não é a chave em si).
 function segredoDoHash(): string {
   if (process.env.HASH_IP_SEGREDO) return process.env.HASH_IP_SEGREDO;
+  return segredoDerivado("staypse:hash-ip:v1");
+}
+
+// Segredo próprio para cada uso (ex.: assinar o cookie de atribuição), derivado
+// da chave secreta do Supabase. Um rótulo diferente dá um segredo diferente.
+export function segredoDerivado(rotulo: string): string {
   const chave = process.env.SUPABASE_SECRET_KEY;
   if (!chave) throw new Error("Configure SUPABASE_SECRET_KEY (ver .env.example).");
-  return createHmac("sha256", chave).update("staypse:hash-ip:v1").digest("hex");
+  return createHmac("sha256", chave).update(rotulo).digest("hex");
 }
 
 // Na Vercel, x-forwarded-for é preenchido pela própria Vercel.

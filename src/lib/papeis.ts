@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
-export type Papel = "produtor" | "revendedor" | "admin";
+export type Papel = "produtor" | "revendedor" | "admin" | "vendedor_proprio";
 
 export type UsuarioAtual = {
   id: string;
@@ -45,14 +45,28 @@ export async function exigirPapel(papel?: Papel): Promise<UsuarioAtual> {
   return usuario;
 }
 
+// Como exigirPapel, mas basta ter UM dos papéis (ex.: a vitrine serve para o
+// revendedor e para o vendedor próprio da loja).
+export async function exigirAlgumPapel(papeis: Papel[]): Promise<UsuarioAtual> {
+  const usuario = await usuarioAtual();
+  if (!usuario) redirect("/entrar");
+  if (!papeis.some((p) => usuario.papeis.includes(p))) redirect("/painel");
+  return usuario;
+}
+
+// Áreas do painel de cada papel
+export const AREAS: { papel: Papel; caminho: string; titulo: string; texto: string }[] = [
+  { papel: "produtor", caminho: "/painel/produtor", titulo: "Produtor", texto: "Empresa, produtos e vendedores." },
+  { papel: "revendedor", caminho: "/painel/revendedor", titulo: "Revendedor", texto: "Sua vitrine, links e cliques." },
+  { papel: "vendedor_proprio", caminho: "/painel/vendedor", titulo: "Vendedor da loja", texto: "Seus links e cliques na loja." },
+];
+
 // Para onde vai cada pessoa depois de entrar.
-// Retorna null quando a pessoa tem os dois papéis: aí /painel mostra a escolha.
+// Retorna null quando a pessoa tem mais de uma área: aí /painel mostra a escolha.
 export function destinoDoPainel(papeis: Papel[]): string | null {
   if (papeis.includes("admin")) return "/admin";
-  const produtor = papeis.includes("produtor");
-  const revendedor = papeis.includes("revendedor");
-  if (produtor && revendedor) return null; // mostra os dois atalhos
-  if (produtor) return "/painel/produtor";
-  if (revendedor) return "/painel/revendedor";
+  const minhas = AREAS.filter((a) => papeis.includes(a.papel));
+  if (minhas.length > 1) return null; // mostra os atalhos
+  if (minhas.length === 1) return minhas[0].caminho;
   return "/painel/comecar"; // ainda sem papel: escolhe um
 }
