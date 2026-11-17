@@ -649,6 +649,57 @@ select teste.ok(not has_function_privilege('authenticated', 'public.handle_new_u
                 'ninguém chama a função interna do cadastro diretamente');
 
 -- =========================================================================
+-- 13. Vitrines e afiliação (Etapa 4)
+-- =========================================================================
+reset role;
+select teste.ok((select slug like 'serum-facial-%' from public.items where nome = 'Sérum Facial'), 'item ganha slug automático a partir do nome');
+:comoA
+select teste.bloqueia($$select public.salvar_minha_loja('admin', 'Ana', null, null)$$, 'slug de loja reservado recusado');
+select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null);
+:comoC
+select public.admin_decidir_item((select id from public.items where nome = 'Curso de Maquiagem'), true);
+:comoA
+update public.items set aprovacao_afiliacao = 'manual' where nome = 'Curso de Maquiagem';
+select teste.ok((select status_aprovacao from public.items where nome = 'Curso de Maquiagem') = 'aprovado', 'mudar a regra de afiliação não pede nova análise');
+:comoAnon
+select teste.ok((select count(*) from public.loja_publica('ana-cosmeticos')) = 1, 'loja pública do produtor aprovado');
+select teste.ok((select count(*) from public.itens_da_loja('ana-cosmeticos')) = 2, 'loja mostra os itens aprovados');
+select teste.bloqueia($$select * from public.afiliacoes$$, 'visitante não lê afiliações');
+select teste.bloqueia($$select public.afiliar_se(gen_random_uuid())$$, 'visitante não se afilia');
+:comoD
+select teste.bloqueia($$select public.afiliar_se((select id from public.items where nome = 'Sérum Facial'))$$, 'sem vitrine não se afilia');
+:comoB
+select teste.ok((select status from public.afiliar_se((select id from public.items where nome = 'Sérum Facial'))) = 'aprovada', 'afiliação automática já sai aprovada');
+select teste.ok((select status from public.afiliar_se((select id from public.items where nome = 'Curso de Maquiagem'))) = 'pendente', 'afiliação manual fica pendente');
+select teste.ok((select bool_and(codigo ~ '^[0-9a-f]{8}$') from public.afiliacoes), 'afiliação tem código curto');
+select teste.bloqueia($$select public.decidir_afiliacao((select id from public.afiliacoes where status = 'pendente'), true)$$, 'afiliado não aprova a própria afiliação');
+:comoAnon
+select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia')) = 1, 'vitrine pública só mostra afiliação aprovada');
+:comoA
+select teste.ok((select count(*) from public.afiliacoes) = 2, 'produtor vê quem se afiliou aos itens dele');
+select public.decidir_afiliacao((select id from public.afiliacoes where status = 'pendente'), true);
+:comoD
+select teste.ok((select count(*) from public.afiliacoes) = 0, 'outro usuário não vê afiliações alheias');
+:comoAnon
+select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia')) = 2, 'após aprovação do produtor, item aparece na vitrine');
+select teste.bloqueia($$select public.registrar_clique('loja-da-bia', 'x', null, null, 'h', null)$$, 'visitante não grava clique direto');
+:comoServidor
+select teste.ok(public.registrar_clique('loja-da-bia', (select slug from public.items where nome = 'Sérum Facial'), null, null, 'ip-1', 'instagram.com'), 'servidor registra clique');
+select teste.ok(not public.registrar_clique('loja-da-bia', (select slug from public.items where nome = 'Sérum Facial'), null, null, 'ip-1', null), 'mesmo IP e item em 10 min não conta de novo');
+select teste.ok(public.registrar_clique(null, (select slug from public.items where nome = 'Sérum Facial'), null,
+                (select a.codigo from public.afiliacoes a join public.items i on i.id = a.item_id where i.nome = 'Sérum Facial'), 'ip-2', null),
+                'clique pelo link do afiliado (?a=código) é atribuído à vitrine');
+:comoB
+select teste.ok((select cliques_30d from public.meus_cliques() where titulo = 'Sérum Facial') = 2, 'afiliado vê os cliques no painel');
+:comoD
+select teste.ok((select count(*) from public.meus_cliques()) = 0, 'outro usuário não vê cliques alheios');
+:comoA
+update public.items set preco_centavos = 10990 where nome = 'Sérum Facial';
+:comoAnon
+select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia')) = 1, 'item que volta para análise some da vitrine');
+select teste.ok((select count(*) from public.item_publico((select slug from public.items where nome = 'Curso de Maquiagem'))) = 1, 'página do produto aprovado é pública');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;
