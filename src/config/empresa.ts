@@ -6,9 +6,11 @@
 
 export const EMPRESA = {
   // Como aparece no cartão CNPJ (MEI)
-  nomeEmpresarial: "[nome que aparece no seu cartão CNPJ]",
-  cnpj: "[00.000.000/0001-00]",
-  endereco: "[endereço comercial]",
+  nomeEmpresarial: "Staypse Plataforma Digital",
+  cnpj: "54.623.584/0001-80",
+  // Falta completar com rua, número e CEP do cartão CNPJ (o comércio
+  // eletrônico exige o endereço completo do fornecedor no site).
+  endereco: "Maricá, RJ",
 
   // Contatos
   email: "[e-mail]",
