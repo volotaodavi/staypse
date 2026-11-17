@@ -1,0 +1,18 @@
+<!-- E-mail de confirmação de cadastro (Supabase Auth).
+     O link usa token_hash: funciona mesmo se aberto em outro navegador/app.
+     {{ .RedirectTo }} já traz /auth/confirmar?proximo=... (definido pelo site). -->
+<div style="font-family:Arial,Helvetica,sans-serif;background:#EEF6F5;padding:24px">
+  <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;padding:28px">
+    <p style="margin:0 0 4px;font-size:22px;font-weight:800;color:#062C30">Confirme seu e-mail</p>
+    <p style="margin:0 0 20px;color:#062C30;line-height:1.5">
+      Falta só um passo para ativar sua conta na Staypse.
+    </p>
+    <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email"
+       style="display:inline-block;background:#14D6C4;color:#062C30;font-weight:700;text-decoration:none;padding:14px 24px;border-radius:999px">
+      Confirmar meu e-mail
+    </a>
+    <p style="margin:24px 0 0;font-size:13px;color:#4E6467;line-height:1.5">
+      Se você não criou uma conta na Staypse, ignore este e-mail.
+    </p>
+  </div>
+</div>

@@ -244,6 +244,16 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# E-mails da Staypse em português, com link token_hash (funciona mesmo se
+# aberto em outro navegador/app). Os mesmos textos vão para o projeto real.
+[auth.email.template.confirmation]
+subject = "Confirme seu e-mail na Staypse"
+content_path = "./supabase/templates/confirmacao.html"
+
+[auth.email.template.magic_link]
+subject = "Seu link de acesso à Staypse"
+content_path = "./supabase/templates/link-magico.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
