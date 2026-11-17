@@ -89,8 +89,9 @@ npm run build                  # checa tipos e compila
    - Em Authentication → Providers → Email: deixe **Confirm email** ligado e
      senha mínima de **8** caracteres.
 4. **Variáveis:** Project Settings → API → copie a URL, a *Publishable key* e a
-   *Secret key* para o `.env.local` (e depois para a Vercel). Gere o
-   `HASH_IP_SEGREDO` com `openssl rand -hex 32`. Veja `.env.example`.
+   *Secret key* para o `.env.local` (e depois para a Vercel). Sem domínio
+   próprio, não defina `NEXT_PUBLIC_SITE_URL`: o site usa o endereço da Vercel.
+   `HASH_IP_SEGREDO` é opcional. Veja `.env.example`.
 5. **Tornar-se admin:** crie sua conta pelo site e rode no SQL Editor:
    ```sql
    insert into public.user_roles (user_id, papel)

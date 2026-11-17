@@ -19,9 +19,19 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 async function hashDoIp(): Promise<string> {
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "desconhecido";
-  const segredo = process.env.HASH_IP_SEGREDO;
-  if (!segredo) throw new Error("Variável de ambiente HASH_IP_SEGREDO não configurada (ver .env.example).");
-  return createHmac("sha256", segredo).update(ip).digest("hex");
+  return createHmac("sha256", segredoDoHash()).update(ip).digest("hex");
+}
+
+// Segredo usado para embaralhar o IP. HASH_IP_SEGREDO é OPCIONAL: se não
+// existir, derivamos um segredo próprio a partir da chave secreta do Supabase
+// (HMAC com um rótulo fixo — o valor final não é a chave em si).
+// Atenção: trocar a chave secreta (ou este segredo) "zera" o limite por IP e a
+// detecção de autoindicação das inscrições antigas.
+function segredoDoHash(): string {
+  if (process.env.HASH_IP_SEGREDO) return process.env.HASH_IP_SEGREDO;
+  const chave = process.env.SUPABASE_SECRET_KEY;
+  if (!chave) throw new Error("Configure SUPABASE_SECRET_KEY (ver .env.example).");
+  return createHmac("sha256", chave).update("staypse:hash-ip:v1").digest("hex");
 }
 
 const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
