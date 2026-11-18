@@ -1,7 +1,8 @@
 // Produto dentro do site da loja: /loja/[loja]/[produto]
 // Quem chega por um link de afiliado (/@ana/produto) é redirecionado para cá,
 // SEM o código na barra de endereço; a indicação fica no cookie de atribuição.
-// Compra ainda fechada: o botão leva à lista de espera (nada de checkout falso).
+// Com COMPRAS_ABERTAS=1 o botão leva ao checkout; antes disso, à lista de espera
+// (nada de checkout que não pode ser pago).
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { GaleriaFotos } from "@/components/GaleriaFotos";
 import { classeBotaoLoja } from "@/components/loja";
 import { linkWhatsapp } from "@/components/publico";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
+import { comprasAbertas } from "@/lib/pedidos";
 import { formatarCnpj, formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarLoja, buscarProduto } from "@/lib/publico";
 import { supabaseUrl, urlDoSite } from "@/lib/supabase/env";
@@ -39,7 +41,12 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
   const url = `${urlDoSite()}/loja/${slug}/${produto}`;
   const fotos = item.fotos.map((f) => urlFoto(supabaseUrl(), f));
 
-  const botaoComprar = (
+  const abertas = comprasAbertas();
+  const botaoComprar = abertas ? (
+    <Link href={`/loja/${slug}/${produto}/comprar`} className={`${classeBotaoLoja} w-full`}>
+      Comprar
+    </Link>
+  ) : (
     <Link href="/#lista" className={`${classeBotaoLoja} w-full`}>
       Entrar na lista de espera
     </Link>
@@ -67,7 +74,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
 
         {/* desktop: botão no fluxo da página */}
         <div className="hidden flex-col gap-2 md:flex">
-          <p className="text-sm text-neutral-600">Compras abrem em breve.</p>
+          {!abertas && <p className="text-sm text-neutral-600">Compras abrem em breve.</p>}
           {botaoComprar}
         </div>
 
@@ -135,7 +142,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
         <div className="flex items-center gap-4">
           <div className="shrink-0">
             <p className="text-base font-semibold">{formatarPreco(item.preco_centavos)}</p>
-            <p className="text-sm text-neutral-600">Em breve</p>
+            {!abertas && <p className="text-sm text-neutral-600">Em breve</p>}
           </div>
           {botaoComprar}
         </div>

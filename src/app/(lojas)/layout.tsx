@@ -29,6 +29,12 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
             <Link href="/cookies" className="inline-block py-1 underline">
               Cookies
             </Link>
+            <Link href="/pedido" className="inline-block py-1 underline">
+              Meu pedido
+            </Link>
+            <Link href="/atendimento" className="inline-block py-1 underline">
+              Atendimento
+            </Link>
           </nav>
         </div>
       </footer>

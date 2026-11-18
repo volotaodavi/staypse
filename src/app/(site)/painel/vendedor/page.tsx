@@ -3,6 +3,7 @@
 // da loja — o banco também não deixa (RLS e funções só devolvem o que é dele).
 import Link from "next/link";
 import { BotaoWhatsapp } from "@/components/publico";
+import { MinhasVendas } from "@/components/MinhasVendas";
 import { CopiarLink } from "@/components/rastreio";
 import { exigirPapel } from "@/lib/papeis";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -140,6 +141,7 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
       </section>
 
       {/* cliques (só os dele) */}
+      <MinhasVendas />
       <section className="rounded-3xl bg-branco p-5">
         <h2 className="text-xl">Cliques</h2>
         <p className="text-sm text-petroleo/70">Pessoas que abriram seus links. Repetições da mesma pessoa em 10 minutos contam uma vez.</p>

@@ -1,6 +1,7 @@
 // Painel do revendedor (afiliado): vitrine, afiliações com links prontos e cliques.
 import Link from "next/link";
 import { BotaoWhatsapp } from "@/components/publico";
+import { MinhasVendas } from "@/components/MinhasVendas";
 import { CopiarLink } from "@/components/rastreio";
 import { exigirPapel } from "@/lib/papeis";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -163,7 +164,8 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
         </section>
       )}
 
-      {/* cliques */}
+      {/* vendas e cliques */}
+      <MinhasVendas />
       {vitrine && (
         <section className="rounded-3xl bg-branco p-5">
           <h2 className="text-xl">Cliques</h2>
