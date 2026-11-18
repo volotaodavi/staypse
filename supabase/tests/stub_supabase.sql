@@ -24,7 +24,10 @@ create table auth.users (
   email              text,
   -- como no Supabase: preenchido quando a pessoa confirma o e-mail
   email_confirmed_at timestamptz default now(),
-  raw_user_meta_data jsonb
+  raw_user_meta_data jsonb,
+  -- como no Supabase
+  created_at         timestamptz default now(),
+  last_sign_in_at    timestamptz
 );
 
 create function auth.uid() returns uuid

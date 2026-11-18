@@ -887,6 +887,167 @@ select teste.ok((select endereco like 'Rua do Bom Jesus, 100%' and email_contato
                 'loja pública traz endereço e e-mail do vendedor');
 
 -- =========================================================================
+-- 16. Checkout, pedidos, frete, arrependimento, SAC, LGPD e erros (migração 9)
+-- =========================================================================
+reset role;
+-- item físico aprovado da loja da Ana, com estoque 5 e retirada no local
+insert into public.items (producer_id, nome, descricao, fotos, categoria, declaracao_nf, declaracao_nf_em, preco_centavos, tipo,
+                          comissao_percentual, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias,
+                          retirada_local, status_aprovacao, aprovado_em)
+select id, 'Kit Banho', 'Kit com sabonete e óleo.', array['00000000-0000-0000-0000-00000000000a/kit.webp'], 'beleza', true, now(),
+       5000, 'fisico', 10, 5, 500, 10, 10, 10, 2, true, 'aprovado', now()
+from public.producers where user_id = '00000000-0000-0000-0000-00000000000a';
+update public.items set status_aprovacao = 'aprovado', aprovado_em = now() where nome = 'Kit Banho';
+select id as kit from public.items where nome = 'Kit Banho' \gset
+select id as curso from public.items where nome = 'Curso de Maquiagem' \gset
+
+-- frete: só a própria loja define
+:comoB
+select teste.bloqueia($$select public.salvar_frete(1000, 20000, 5)$$, 'quem não tem loja não define frete');
+:comoA
+select public.salvar_frete(1500, 12000, 5);
+:comoAnon
+select teste.bloqueia(format('select * from public.cotar_pedido(%L, 1, %L)', :'kit', 'digital'), 'item físico não aceita entrega digital');
+select teste.bloqueia(format('select * from public.cotar_pedido(%L, 6, %L)', :'kit', 'envio'), 'cotação respeita o estoque');
+select teste.ok((select frete_centavos = 1500 and total_centavos = 6500 from public.cotar_pedido(:'kit', 1, 'envio')),
+                'cotação: preço + frete fixo calculados pelo banco');
+select teste.ok((select frete_centavos = 0 from public.cotar_pedido(:'kit', 3, 'envio')), 'frete grátis acima do valor da loja');
+select teste.ok((select frete_centavos = 0 from public.cotar_pedido(:'kit', 1, 'retirada')), 'retirada no local sem frete');
+
+-- só o servidor cria pedido
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L)',
+                             :'kit', 'retirada', 'Caio', 'caio@teste.com', '52998224725', '2026-11-18'),
+                      'visitante não cria pedido direto');
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L)',
+                             :'kit', 'retirada', 'Caio', 'caio@teste.com', '11111111111', '2026-11-18'),
+                      'CPF inválido recusado');
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, %L, %L)',
+                             :'kit', 'envio', 'Caio', 'caio@teste.com', '52998224725', '{"cep":"123"}', '2026-11-18'),
+                      'envio sem endereço completo recusado');
+-- "indicado" por quem não tem afiliação ao kit => sem comissão
+select codigo as ped1, token as tok1 from public.criar_pedido(:'kit', 2, 'envio', '00000000-0000-0000-0000-0000000000ff', null,
+  'Caio Comprador', 'Caio@Teste.com', '529.982.247-25', '(21) 99999-0000',
+  '{"cep":"24900000","logradouro":"Rua A","numero":"1","bairro":"Centro","cidade":"Maricá","uf":"RJ","extra":"x"}', '2026-11-18') \gset
+select codigo as ped2, token as tok2 from public.criar_pedido(:'curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b', null,
+  'Duda', 'duda@teste.com', '52998224725', null, null, '2026-11-18') \gset
+reset role;
+select teste.ok((select revendedor_id is null and total_centavos = 11500 and not (endereco_entrega ? 'extra') and comprador_email = 'caio@teste.com'
+                 from public.orders where codigo = :'ped1'),
+                'pedido: total do banco, sem indicação sem afiliação aprovada, endereço limpo');
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000b' and oi.comissao_percentual > 0
+                 from public.orders o join public.order_items oi on oi.order_id = o.id where o.codigo = :'ped2'),
+                'pedido indicado por afiliação aprovada leva a comissão');
+select teste.ok((select acesso_hash <> :'tok1' from public.orders where codigo = :'ped1'), 'token do comprador guardado só como hash');
+
+-- comprador sem conta vê o pedido só com o link certo
+:comoServidor
+select teste.ok(public.pedido_do_comprador(:'ped1', 'errado') is null, 'link errado não abre o pedido');
+select teste.ok((public.pedido_do_comprador(:'ped2', :'tok2') -> 'itens' -> 0 -> 'acesso') = 'null'::jsonb,
+                'conteúdo digital fechado antes do pagamento');
+:comoAnon
+select teste.bloqueia(format('select public.confirmar_pagamento((select id from public.orders limit 1))'), 'visitante não confirma pagamento');
+:comoA
+select teste.bloqueia(format('select public.confirmar_pagamento(%L)', (select gen_random_uuid())), 'loja não confirma pagamento');
+:comoServidor
+select public.confirmar_pagamento(id) from public.orders where codigo in (:'ped1', :'ped2');
+select teste.ok((public.pedido_do_comprador(:'ped2', :'tok2') -> 'itens' -> 0 -> 'acesso') <> 'null'::jsonb,
+                'conteúdo digital liberado depois do pagamento');
+select teste.ok((public.pedido_do_comprador(:'ped2', :'tok2') ->> 'arrependimento_ate') is not null,
+                'digital: prazo de 7 dias começa na liberação');
+reset role;
+select teste.ok((select estoque = 3 from public.items where nome = 'Kit Banho'), 'pagamento baixa o estoque');
+
+-- loja: nota fiscal e rastreio; entregue começa o prazo de arrependimento
+:comoA
+select teste.ok((select count(*) from public.orders where codigo = :'ped1') = 1, 'loja vê o pedido pago');
+update public.order_items set nota_fiscal_numero = '987', nota_fiscal_chave = repeat('3', 44), codigo_rastreio = 'BR987',
+       status_entrega = 'enviado'
+where order_id = (select id from public.orders where codigo = :'ped1');
+select teste.ok((select nota_fiscal_emitida_em is not null from public.order_items
+                 where order_id = (select id from public.orders where codigo = :'ped1')), 'data da nota preenchida sozinha');
+:comoServidor
+select public.confirmar_recebimento(:'ped1', :'tok1');
+reset role;
+select teste.ok((select entregue_em is not null and arrependimento_ate = entregue_em + interval '7 days'
+                 from public.orders where codigo = :'ped1'), 'recebimento confirmado: prazo de 7 dias a partir da entrega');
+
+-- arrependimento (CDC art. 49)
+:comoServidor
+select teste.ok(public.desistir_do_pedido(:'ped1', :'tok1', null) = 'em_reembolso', 'comprador desiste dentro de 7 dias sem justificar');
+select teste.ok((public.pedido_do_comprador(:'ped1', :'tok1') ->> 'status') = 'em_reembolso', 'pedido vai para reembolso');
+reset role;
+update public.orders set arrependimento_ate = now() - interval '1 day', status = 'pago' where codigo = :'ped2';
+:comoServidor
+select teste.bloqueia(format('select public.desistir_do_pedido(%L, %L, null)', :'ped2', :'tok2'), 'fora do prazo de 7 dias a desistência é recusada');
+:comoB
+select teste.bloqueia(format('select public.concluir_reembolso((select id from public.orders where codigo = %L))', :'ped1'),
+                      'só o admin registra o reembolso');
+:comoC
+select public.concluir_reembolso(id) from public.orders where codigo = :'ped1';
+reset role;
+select teste.ok((select status = 'reembolsado' from public.orders where codigo = :'ped1'), 'reembolso concluído');
+-- pedido não pago: cancela sem custo
+:comoServidor
+select codigo as ped3, token as tok3 from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Eli', 'eli@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select teste.ok(public.desistir_do_pedido(:'ped3', :'tok3', 'mudei de ideia') = 'cancelado', 'pedido não pago é cancelado');
+select teste.ok(public.renovar_acesso_pedido(:'ped3', 'outra@teste.com') is null, 'perdeu o link: e-mail errado não gera link novo');
+select teste.ok(public.renovar_acesso_pedido(:'ped3', 'ELI@teste.com') is not null, 'perdeu o link: código + e-mail geram link novo');
+select teste.ok(public.pedido_do_comprador(:'ped3', :'tok3') is null, 'link antigo deixa de valer');
+
+-- revendedor vê a venda sem dados do comprador
+:comoB
+select teste.ok((select count(*) from public.minhas_vendas()) >= 1, 'afiliado vê as próprias vendas (sem dados do comprador)');
+
+-- SAC com protocolo e prazo de 5 dias
+:comoAnon
+select teste.bloqueia($$select * from public.abrir_atendimento(null, 'Caio', 'caio@teste.com', 'pedido', 'Mensagem de teste longa.', null)$$,
+                      'visitante não grava atendimento direto (só pelo servidor)');
+:comoServidor
+select protocolo as proto, token as tokp from public.abrir_atendimento(null, 'Caio', 'caio@teste.com', 'pedido',
+                                                                      'Quero saber do meu pedido, por favor.', :'ped1') \gset
+select protocolo as proto_lgpd from public.abrir_atendimento(null, 'Caio', 'caio@teste.com', 'lgpd_exclusao',
+                                                            'Quero apagar meus dados pessoais.', null) \gset
+select teste.ok((select prazo_ate::date = (criado_em + interval '5 days')::date from public.ver_atendimento(:'proto', :'tokp')),
+                'atendimento com protocolo e prazo de 5 dias');
+:comoA
+select teste.ok((select count(*) from public.atendimentos) = 1, 'loja vê o atendimento sobre o pedido dela (não o de LGPD)');
+select public.responder_atendimento((select id from public.atendimentos where protocolo = :'proto'), 'Seu pedido foi postado.', false);
+:comoD
+select teste.ok((select count(*) from public.atendimentos) = 0, 'terceiro não vê atendimentos');
+select teste.bloqueia(format('select public.responder_atendimento((select id from public.atendimentos limit 1), %L, true)', 'oi'),
+                      'terceiro não responde atendimento');
+:comoServidor
+select teste.ok((select status = 'respondido' and resposta like 'Seu pedido%' from public.ver_atendimento(:'proto', :'tokp')),
+                'comprador vê a resposta pelo protocolo');
+:comoC
+select teste.ok((select count(*) from public.atendimentos where protocolo = :'proto_lgpd') = 1, 'pedido LGPD chega à Staypse');
+
+-- LGPD: baixar meus dados
+:comoB
+select teste.ok((select (d -> 'conta' ->> 'email') is not null and d ? 'afiliacoes' and d ? 'aceites_de_termos'
+                 from public.meus_dados() d), 'titular baixa os próprios dados');
+:comoAnon
+select teste.bloqueia($$select public.meus_dados()$$, 'visitante não chama meus_dados');
+
+-- monitoramento
+:comoAnon
+select teste.ok(public.saude() = 1, 'checagem de saúde responde');
+select teste.bloqueia($$insert into public.erros_app (mensagem) values ('x')$$, 'visitante não grava erro');
+:comoServidor
+insert into public.erros_app (mensagem, caminho) values ('teste de erro', '/x');
+:comoB
+select teste.ok((select count(*) from public.erros_app) = 0, 'só admin lê os erros');
+:comoC
+select teste.ok((select count(*) from public.erros_app) = 1, 'admin lê os erros');
+reset role;
+update public.orders set criado_em = now() - interval '4 days' where codigo = :'ped3';
+select codigo as ped4 from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Fê', 'fe@teste.com', '52998224725', null, null, '2026-11-18') \gset
+update public.orders set criado_em = now() - interval '4 days' where codigo = :'ped4';
+select public.apagar_dados_vencidos();
+select teste.ok((select status = 'cancelado' from public.orders where codigo = :'ped4'), 'pedido não pago em 3 dias é cancelado sozinho');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;
