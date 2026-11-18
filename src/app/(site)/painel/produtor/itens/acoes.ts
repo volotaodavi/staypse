@@ -24,6 +24,10 @@ const numero = (f: FormData, c: string) => {
 function mensagemDeErro(m: string, dados: DadosItem): string {
   if (m.includes("items_comissao_faixa")) return "A comissão do revendedor deve ficar entre 10% e 70%.";
   if (m.includes("items_slug_por_loja")) return "Esse endereço já é usado por outro produto da sua loja.";
+  if (m.includes("slug_conflita_afiliado")) {
+    return "Um afiliado deste produto já indica outro produto com esse endereço. Escolha um endereço diferente.";
+  }
+  if (m.includes("foto_fora_da_pasta") || m.includes("arquivo_fora_da_pasta")) return "Envie as fotos e o arquivo de novo.";
   if (m.includes("items_slug_check")) return "Endereço do produto inválido.";
   if (m.includes("items_completo_para_analise")) {
     return `Para enviar para análise, falta: ${pendenciasItem(dados).join("; ")}.`;

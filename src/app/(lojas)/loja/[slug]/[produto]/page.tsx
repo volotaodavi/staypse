@@ -46,8 +46,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
   );
 
   return (
-    // pb-28 no celular: espaço para a barra de compra fixa
-    <main className="mx-auto grid w-full max-w-6xl gap-8 px-4 pt-6 pb-28 md:grid-cols-2 md:pb-12">
+    <main id="conteudo" tabIndex={-1} className="mx-auto grid w-full max-w-6xl gap-8 px-4 pt-6 md:grid-cols-2 md:pb-12">
       <GaleriaFotos fotos={fotos} nome={item.nome} />
 
       <div className="flex min-w-0 flex-col gap-6">
@@ -56,11 +55,12 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           <h1 className="text-2xl font-semibold">{item.nome}</h1>
           <p className="text-2xl font-semibold">{formatarPreco(item.preco_centavos)}</p>
           {indicacao && (
-            <p className="text-sm text-neutral-600" data-indicacao>
-              Indicado por{" "}
-              <a href={`/@${indicacao.h}`} className="font-semibold text-[var(--loja-link)] underline">
-                @{indicacao.h}
-              </a>
+            // CDC art. 36 / CONAR: a indicação é remunerada e isso fica claro
+            <p className="text-sm text-neutral-600">
+              <span data-indicacao>
+                Indicado por <strong className="font-semibold text-neutral-900">@{indicacao.h}</strong>
+              </span>
+              <span className="block">Quem indicou recebe uma comissão se você comprar. O preço é o mesmo.</span>
             </p>
           )}
         </div>
@@ -106,24 +106,31 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           <h2 className="text-base font-semibold">Trocas e devoluções</h2>
           <p className="text-sm text-neutral-700">
             Você pode desistir da compra em até 7 dias depois de receber o produto (Código de Defesa do Consumidor,
-            art. 49) e recebe o valor de volta integralmente.
+            art. 49) e recebe de volta tudo o que pagou, inclusive o frete. A garantia contra defeitos segue o CDC.
           </p>
         </section>
 
+        {/* Decreto 7.962/2013: nome empresarial, CNPJ, endereço físico e eletrônico */}
         <section className="flex flex-col gap-2 border-t border-neutral-200 pt-6">
           <h2 className="text-base font-semibold">Quem vende</h2>
-          <p className="text-sm text-neutral-700">
-            {loja.razao_social} · CNPJ {formatarCnpj(loja.cnpj)}
-            {loja.cidade && ` · ${loja.cidade}/${loja.uf}`}
-          </p>
+          <address className="flex flex-col gap-0.5 text-sm text-neutral-700 not-italic">
+            <span>
+              {loja.razao_social} · CNPJ {formatarCnpj(loja.cnpj)}
+            </span>
+            {(loja.endereco || loja.cidade) && (
+              <span>{[loja.endereco, [loja.cidade, loja.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")}</span>
+            )}
+            {loja.email_contato && <span>{loja.email_contato}</span>}
+          </address>
           <Link href={`/loja/${slug}`} className="text-sm font-semibold text-[var(--loja-link)] underline">
             Ver todos os produtos da loja
           </Link>
         </section>
       </div>
 
-      {/* celular: barra de compra fixa no rodapé */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white px-4 py-3 md:hidden">
+      {/* celular: barra de compra presa ao rodapé da tela enquanto o produto está
+          visível; "sticky" (e não "fixed") para nunca cobrir o rodapé legal */}
+      <div className="sticky bottom-0 z-20 -mx-4 border-t border-neutral-200 bg-white px-4 py-3 md:hidden">
         <div className="flex items-center gap-4">
           <div className="shrink-0">
             <p className="text-base font-semibold">{formatarPreco(item.preco_centavos)}</p>

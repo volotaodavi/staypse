@@ -22,6 +22,7 @@ type Afiliacao = {
   status: string;
   origem: string;
   items: { nome: string; slug: string } | null;
+  loja_vendedores: { status: string } | null;
 };
 
 export default async function PainelRevendedor({ searchParams }: PageProps<"/painel/revendedor">) {
@@ -35,7 +36,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
     supabase.from("storefronts").select("slug, nome_exibicao, publicada").eq("revendedor_id", usuario.id).maybeSingle(),
     supabase
       .from("afiliacoes")
-      .select("id, status, origem, items(nome, slug)")
+      .select("id, status, origem, items(nome, slug), loja_vendedores(status)")
       .eq("afiliado_id", usuario.id)
       .order("criado_em", { ascending: false })
       .returns<Afiliacao[]>(),
@@ -128,7 +129,10 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
                       <p className="font-medium">{a.items?.nome ?? "Item indisponível no momento"}</p>
                       <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.cor}`}>{status.rotulo}</span>
                     </div>
-                    {a.status === "aprovada" && a.items && (
+                    {a.status === "aprovada" && a.items && a.origem !== "catalogo" && a.loja_vendedores?.status !== "ativo" && (
+                      <p className="text-sm text-petroleo/75">A loja desativou seu vínculo de vendedor: este link não registra novas indicações.</p>
+                    )}
+                    {a.status === "aprovada" && a.items && (a.origem === "catalogo" || a.loja_vendedores?.status === "ativo") && (
                       <>
                         <p className="break-all rounded-lg bg-gelo px-3 py-2 text-xs">{link}</p>
                         <div className="flex flex-wrap gap-2">

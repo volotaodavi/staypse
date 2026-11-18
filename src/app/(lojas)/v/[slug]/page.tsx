@@ -77,6 +77,10 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
             </div>
           </div>
           {vitrine.bio && <p className="max-w-2xl text-base text-neutral-700">{vitrine.bio}</p>}
+          {/* CDC art. 36 / CONAR: publicidade identificada */}
+          <p className="max-w-2xl text-sm text-neutral-600">
+            Esta vitrine reúne indicações: @{slug} recebe comissão pelas vendas feitas por aqui, sem custo extra para você.
+          </p>
           <div className="flex flex-wrap gap-2">
             <a
               href={linkWhatsapp(`Olha a minha vitrine: ${nome}\n${url}`)}

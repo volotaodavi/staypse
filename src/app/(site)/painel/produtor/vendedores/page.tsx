@@ -5,6 +5,7 @@ import { exigirPapel } from "@/lib/papeis";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { alternarVendedor, atualizarVendedor } from "./acoes";
 import { FormConvite } from "./FormConvite";
+import { mesAtualBrasil } from "./relatorio/dados";
 
 export const metadata = { title: "Vendedores próprios" };
 export const instant = false;
@@ -53,7 +54,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
         .order("alterado_em", { ascending: false })
         .returns<Historico[]>()
     : { data: [] as Historico[] };
-  const mesAtual = new Date().toISOString().slice(0, 7);
+  const mesAtual = mesAtualBrasil();
   const campoNumero = "w-20 rounded-lg border border-petroleo/20 px-2 py-1.5 text-sm";
 
   return (

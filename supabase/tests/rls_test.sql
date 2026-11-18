@@ -230,7 +230,7 @@ select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise'$
 select teste.bloqueia($$update public.items set declaracao_nf_em = '2020-01-01'$$,
                       'data da declaração de NF não vem do produtor');
 update public.items set declaracao_nf = true;
-select teste.ok((select declaracao_nf_em is not null from public.items), 'declaração de NF registrada com data do servidor');
+select teste.ok((select declaracao_nf_em is not null from public.itens_privados()), 'declaração de NF registrada com data do servidor');
 select teste.bloqueia($$update public.items set fotos = array['a','b','c','d','e','f','g']$$, 'mais de 6 fotos recusado');
 update public.items set status_aprovacao = 'em_analise';
 select teste.ok(true, 'item físico completo vai para análise');
@@ -575,13 +575,13 @@ select teste.ok((select status_aprovacao from public.items where nome = 'Curso d
 insert into public.items (producer_id, nome, descricao, preco_centavos, tipo, comissao_percentual)
   select id, 'Chá Emagrecedor', 'Remédio natural, cura em 7 dias. Fique rico revendendo!', 4990, 'fisico', 30
   from public.producers;
-select teste.ok((select alerta_palavras from public.items where nome = 'Chá Emagrecedor')
+select teste.ok((select alerta_palavras from public.itens_privados() where nome = 'Chá Emagrecedor')
                 = array['cura','emagrecedor','fique rico','remedio'],
                 'alerta encontra termos proibidos sem diferenciar acento e maiúsculas');
-select teste.ok((select alerta_palavras = '{}' from public.items where nome = 'Sérum Facial'),
+select teste.ok((select alerta_palavras = '{}' from public.itens_privados() where nome = 'Sérum Facial'),
                 'item normal não recebe alerta');
 update public.items set descricao = 'Organizador para armário de cozinha.' where nome = 'Chá Emagrecedor';
-select teste.ok((select alerta_palavras from public.items where nome = 'Chá Emagrecedor') = array['emagrecedor'],
+select teste.ok((select alerta_palavras from public.itens_privados() where nome = 'Chá Emagrecedor') = array['emagrecedor'],
                 'alerta é recalculado a cada edição ("armário" não dispara "arma")');
 
 -- admin recusa item com motivo, produtor vê e reenvia
@@ -593,12 +593,12 @@ select public.admin_decidir_item((select id from public.items where nome = 'Curs
 select teste.ok((select count(*) from public.audit_log where entidade = 'item' and acao = 'item_recusado') = 1,
                 'recusa do item registrada no log');
 :comoA
-select teste.ok((select motivo_rejeicao from public.items where nome = 'Curso de Maquiagem')
+select teste.ok((select motivo_rejeicao from public.itens_privados() where nome = 'Curso de Maquiagem')
                 = 'Inclua o conteúdo das aulas na descrição.', 'produtor vê o motivo da recusa do item');
 update public.items set descricao = 'Curso em vídeo: pele, olhos e boca. 20 aulas.', status_aprovacao = 'em_analise'
   where nome = 'Curso de Maquiagem';
 select teste.ok((select status_aprovacao = 'em_analise' and motivo_rejeicao is null
-                 from public.items where nome = 'Curso de Maquiagem'), 'item corrigido volta para análise');
+                 from public.itens_privados() where nome = 'Curso de Maquiagem'), 'item corrigido volta para análise');
 
 -- item aprovado exige produtor aprovado (vale até para o servidor)
 :comoServidor
@@ -823,6 +823,68 @@ select public.definir_status_vendedor((select id from public.loja_vendedores whe
 :comoServidor
 select teste.ok((select atribuido from public.abrir_link_afiliado('davi-vendas', 'curso-de-maquiagem', 'ip-12', null, true)),
                 'vendedor reativado volta a atribuir');
+
+-- =========================================================================
+-- 15. Revisão de segurança (migração 20261122000001)
+-- =========================================================================
+-- conteúdo pago e dados internos dos itens
+:comoAnon
+select teste.bloqueia($$select link_acesso from public.items$$, 'visitante NÃO lê o link de acesso do produto digital');
+select teste.bloqueia($$select instrucoes_pos_compra from public.items$$, 'visitante NÃO lê as instruções pós-compra');
+select teste.bloqueia($$select * from public.itens_privados()$$, 'visitante não chama itens_privados');
+select teste.ok((select count(*) from public.items where slug = 'curso-de-maquiagem') = 1, 'visitante continua vendo os dados públicos do item');
+:comoB
+select teste.bloqueia($$select link_acesso from public.items$$, 'outro usuário logado NÃO lê o link de acesso');
+select teste.ok((select count(*) from public.itens_privados()) = 0, 'itens_privados não mostra itens de outra loja');
+:comoA
+select teste.ok((select count(*) from public.itens_privados() where link_acesso is not null or arquivo_path is not null) >= 1,
+                'dono da loja lê o conteúdo do próprio item digital');
+:comoC
+select teste.ok((select count(*) from public.itens_privados()) >= 3, 'admin lê todos os itens para análise');
+
+-- links externos só das plataformas permitidas (também pela API direta)
+:comoB
+select teste.bloqueia($$insert into public.external_links (storefront_id, url, titulo, plataforma)
+                        select id, 'https://loja-falsa.example/login', 'Golpe', 'shopee' from public.storefronts where slug = 'loja-da-bia'$$,
+                      'link externo de site não permitido recusado no banco');
+select teste.bloqueia($$insert into public.external_links (storefront_id, url, titulo, plataforma)
+                        select id, 'https://shopee.com.br@evil.example/x', 'Golpe', 'shopee' from public.storefronts where slug = 'loja-da-bia'$$,
+                      'truque "shopee.com.br@site-falso" recusado');
+select teste.bloqueia($$insert into public.external_links (storefront_id, url, titulo, plataforma)
+                        select id, 'https://shopee.com.br.evil.example/x', 'Golpe', 'shopee' from public.storefronts where slug = 'loja-da-bia'$$,
+                      'subdomínio enganoso "shopee.com.br.site-falso" recusado');
+select teste.bloqueia($$insert into public.external_links (storefront_id, url, titulo, plataforma, imagem_url)
+                        select id, 'https://shopee.com.br/x', 'Fone', 'shopee', 'https://rastreio.example/pixel.gif' from public.storefronts where slug = 'loja-da-bia'$$,
+                      'imagem de servidor desconhecido (pixel de rastreio) recusada');
+insert into public.external_links (storefront_id, url, titulo, plataforma, imagem_url)
+  select id, 'https://produto.mercadolivre.com.br/MLB-1', 'Garrafa', 'mercado_livre', 'https://http2.mlstatic.com/D_1.jpg'
+  from public.storefronts where slug = 'loja-da-bia';
+select teste.ok(true, 'link e imagem das plataformas permitidas aceitos');
+
+-- caminhos de arquivo
+select teste.bloqueia($$update public.storefronts set foto_path = '00000000-0000-0000-0000-00000000000b/../x.png' where slug = 'loja-da-bia'$$,
+                      'caminho com ".." recusado');
+select teste.bloqueia($$update public.storefronts set foto_path = '00000000-0000-0000-0000-00000000000a/foto.png' where slug = 'loja-da-bia'$$,
+                      'foto da vitrine fora da pasta do dono recusada');
+:comoA
+select teste.bloqueia($$update public.items set fotos = array['00000000-0000-0000-0000-00000000000b/x.webp'] where slug = 'serum-mini'$$,
+                      'foto de item na pasta de outra pessoa recusada');
+
+-- convite: não expõe o e-mail e exige e-mail confirmado
+select public.convidar_vendedor('eva@teste.com', 10, 'folha', false) as token_eva \gset
+:comoAnon
+select teste.ok((select email_mascarado = 'e***@teste.com' and not para_mim from public.ver_convite(:'token_eva')),
+                'convite mostra só o e-mail mascarado');
+reset role;
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-00000000000e', 'eva@teste.com', null, '{"nome":"Eva Sem Confirmar","papeis":[],"termos_versao":"2026-11-16"}');
+reset role; select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000e"}', false); set role authenticated;
+select teste.bloqueia(format('select public.aceitar_convite(%L, %L)', :'token_eva', 'eva'), 'convite exige e-mail confirmado');
+
+-- loja pública: identificação completa de quem vende (Decreto 7.962/2013)
+:comoAnon
+select teste.ok((select endereco like 'Rua do Bom Jesus, 100%' and email_contato is not null from public.loja_publica('ana-cosmeticos')),
+                'loja pública traz endereço e e-mail do vendedor');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas

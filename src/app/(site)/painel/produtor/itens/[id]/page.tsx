@@ -17,9 +17,9 @@ export default async function EditarItem({ params }: PageProps<"/painel/produtor
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
 
   const supabase = await criarClienteServidor();
-  // RLS: só encontra se o item for deste produtor
+  // itens_privados(): só devolve itens da própria loja (inclui o conteúdo digital)
   const { data: item } = await supabase
-    .from("items")
+    .rpc("itens_privados")
     .select(
       "id, slug, nome, descricao, fotos, preco_centavos, comissao_percentual, aprovacao_afiliacao, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, retirada_local, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao, producers!inner(user_id)",
     )

@@ -16,9 +16,14 @@ export type LinhaRelatorio = {
   comissao_centavos: number;
 };
 
+// Mês atual no horário de Brasília ("2026-11"), não em UTC
+export function mesAtualBrasil(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit" }).format(new Date());
+}
+
 // "2026-11" → aceito; inválido → mês atual
 export function mesDoParametro(mes: unknown): string {
-  return typeof mes === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes) ? mes : new Date().toISOString().slice(0, 7);
+  return typeof mes === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes) ? mes : mesAtualBrasil();
 }
 
 export async function lerRelatorio(mes: string): Promise<LinhaRelatorio[]> {

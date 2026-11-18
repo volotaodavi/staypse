@@ -22,7 +22,9 @@ export type LayoutLoja = keyof typeof LAYOUTS_LOJA;
 export const PADRAO = { principal: "#062c30", destaque: "#14d6c4", fonte: "outfit" as FonteLoja, layout: "grade" as LayoutLoja };
 
 const BRANCO = "#ffffff";
-const PRETO = "#111111";
+// preto puro: com ele, TODA cor passa AA (4,5:1) com branco ou com preto
+// (o pior caso fica em ~4,58:1). Com um "quase preto" isso deixa de valer.
+const PRETO = "#000000";
 export const AA = 4.5;
 
 export const corValida = (c: string | null | undefined): c is string => !!c && /^#[0-9a-f]{6}$/i.test(c);

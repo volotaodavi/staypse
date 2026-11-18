@@ -50,16 +50,17 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
   const status = Object.keys(STATUS_ITEM).includes(um(params.status) ?? "") ? um(params.status)! : "em_analise";
 
   const supabase = await criarClienteServidor();
+  // itens_privados(): o admin vê também o conteúdo digital para analisar
   const { data } = await supabase
-    .from("items")
+    .rpc("itens_privados")
     .select(
       "id, nome, descricao, fotos, preco_centavos, comissao_percentual, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, retirada_local, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf_em, alerta_palavras, status_aprovacao, motivo_rejeicao, producers(razao_social, status_verificacao)",
     )
     .eq("status_aprovacao", status)
-    .order("enviado_para_analise_em", { ascending: true, nullsFirst: false })
-    .returns<ItemAdmin[]>();
+    .order("enviado_para_analise_em", { ascending: true, nullsFirst: false });
   // itens com alerta de palavra proibida primeiro
-  const itens = (data ?? []).sort((a, b) => b.alerta_palavras.length - a.alerta_palavras.length);
+  // (a relação producers é 1:1; a tipagem genérica do supabase-js a vê como lista)
+  const itens = ((data ?? []) as unknown as ItemAdmin[]).sort((a, b) => b.alerta_palavras.length - a.alerta_palavras.length);
 
   // Links temporários para arquivos digitais (bucket privado)
   const caminhos = itens.map((i) => i.arquivo_path).filter(Boolean) as string[];

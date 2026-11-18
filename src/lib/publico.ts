@@ -68,8 +68,11 @@ export type Loja = {
   layout: string | null;
   razao_social: string;
   cnpj: string;
+  // Decreto 7.962/2013: endereço físico e eletrônico de quem vende
+  endereco: string | null;
   cidade: string | null;
   uf: string | null;
+  email_contato: string | null;
 };
 export type ItemLoja = { slug: string; nome: string; fotos: string[]; preco_centavos: number; tipo: string };
 

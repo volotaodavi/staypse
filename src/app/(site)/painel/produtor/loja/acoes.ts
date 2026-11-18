@@ -30,8 +30,8 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
   if (valores.loja_nome.length < 2 || valores.loja_nome.length > 80) return volta("Informe o nome da loja (2 a 80 letras).");
   if (valores.loja_descricao.length > 500) return volta("A descrição pode ter até 500 letras.");
   if (![valores.cor_principal, valores.cor_destaque].every((c) => /^#[0-9a-f]{6}$/.test(c))) return volta("Escolha as duas cores.");
-  if (!(valores.fonte in FONTES_LOJA)) return volta("Escolha uma fonte da lista.");
-  if (!(valores.layout in LAYOUTS_LOJA)) return volta("Escolha um layout.");
+  if (!Object.hasOwn(FONTES_LOJA, valores.fonte)) return volta("Escolha uma fonte da lista.");
+  if (!Object.hasOwn(LAYOUTS_LOJA, valores.layout)) return volta("Escolha um layout.");
 
   const supabase = await criarClienteServidor();
   // a função confere que o cadastro é do usuário e que a foto está na pasta dele
@@ -47,7 +47,9 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
   });
   if (error) {
     if (error.code === "23505") return volta("Esse endereço já está em uso. Escolha outro.");
-    if (error.code === "23514") return volta("Esse endereço não é permitido. Escolha outro.");
+    if (error.code === "23514") {
+      return volta(error.message.includes("loja_slug") ? "Esse endereço não é permitido. Escolha outro." : "Confira as cores, a fonte e o layout.");
+    }
     if (error.message.includes("cadastro_inexistente")) return volta("Cadastre sua empresa antes de montar a loja.");
     if (error.message.includes("foto_fora_da_pasta")) return volta("Envie a foto de novo.");
     return volta("Não foi possível salvar a loja. Tente novamente.");

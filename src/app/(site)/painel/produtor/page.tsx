@@ -42,8 +42,9 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
   let itens: ItemLista[] = [];
   if (produtor) {
     const supabase = await criarClienteServidor();
+    // itens_privados(): inclui o conteúdo do produto digital, que a API pública não mostra
     const { data } = await supabase
-      .from("items")
+      .rpc("itens_privados")
       .select(
         "id, nome, descricao, fotos, preco_centavos, comissao_percentual, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao",
       )

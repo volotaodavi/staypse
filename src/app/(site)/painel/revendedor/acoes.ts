@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
 import { exigirAlgumPapel, exigirPapel } from "@/lib/papeis";
 import { lerPreco } from "@/lib/produtor";
-import { buscarPrevia, plataformaDoLink } from "@/lib/previa-link";
+import { buscarPrevia, imagemPermitida, plataformaDoLink } from "@/lib/previa-link";
 import { ETIQUETA_VITRINES } from "@/lib/publico";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { MODELOS_VISUAIS, NICHOS_VITRINE, problemaNoSlug } from "@/lib/vitrine";
@@ -33,7 +33,7 @@ export async function salvarVitrine(_a: EstadoFormulario, f: FormData): Promise<
   const problema = problemaNoSlug(valores.slug);
   if (problema) return volta(problema);
   if (!NICHOS_VITRINE.some((n) => n.valor === valores.nicho)) return volta("Escolha o nicho da vitrine.");
-  if (!(valores.modelo_visual in MODELOS_VISUAIS)) return volta("Escolha o visual da vitrine.");
+  if (!Object.hasOwn(MODELOS_VISUAIS, valores.modelo_visual)) return volta("Escolha o visual da vitrine.");
   const proprio = valores.modelo_visual === "proprio";
   if (proprio && !/^#[0-9a-f]{6}$/.test(valores.cor_principal)) return volta("Escolha a sua cor principal.");
   if (valores.foto_path && !valores.foto_path.startsWith(`${usuario.id}/`)) return volta("Envie a foto de novo.");
@@ -54,7 +54,9 @@ export async function salvarVitrine(_a: EstadoFormulario, f: FormData): Promise<
 
   if (error) {
     if (error.code === "23505") return volta("Esse endereço já está em uso. Escolha outro.");
-    if (error.code === "23514") return volta("Esse endereço não é permitido. Escolha outro.");
+    if (error.code === "23514") {
+      return volta(error.message.includes("slug") ? "Esse endereço não é permitido. Escolha outro." : "Confira a cor e a foto da vitrine.");
+    }
     return volta("Não foi possível salvar a vitrine. Tente novamente.");
   }
   updateTag(ETIQUETA_VITRINES);
@@ -133,7 +135,9 @@ export async function adicionarLink(_a: EstadoFormulario, f: FormData): Promise<
   }
 
   if (valores.titulo.length < 2 || valores.titulo.length > 140) return volta("Informe o título (2 a 140 letras).");
-  if (valores.imagem_url && !/^https:\/\//.test(valores.imagem_url)) return volta("O endereço da imagem precisa começar com https://");
+  if (valores.imagem_url && !imagemPermitida(valores.imagem_url)) {
+    return volta("Use uma imagem da própria Shopee, Mercado Livre ou TikTok (copie o endereço da foto do produto) ou deixe em branco.");
+  }
   const preco = valores.preco ? lerPreco(valores.preco) : null;
   if (valores.preco && !preco) return volta("Preço inválido. Ex.: 49,90");
 

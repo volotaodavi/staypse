@@ -11,7 +11,8 @@ import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { urlDoSite } from "@/lib/supabase/env";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
-const percentual = (f: FormData) => Number(texto(f, "comissao_percentual").replace(",", "."));
+// "10", "10,5" ou "10%" → número
+const percentual = (f: FormData) => Number(texto(f, "comissao_percentual").replace("%", "").replace(",", ".").trim());
 
 const ERROS: Record<string, string> = {
   declaracao_obrigatoria: 'Para "split direto", marque a declaração de que o vendedor não é seu empregado.',
@@ -52,10 +53,12 @@ export async function convidarVendedor(_a: EstadoFormulario, f: FormData): Promi
 
 export async function atualizarVendedor(f: FormData) {
   await exigirPapel("produtor");
+  const pct = percentual(f);
+  if (!Number.isFinite(pct) || pct <= 0 || pct > 90) voltar("Informe a comissão em % entre 0,01 e 90 (ex.: 10).", true);
   const supabase = await criarClienteServidor();
   const { error } = await supabase.rpc("atualizar_vendedor", {
     p_vendedor: texto(f, "vendedor_id"),
-    p_comissao: percentual(f),
+    p_comissao: pct,
     p_forma: texto(f, "forma_pagamento") === "split_direto" ? "split_direto" : "folha",
     p_declaracao: f.get("declaracao_nao_empregado") === "sim",
   });

@@ -12,7 +12,13 @@ export const metadata = { title: "Painel do vendedor" };
 export const instant = false;
 
 type Vinculo = { loja_nome: string; loja_slug: string | null; comissao_percentual: number; forma_pagamento: string; status: string };
-type Afiliacao = { id: string; status: string; items: { nome: string; slug: string } | null };
+type Afiliacao = {
+  id: string;
+  status: string;
+  items: { nome: string; slug: string } | null;
+  // situação do vínculo com a loja deste item (desativado = link não atribui)
+  loja_vendedores: { status: string } | null;
+};
 type Clique = { titulo: string; tipo: string; cliques_7d: number; cliques_30d: number };
 
 const FORMA: Record<string, string> = {
@@ -31,7 +37,7 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
     supabase.from("storefronts").select("slug, publicada").eq("revendedor_id", usuario.id).maybeSingle(),
     supabase
       .from("afiliacoes")
-      .select("id, status, items(nome, slug)")
+      .select("id, status, items(nome, slug), loja_vendedores(status)")
       .eq("afiliado_id", usuario.id)
       .eq("origem", "vendedor_proprio")
       .order("criado_em")
@@ -40,7 +46,6 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
   ]);
   const vinculos = (dadosVinculos ?? []) as Vinculo[];
   const cliques = (dadosCliques ?? []) as Clique[];
-  const ativo = (vinculos ?? []).some((v) => v.status === "ativo");
 
   return (
     <div className="flex flex-col gap-6">
@@ -115,7 +120,9 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
                   <li key={a.id} className="flex flex-col gap-2 py-3">
                     <p className="font-medium">{a.items!.nome}</p>
                     <p className="break-all rounded-lg bg-gelo px-3 py-2 text-xs">{link}</p>
-                    {ativo && (
+                    {a.loja_vendedores?.status !== "ativo" ? (
+                      <p className="text-sm text-petroleo/75">A loja desativou seu vínculo: este link não registra novas indicações.</p>
+                    ) : (
                       <div className="flex flex-wrap gap-2">
                         <CopiarLink url={link} />
                         <BotaoWhatsapp

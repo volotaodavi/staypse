@@ -22,12 +22,15 @@ grant usage on schema auth to anon, authenticated, service_role;
 create table auth.users (
   id                 uuid primary key default gen_random_uuid(),
   email              text,
+  -- como no Supabase: preenchido quando a pessoa confirma o e-mail
+  email_confirmed_at timestamptz default now(),
   raw_user_meta_data jsonb
 );
 
 create function auth.uid() returns uuid
 language sql stable as $$
-  select nullif(current_setting('request.jwt.claims', true)::jsonb ->> 'sub', '')::uuid
+  -- visitante (claims vazias) → null, como no Supabase
+  select nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', '')::uuid
 $$;
 
 -- storage

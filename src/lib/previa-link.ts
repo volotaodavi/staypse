@@ -33,7 +33,21 @@ export function plataformaDoLink(url: string): string | null {
   }
 }
 
-export type Previa = { titulo?: string; imagem?: string; precoCentavos?: number };
+// Imagens só dos servidores de imagem das plataformas (mesma regra do banco:
+// imagem_externa_permitida). Evita "pixel" de rastreio de terceiros na vitrine.
+const CDNS = ["susercontent.com", "shopee.com.br", "mlstatic.com", "mercadolivre.com.br", "tiktokcdn.com", "tiktokcdn-us.com", "ibyteimg.com"];
+export function imagemPermitida(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" || u.username || u.password || u.port) return false;
+    const host = u.hostname.toLowerCase();
+    return CDNS.some((c) => host === c || host.endsWith(`.${c}`));
+  } catch {
+    return false;
+  }
+}
+
+export type Previa ={ titulo?: string; imagem?: string; precoCentavos?: number };
 
 export async function buscarPrevia(url: string): Promise<Previa | null> {
   if (!plataformaDoLink(url)) return null;
@@ -113,7 +127,7 @@ export function lerMetas(html: string): Previa {
   const generico = /^(mercado\s*(livre|libre)|shopee(\s*brasil)?|tiktok(\s*shop)?)\b.{0,20}$/i.test(titulo ?? "");
   return {
     titulo: titulo && !generico ? titulo.slice(0, 140) : undefined,
-    imagem: imagem?.startsWith("https://") && imagem.length <= 2000 ? imagem : undefined,
+    imagem: imagem && imagem.length <= 2000 && imagemPermitida(imagem) ? imagem : undefined,
     precoCentavos: Number.isFinite(valor) && valor > 0 ? Math.round(valor * 100) : undefined,
   };
 }
