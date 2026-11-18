@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { TERMOS_VERSAO } from "@/config/empresa";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
-import { comprasAbertas, mensagemDeErro, type ModoEntrega } from "@/lib/pedidos";
+import { comprasAbertas, cpfValido, mensagemDeErro, type ModoEntrega } from "@/lib/pedidos";
 import { usuarioAtual } from "@/lib/papeis";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -58,6 +58,7 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   if (valores.nome.length < 2) return dados("Informe seu nome completo.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valores.email)) return dados("Informe um e-mail válido.");
   if (valores.cpf.replace(/\D/g, "").length !== 11) return dados("Informe seu CPF (11 números). A loja precisa dele para a nota fiscal.");
+  if (!cpfValido(valores.cpf)) return dados("CPF inválido. Confira os números.");
   if (modo === "envio") {
     if (valores.cep.replace(/\D/g, "").length !== 8) return dados("Informe o CEP (8 números).");
     if (!valores.logradouro || !valores.numero || !valores.bairro || !valores.cidade || !/^[A-Z]{2}$/.test(valores.uf)) {

@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { GaleriaFotos } from "@/components/GaleriaFotos";
 import { classeBotaoLoja } from "@/components/loja";
 import { linkWhatsapp } from "@/components/publico";
@@ -37,6 +38,8 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
   const [item, dados, jar] = await Promise.all([buscarProduto(slug, produto), buscarLoja(slug), cookies()]);
   if (!item || !dados) notFound();
   const { loja } = dados;
+  // a indicação vence em 30 dias: a conferência usa a hora do acesso
+  await connection();
   const indicacao = atribuicaoDoItem(jar.get(COOKIE_ATRIBUICAO)?.value, item.id);
   const url = `${urlDoSite()}/loja/${slug}/${produto}`;
   const fotos = item.fotos.map((f) => urlFoto(supabaseUrl(), f));

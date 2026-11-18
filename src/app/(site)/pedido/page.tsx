@@ -4,6 +4,7 @@ import { Cabecalho } from "@/components/Cabecalho";
 import { FormEncontrar } from "./FormEncontrar";
 
 export const metadata: Metadata = { title: "Encontrar meu pedido", robots: { index: false } };
+export const instant = false;
 
 export default async function EncontrarPedido({ searchParams }: PageProps<"/pedido">) {
   const { invalido } = await searchParams;

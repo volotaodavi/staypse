@@ -71,6 +71,19 @@ export function mensagemDeErro(erro: { message?: string } | null | undefined, pa
   return chave ? ERROS_PEDIDO[chave] : padrao;
 }
 
+// CPF com dígitos verificadores corretos (o banco confere de novo ao criar o pedido)
+export function cpfValido(entrada: string): boolean {
+  const cpf = entrada.replace(/\D/g, "");
+  if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  const digito = (base: string) => {
+    let soma = 0;
+    for (let i = 0; i < base.length; i++) soma += Number(base[i]) * (base.length + 1 - i);
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+  return digito(cpf.slice(0, 9)) === Number(cpf[9]) && digito(cpf.slice(0, 10)) === Number(cpf[10]);
+}
+
 // "52998224725" → "529.982.247-25"
 export function formatarCpf(cpf: string | null | undefined): string {
   if (!cpf || cpf.length !== 11) return cpf ?? "";
