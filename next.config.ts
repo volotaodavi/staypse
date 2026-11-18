@@ -11,6 +11,28 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: /^http:\/\/(127\.0\.0\.1|localhost)/.test(supabase ?? ""),
   },
   partialPrefetching: true,
+  // não anuncia "X-Powered-By: Next.js"
+  poweredByHeader: false,
+  // Cabeçalhos de segurança em todas as páginas
+  headers() {
+    const seguranca = [
+      // o site não pode ser aberto dentro de outro (evita clique enganoso e "cookie stuffing")
+      { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+      { key: "X-Frame-Options", value: "DENY" },
+      // o navegador não "adivinha" o tipo dos arquivos
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      // outros sites só ficam sabendo de onde a pessoa veio (o domínio), não a página
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      // recursos do aparelho que o site não usa ficam desligados
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+      { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+    ];
+    return [
+      { source: "/:caminho*", headers: seguranca },
+      // o link do convite tem um código secreto: nunca é enviado a outros sites
+      { source: "/convite/:token", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

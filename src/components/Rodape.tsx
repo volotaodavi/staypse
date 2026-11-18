@@ -32,6 +32,9 @@ export function Rodape() {
           <Link href="/privacidade#canal-lgpd" className="hover:text-ciano">
             Canal de privacidade (LGPD)
           </Link>
+          <Link href="/cookies" className="hover:text-ciano">
+            Política de cookies
+          </Link>
           <Link href="/produtos-proibidos" className="hover:text-ciano">
             Produtos proibidos
           </Link>

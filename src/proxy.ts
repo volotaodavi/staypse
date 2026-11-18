@@ -15,7 +15,8 @@ export async function proxy(request: NextRequest) {
   // Links curtos do afiliado (no Next, pasta com "@" é reservada, por isso a
   // reescrita): /@ana → vitrine; /@ana/tenis-runner → abre o link (clique +
   // atribuição + redirecionamento para a loja). A barra de endereço não muda.
-  const arroba = request.nextUrl.pathname.match(/^\/(?:@|%40)([^/]+)(?:\/([^/]+))?\/?$/i);
+  // só letras, números e hífen (o mesmo formato dos endereços no banco)
+  const arroba = request.nextUrl.pathname.match(/^\/(?:@|%40)([A-Za-z0-9-]{1,60})(?:\/([a-z0-9-]{1,60}))?\/?$/);
   if (arroba) {
     const url = request.nextUrl.clone();
     url.pathname = arroba[2] ? `/ir/${arroba[1]}/${arroba[2]}` : `/v/${arroba[1].toLowerCase()}`;

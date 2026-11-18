@@ -10,7 +10,8 @@ import { segredoDerivado } from "./ip";
 
 export const COOKIE_ATRIBUICAO = "staypse_atrib";
 export const DURACAO_ATRIBUICAO_S = 60 * 60 * 24 * 30;
-const MAX_ENTRADAS = 20;
+// 12 produtos cabem com folga no limite de 4 KB por cookie do navegador
+const MAX_ENTRADAS = 12;
 
 export type Atribuicao = { i: string; a: string; h: string; t: number };
 

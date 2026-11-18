@@ -6,7 +6,7 @@
 // Robôs de prévia (WhatsApp, Facebook...) seguem o redirecionamento para montar
 // a prévia, mas não contam clique nem recebem cookie.
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_ATRIBUICAO, DURACAO_ATRIBUICAO_S, registrarAtribuicao } from "@/lib/atribuicao";
+import { COOKIE_ATRIBUICAO, DURACAO_ATRIBUICAO_S, atribuicaoDoItem, registrarAtribuicao } from "@/lib/atribuicao";
 import { hashDoIp } from "@/lib/ip";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 
@@ -50,19 +50,22 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/ir/[a
 
   const resposta = NextResponse.redirect(new URL(`/loja/${data.loja_slug}/${data.produto_slug}`, request.url), 302);
   resposta.headers.set("Cache-Control", "private, no-store");
-  if (data.atribuido && !robo && data.afiliado_id && data.afiliado_slug) {
+  const atual = request.cookies.get(COOKIE_ATRIBUICAO)?.value;
+  // Proteção contra "cookie stuffing": uma navegação que NÃO veio de um toque da
+  // pessoa (ex.: outro site redirecionando sozinho) não troca a indicação que
+  // já existe para o produto. Navegadores antigos não mandam o cabeçalho: aceita.
+  const toqueDaPessoa = request.headers.get("sec-fetch-user") === "?1" || !request.headers.has("sec-fetch-site");
+  const outraIndicacao = atribuicaoDoItem(atual, data.item_id);
+  const podeGravar = toqueDaPessoa || !outraIndicacao || outraIndicacao.a === data.afiliado_id;
+  if (data.atribuido && !robo && data.afiliado_id && data.afiliado_slug && podeGravar) {
     resposta.cookies.set(
       COOKIE_ATRIBUICAO,
-      registrarAtribuicao(request.cookies.get(COOKIE_ATRIBUICAO)?.value, {
-        i: data.item_id,
-        a: data.afiliado_id,
-        h: data.afiliado_slug,
-      }),
+      registrarAtribuicao(atual, { i: data.item_id, a: data.afiliado_id, h: data.afiliado_slug }),
       {
         maxAge: DURACAO_ATRIBUICAO_S,
         httpOnly: true,
         sameSite: "lax",
-        secure: request.nextUrl.protocol === "https:",
+        secure: process.env.NODE_ENV === "production",
         path: "/",
       },
     );

@@ -2,11 +2,13 @@
 // O rodapé é discreto, mas continua com os dados legais (regra 3) e deixa
 // claro quem processa o pagamento.
 import Link from "next/link";
+import { AvisoCookies } from "@/components/AvisoCookies";
 import { EMPRESA } from "@/config/empresa";
 
 export default function LayoutLojas({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <AvisoCookies />
       <div className="flex flex-1 flex-col bg-white text-neutral-900">{children}</div>
       <footer className="border-t border-neutral-200 bg-white text-neutral-600">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs leading-relaxed">
@@ -23,6 +25,9 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
             </Link>
             <Link href="/privacidade#canal-lgpd" className="underline">
               Seus dados (LGPD)
+            </Link>
+            <Link href="/cookies" className="underline">
+              Cookies
             </Link>
           </nav>
         </div>
