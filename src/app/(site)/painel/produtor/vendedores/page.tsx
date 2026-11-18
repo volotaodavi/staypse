@@ -55,7 +55,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
         .returns<Historico[]>()
     : { data: [] as Historico[] };
   const mesAtual = mesAtualBrasil();
-  const campoNumero = "w-20 rounded-lg border border-petroleo/20 px-2 py-1.5 text-sm";
+  const campoNumero = "w-20 rounded-lg border border-petroleo/60 px-2 py-1.5 text-sm";
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,13 +113,13 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
                     </label>
                     <label className="flex flex-col gap-1">
                       Forma
-                      <select name="forma_pagamento" defaultValue={v.forma_pagamento} className="rounded-lg border border-petroleo/20 px-2 py-1.5 text-sm">
+                      <select name="forma_pagamento" defaultValue={v.forma_pagamento} className="rounded-lg border border-petroleo/60 px-2 py-1.5 text-sm">
                         <option value="folha">Folha</option>
                         <option value="split_direto">Split direto</option>
                       </select>
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" name="declaracao_nao_empregado" value="sim" defaultChecked={v.declaracao_nao_empregado} className="h-4 w-4 accent-petroleo" />
+                      <input type="checkbox" name="declaracao_nao_empregado" value="sim" defaultChecked={v.declaracao_nao_empregado} className="h-5 w-5 shrink-0 accent-petroleo" />
                       Não é meu empregado
                     </label>
                     <button className="rounded-full bg-petroleo px-4 py-1.5 font-medium text-branco">Salvar</button>
@@ -141,11 +141,11 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
                         <table className="mt-2 text-xs">
                           <thead>
                             <tr className="text-left text-petroleo/70">
-                              <th className="pr-3 font-medium">Quando</th>
-                              <th className="pr-3 font-medium">Quem</th>
-                              <th className="pr-3 font-medium">O quê</th>
-                              <th className="pr-3 font-medium">De</th>
-                              <th className="font-medium">Para</th>
+                              <th scope="col" className="pr-3 font-medium">Quando</th>
+                              <th scope="col" className="pr-3 font-medium">Quem</th>
+                              <th scope="col" className="pr-3 font-medium">O quê</th>
+                              <th scope="col" className="pr-3 font-medium">De</th>
+                              <th scope="col" className="font-medium">Para</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -179,7 +179,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
         <form action="/painel/produtor/vendedores/relatorio" className="mt-3 flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-sm font-medium">
             Mês
-            <input type="month" name="mes" defaultValue={mesAtual} required className="rounded-xl border border-petroleo/20 px-3 py-2 text-base" />
+            <input type="month" name="mes" defaultValue={mesAtual} required className="rounded-xl border border-petroleo/60 px-3 py-2 text-base" />
           </label>
           <button className="rounded-full bg-petroleo px-5 py-2.5 font-medium text-branco">Baixar CSV</button>
           <button formAction="/painel/produtor/vendedores/relatorio/imprimir" className="rounded-full border border-petroleo px-5 py-2.5 font-medium">

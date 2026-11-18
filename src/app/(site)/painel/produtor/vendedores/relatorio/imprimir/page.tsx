@@ -38,13 +38,13 @@ export default async function Imprimir({ searchParams }: PageProps<"/painel/prod
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-neutral-400 text-left">
-            <th className="py-2 pr-2">Vendedor</th>
-            <th className="py-2 pr-2">Forma</th>
-            <th className="py-2 pr-2 text-right">Comissão</th>
-            <th className="py-2 pr-2 text-right">Cliques</th>
-            <th className="py-2 pr-2 text-right">Pedidos pagos</th>
-            <th className="py-2 pr-2 text-right">Vendido</th>
-            <th className="py-2 text-right">Comissão (R$)</th>
+            <th scope="col" className="py-2 pr-2">Vendedor</th>
+            <th scope="col" className="py-2 pr-2">Forma</th>
+            <th scope="col" className="py-2 pr-2 text-right">Comissão</th>
+            <th scope="col" className="py-2 pr-2 text-right">Cliques</th>
+            <th scope="col" className="py-2 pr-2 text-right">Pedidos pagos</th>
+            <th scope="col" className="py-2 pr-2 text-right">Vendido</th>
+            <th scope="col" className="py-2 text-right">Comissão (R$)</th>
           </tr>
         </thead>
         <tbody>

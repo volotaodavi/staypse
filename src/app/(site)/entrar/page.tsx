@@ -16,7 +16,7 @@ export default async function PaginaEntrar({ searchParams }: PageProps<"/entrar"
   return (
     <>
       <Cabecalho />
-      <main className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
+      <main id="conteudo" tabIndex={-1} className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
         <section className="w-full max-w-md rounded-3xl bg-branco p-6 shadow-sm sm:p-8">
           <h1 className="text-3xl">Entrar</h1>
           <p className="mt-1 mb-6 text-petroleo/75">Acesse seu painel na Staypse.</p>

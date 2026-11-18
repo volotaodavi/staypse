@@ -63,7 +63,7 @@ export function FormLoja({
           type="color"
           value={valor}
           onChange={(e) => mudar(e.target.value)}
-          className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-petroleo/20"
+          className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-petroleo/60"
           aria-label={`${rotulo} (seletor)`}
         />
         <input
@@ -71,7 +71,7 @@ export function FormLoja({
           value={valor}
           onChange={(e) => mudar(e.target.value.toLowerCase())}
           maxLength={7}
-          className="w-full min-w-0 rounded-xl border border-petroleo/20 px-3 py-2.5 font-mono text-base font-normal"
+          className="w-full min-w-0 rounded-xl border border-petroleo/60 px-3 py-2.5 font-mono text-base font-normal"
           aria-label={`${rotulo} (código)`}
         />
       </span>
@@ -101,7 +101,7 @@ export function FormLoja({
             rows={3}
             maxLength={500}
             defaultValue={inicial.loja_descricao ?? ""}
-            className="rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
+            className="rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
           />
         </label>
         <EnviarArquivo
@@ -128,7 +128,7 @@ export function FormLoja({
               name="fonte"
               value={fonte}
               onChange={(e) => setFonte(e.target.value as FonteLoja)}
-              className="rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal"
+              className="rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal"
             >
               {(Object.keys(FONTES_LOJA) as FonteLoja[]).map((f) => (
                 <option key={f} value={f}>
@@ -142,9 +142,9 @@ export function FormLoja({
             {(Object.keys(LAYOUTS_LOJA) as LayoutLoja[]).map((l) => (
               <label
                 key={l}
-                className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/20 px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
+                className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
               >
-                <input type="radio" name="layout" value={l} checked={layout === l} onChange={() => setLayout(l)} className="mt-0.5 h-4 w-4 accent-petroleo" />
+                <input type="radio" name="layout" value={l} checked={layout === l} onChange={() => setLayout(l)} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
                 <span>
                   <span className="block font-medium">{LAYOUTS_LOJA[l].rotulo}</span>
                   <span className="block text-petroleo/70">{LAYOUTS_LOJA[l].dica}</span>
@@ -167,6 +167,7 @@ export function FormLoja({
         ))}
         <div
           data-previa
+          aria-hidden="true"
           className={`${classesFontes} overflow-hidden rounded-2xl border border-neutral-200 bg-white text-neutral-900`}
           style={{ ...tema.vars, fontFamily: "var(--loja-fonte)" } as CSSProperties}
         >

@@ -120,7 +120,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
               className={`flex cursor-pointer flex-col gap-1 rounded-2xl px-4 py-3 ring-2 ${modelo === m ? "bg-gelo ring-petroleo" : "ring-petroleo/10"}`}
             >
               <span className="flex items-center gap-2 font-medium">
-                <input type="radio" name="modelo_visual" value={m} checked={modelo === m} onChange={() => setModelo(m)} className="h-4 w-4 accent-petroleo" />
+                <input type="radio" name="modelo_visual" value={m} checked={modelo === m} onChange={() => setModelo(m)} className="h-5 w-5 shrink-0 accent-petroleo" />
                 {MODELOS_VISUAIS[m].rotulo}
               </span>
               <span className="pl-6 text-sm text-petroleo/70">{MODELOS_VISUAIS[m].dica}</span>
@@ -132,13 +132,13 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
           <label className="flex flex-col gap-1 text-sm font-medium">
             Cor principal
             <span className="flex items-center gap-3">
-              <input type="color" value={cor} onChange={(e) => setCor(e.target.value)} className="h-11 w-14 cursor-pointer rounded-lg border border-petroleo/20" />
+              <input type="color" value={cor} onChange={(e) => setCor(e.target.value)} className="h-11 w-14 cursor-pointer rounded-lg border border-petroleo/60" />
               <input
                 name="cor_principal"
                 value={cor}
                 onChange={(e) => setCor(e.target.value.toLowerCase())}
                 maxLength={7}
-                className="w-28 rounded-xl border border-petroleo/20 px-3 py-2.5 font-mono text-base font-normal"
+                className="w-28 rounded-xl border border-petroleo/60 px-3 py-2.5 font-mono text-base font-normal"
                 aria-label="Código da cor"
               />
             </span>
@@ -156,13 +156,16 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
         </div>
 
         {/* prévia ao vivo do botão e dos links com o contraste já ajustado */}
-        <div className="flex flex-col gap-2 rounded-2xl border border-petroleo/10 bg-white p-4" style={tema.vars} aria-label="Prévia">
+        <div className="flex flex-col gap-2 rounded-2xl border border-petroleo/10 bg-white p-4" style={tema.vars}>
           <p className="text-sm text-neutral-600">Prévia</p>
-          <p className="text-base font-semibold">{nome || "Sua vitrine"}</p>
-          <span className="inline-flex w-fit rounded-md bg-[var(--loja-principal)] px-4 py-2 text-sm font-semibold text-[var(--loja-principal-texto)]">
-            Compartilhar no WhatsApp
-          </span>
-          <span className="text-sm font-semibold text-[var(--loja-link)] underline">Ver produto</span>
+          {/* imitação visual: os leitores de tela pulam (não são botões de verdade) */}
+          <div aria-hidden="true" className="flex flex-col gap-2">
+            <p className="text-base font-semibold">{nome || "Sua vitrine"}</p>
+            <span className="inline-flex w-fit rounded-md bg-[var(--loja-principal)] px-4 py-2 text-sm font-semibold text-[var(--loja-principal-texto)]">
+              Compartilhar no WhatsApp
+            </span>
+            <span className="text-sm font-semibold text-[var(--loja-link)] underline">Ver produto</span>
+          </div>
           {tema.avisos.map((a) => (
             <p key={a} className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {a}
@@ -178,7 +181,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
             rows={3}
             defaultValue={inicial?.bio ?? ""}
             placeholder="Conte em poucas palavras o que você indica."
-            className="rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
+            className="rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
           />
         </label>
       </fieldset>

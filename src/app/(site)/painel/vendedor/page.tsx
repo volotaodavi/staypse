@@ -149,9 +149,9 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
           <table className="mt-3 w-full text-sm">
             <thead>
               <tr className="text-left text-petroleo/70">
-                <th className="py-2 font-medium">Produto</th>
-                <th className="py-2 text-right font-medium">7 dias</th>
-                <th className="py-2 text-right font-medium">30 dias</th>
+                <th scope="col" className="py-2 font-medium">Produto</th>
+                <th scope="col" className="py-2 text-right font-medium">7 dias</th>
+                <th scope="col" className="py-2 text-right font-medium">30 dias</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-petroleo/10">

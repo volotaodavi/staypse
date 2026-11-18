@@ -27,7 +27,7 @@ export default function Inicio() {
   return (
     <>
       <Cabecalho preLancamento />
-      <main className="flex flex-1 flex-col">
+      <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col">
         {/* ---------- topo ---------- */}
         <section id="topo" className="overflow-hidden bg-petroleo text-gelo">
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pt-10 pb-16 sm:pt-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:pb-24">
@@ -131,8 +131,8 @@ export default function Inicio() {
 
         {/* ---------- formulário: os botões apontam para #revender e #produtos ---------- */}
         <section id="lista" className="bg-petroleo px-4 py-16 sm:py-20">
-          <span id="revender" className="block scroll-mt-4" />
-          <span id="produtos" className="block scroll-mt-4" />
+          <span id="revender" className="block scroll-mt-20" />
+          <span id="produtos" className="block scroll-mt-20" />
           <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
             <div className="text-gelo">
               <h2 className="text-3xl leading-tight sm:text-4xl">Entre na lista de espera</h2>

@@ -21,24 +21,24 @@ export function Cabecalho({ logado = false, preLancamento = false }: Props) {
         {logado ? (
           // Sair é um POST (evita que um link externo deslogue a pessoa)
           <form action="/sair" method="post">
-            <button className="rounded-full border border-petroleo px-4 py-2 text-sm font-medium hover:bg-gelo">
+            <button className="inline-flex min-h-11 items-center rounded-full border border-petroleo px-4 py-2 text-sm font-medium hover:bg-gelo">
               Sair
             </button>
           </form>
         ) : (
           <nav className="flex items-center gap-2 text-sm font-medium">
-            <Link href="/entrar" className="rounded-full px-4 py-2 hover:bg-gelo">
+            <Link href="/entrar" className="inline-flex min-h-11 items-center rounded-full px-4 py-2 hover:bg-gelo">
               Entrar
             </Link>
             {preLancamento ? (
               // Pré-lançamento: o botão principal é a lista de espera
-              <Link href="/#lista" className="rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95">
+              <Link href="/#lista" className="inline-flex min-h-11 items-center rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95">
                 Entrar na lista
               </Link>
             ) : (
               <Link
                 href="/cadastro"
-                className="rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95"
+                className="inline-flex min-h-11 items-center rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95"
               >
                 Criar conta
               </Link>

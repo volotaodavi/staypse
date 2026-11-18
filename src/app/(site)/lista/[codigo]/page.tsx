@@ -39,7 +39,7 @@ export default async function Obrigado({ params }: PageProps<"/lista/[codigo]">)
   return (
     <>
       <Cabecalho preLancamento />
-      <main className="flex flex-1 flex-col bg-gelo px-4 py-10">
+      <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col bg-gelo px-4 py-10">
         <div className="mx-auto flex w-full max-w-md flex-col gap-5">
           <section className="rounded-3xl bg-petroleo p-6 text-gelo">
             <p className="text-sm font-medium tracking-wide text-ciano uppercase">Inscrição confirmada</p>

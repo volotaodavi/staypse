@@ -109,7 +109,7 @@ export function FormLista() {
                   name="uf"
                   required
                   defaultValue={v.uf ?? ""}
-                  className="rounded-xl border border-petroleo/20 bg-branco px-3 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none"
+                  className="rounded-xl border border-petroleo/60 bg-branco px-3 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none"
                 >
                   <option value="" disabled>
                     --
@@ -127,7 +127,7 @@ export function FormLista() {
                 {NICHOS.map((n) => (
                   <label
                     key={n.valor}
-                    className="cursor-pointer rounded-full border border-petroleo/20 px-3 py-2 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
+                    className="cursor-pointer rounded-full border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-3 py-2 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
                   >
                     <input
                       type="checkbox"
@@ -150,7 +150,7 @@ export function FormLista() {
                 {TIPOS_PRODUTO.map((t) => (
                   <label
                     key={t.valor}
-                    className="flex-1 cursor-pointer rounded-full border border-petroleo/20 px-3 py-2 text-center text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
+                    className="flex-1 cursor-pointer rounded-full border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-3 py-2 text-center text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
                   >
                     <input
                       type="radio"
@@ -174,7 +174,7 @@ export function FormLista() {
                 rows={3}
                 placeholder="Ex.: cosméticos naturais, camisetas, curso de confeitaria"
                 defaultValue={v.o_que_vende}
-                className="rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none"
+                className="rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none"
               />
             </label>
           </>
@@ -182,12 +182,12 @@ export function FormLista() {
 
         {/* LGPD: nunca vem marcado */}
         <label className="flex gap-3 text-sm">
-          <input type="checkbox" name="consentimento" value="sim" required className="mt-0.5 h-4 w-4 shrink-0 accent-petroleo" />
+          <input type="checkbox" name="consentimento" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>
             Concordo que a Staypse use meus dados para me avisar sobre o lançamento, conforme a{" "}
             <Link href="/privacidade" target="_blank" className="font-medium underline">
               Política de Privacidade
-            </Link>
+            <span className="sr-only"> (abre em nova aba)</span></Link>
             .
           </span>
         </label>

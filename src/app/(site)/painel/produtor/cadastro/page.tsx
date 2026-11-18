@@ -65,7 +65,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
         {passo === 1 && (
           <FormAcao acao={salvarEmpresa}>
             <h2 className="text-xl">Dados da empresa</h2>
-            <Campo rotulo="Razão social" name="razao_social" required maxLength={200} defaultValue={produtor?.razao_social} />
+            <Campo rotulo="Razão social" name="razao_social" autoComplete="organization" required maxLength={200} defaultValue={produtor?.razao_social} />
             <Campo
               rotulo="CNPJ"
               name="cnpj"
@@ -82,8 +82,8 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
               placeholder="Só números, ou ISENTO"
               defaultValue={produtor?.inscricao_estadual ?? ""}
             />
-            <Campo rotulo="WhatsApp" name="whatsapp" type="tel" inputMode="tel" required placeholder="(81) 99876-5432" defaultValue={produtor?.whatsapp ?? ""} />
-            <Campo rotulo="E-mail de contato" name="email_contato" type="email" required defaultValue={produtor?.email_contato ?? usuario.email} />
+            <Campo rotulo="WhatsApp" name="whatsapp" autoComplete="tel-national" type="tel" inputMode="tel" required placeholder="(81) 99876-5432" defaultValue={produtor?.whatsapp ?? ""} />
+            <Campo rotulo="E-mail de contato" name="email_contato" autoComplete="email" type="email" required defaultValue={produtor?.email_contato ?? usuario.email} />
             <BotaoEnviar>Salvar e continuar</BotaoEnviar>
           </FormAcao>
         )}
@@ -92,18 +92,18 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
           <FormAcao acao={salvarEndereco}>
             <h2 className="text-xl">Endereço de envio</h2>
             <p className="text-sm text-petroleo/75">De onde saem os pedidos (usado no cálculo do frete).</p>
-            <Campo rotulo="CEP" name="cep" inputMode="numeric" required maxLength={9} placeholder="00000-000" defaultValue={produtor?.cep ?? ""} />
-            <Campo rotulo="Rua" name="logradouro" required maxLength={200} defaultValue={produtor?.logradouro ?? ""} />
+            <Campo rotulo="CEP" name="cep" autoComplete="postal-code" inputMode="numeric" required maxLength={9} placeholder="00000-000" defaultValue={produtor?.cep ?? ""} />
+            <Campo rotulo="Rua" name="logradouro" autoComplete="address-line1" required maxLength={200} defaultValue={produtor?.logradouro ?? ""} />
             <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3">
               <Campo rotulo="Número" name="numero" required maxLength={20} defaultValue={produtor?.numero ?? ""} />
-              <Campo rotulo="Complemento" name="complemento" maxLength={100} defaultValue={produtor?.complemento ?? ""} />
+              <Campo rotulo="Complemento" name="complemento" autoComplete="address-line2" maxLength={100} defaultValue={produtor?.complemento ?? ""} />
             </div>
-            <Campo rotulo="Bairro" name="bairro" required maxLength={100} defaultValue={produtor?.bairro ?? ""} />
+            <Campo rotulo="Bairro" name="bairro" autoComplete="address-level3" required maxLength={100} defaultValue={produtor?.bairro ?? ""} />
             <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3">
-              <Campo rotulo="Cidade" name="cidade" required maxLength={120} defaultValue={produtor?.cidade ?? ""} />
+              <Campo rotulo="Cidade" name="cidade" autoComplete="address-level2" required maxLength={120} defaultValue={produtor?.cidade ?? ""} />
               <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
                 UF
-                <select name="uf" required defaultValue={produtor?.uf ?? ""} className="rounded-xl border border-petroleo/20 bg-branco px-3 py-3 text-base font-normal">
+                <select name="uf" autoComplete="address-level1" required defaultValue={produtor?.uf ?? ""} className="rounded-xl border border-petroleo/60 bg-branco px-3 py-3 text-base font-normal">
                   <option value="" disabled>
                     --
                   </option>
@@ -161,12 +161,12 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             </ul>
             <Link href="/contrato-produtor" target="_blank" className="text-sm font-medium underline">
               Ler o contrato completo (versão {CONTRATO_PRODUTOR_VERSAO})
-            </Link>
+            <span className="sr-only"> (abre em nova aba)</span></Link>
             {contratoAceito ? (
               <p className="rounded-xl bg-gelo px-4 py-3 text-sm">✓ Você já aceitou esta versão do contrato.</p>
             ) : (
               <label className="flex gap-3 text-sm">
-                <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-4 w-4 shrink-0 accent-petroleo" />
+                <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
                 <span>Li e aceito o Contrato do Produtor.</span>
               </label>
             )}

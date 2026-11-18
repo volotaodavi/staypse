@@ -1,6 +1,6 @@
 "use client";
 // Peças de formulário reutilizadas em login, cadastro e painel.
-import { createContext, useActionState, useContext, useTransition } from "react";
+import { createContext, useActionState, useContext, useEffect, useRef, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 
 // "Enviando..." para formulários que usam <FormAcao> (sem action no <form>)
@@ -24,7 +24,7 @@ export function Campo({
       {rotulo}
       <input
         {...props}
-        className="w-full min-w-0 rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
+        className="w-full min-w-0 rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
       />
       {dica && <span className="text-xs font-normal text-petroleo/70">{dica}</span>}
     </label>
@@ -65,17 +65,26 @@ export function BotaoEnviar({
 }
 
 // Mensagem de erro ou sucesso. Nunca ciano sobre fundo claro: usamos petróleo.
+// Ao aparecer, recebe o foco: quem usa leitor de tela ou está no fim de um
+// formulário longo no celular vê na hora o que aconteceu (WCAG 3.3.1 / 4.1.3).
 export function Aviso({ estado }: { estado: EstadoFormulario }) {
-  if (!estado?.erro && !estado?.sucesso) return null;
-  const erro = Boolean(estado.erro);
+  const ref = useRef<HTMLParagraphElement>(null);
+  const texto = estado?.erro ?? estado?.sucesso;
+  useEffect(() => {
+    if (texto) ref.current?.focus({ preventScroll: false });
+  }, [estado, texto]);
+  if (!texto) return null;
+  const erro = Boolean(estado?.erro);
   return (
     <p
+      ref={ref}
+      tabIndex={-1}
       role={erro ? "alert" : "status"}
-      className={`rounded-xl px-4 py-3 text-sm ${
+      className={`rounded-xl px-4 py-3 text-sm outline-none ${
         erro ? "bg-red-50 text-red-800" : "bg-gelo text-petroleo"
       }`}
     >
-      {estado.erro ?? estado.sucesso}
+      {texto}
     </p>
   );
 }

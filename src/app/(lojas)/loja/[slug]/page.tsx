@@ -34,7 +34,7 @@ export default async function InicioLoja({ params }: PageProps<"/loja/[slug]">) 
   const grade = layout === "destaque" ? resto : itens;
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8">
+    <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-8">
       {(loja.loja_descricao || centralizado) && (
         <section className={centralizado ? "mx-auto max-w-xl text-center" : "max-w-2xl"}>
           {centralizado && <h1 className="text-2xl font-semibold">{loja.loja_nome}</h1>}

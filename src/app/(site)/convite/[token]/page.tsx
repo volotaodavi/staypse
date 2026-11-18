@@ -27,7 +27,7 @@ export default async function Convite({ params }: PageProps<"/convite/[token]">)
   return (
     <>
       <Cabecalho logado={Boolean(usuario)} />
-      <main className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
+      <main id="conteudo" tabIndex={-1} className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
         <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
           {!convite || convite.status !== "convidado" ? (
             <>

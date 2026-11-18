@@ -43,7 +43,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className={`${outfit.variable} h-full antialiased`}>
       {/* O rodapé legal (regra 3) fica nos layouts dos grupos:
           (site) = rodapé da Staypse; (lojas) = rodapé discreto nas lojas e vitrines. */}
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="flex min-h-full flex-col font-sans">
+        {/* Atalho de teclado (WCAG 2.4.1): aparece só ao receber foco */}
+        <a href="#conteudo" className="pular-conteudo">
+          Pular para o conteúdo
+        </a>
+        {children}
+      </body>
     </html>
   );
 }

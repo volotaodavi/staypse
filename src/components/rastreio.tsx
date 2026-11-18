@@ -11,7 +11,11 @@ type Clique = { vitrine: string; link: string };
 function enviarClique(dados: Clique) {
   const corpo = JSON.stringify(dados);
   if (!navigator.sendBeacon?.("/api/clique", corpo)) {
-    fetch("/api/clique", { method: "POST", body: corpo, keepalive: true }).catch(() => {});
+    fetch("/api/clique", {
+      method: "POST",
+      body: corpo,
+      keepalive: true,
+    }).catch(() => {});
   }
 }
 
@@ -38,30 +42,44 @@ export function LinkRastreado({
       onClick={() => enviarClique({ vitrine, link: linkId })}
     >
       {children}
-    </a>
+    <span className="sr-only"> (abre em nova aba)</span></a>
   );
 }
 
-export function CopiarLink({ url, rotulo = "Copiar link", className }: { url: string; rotulo?: string; className?: string }) {
+export function CopiarLink({
+  url,
+  rotulo = "Copiar link",
+  className,
+}: {
+  url: string;
+  rotulo?: string;
+  className?: string;
+}) {
   const [copiado, setCopiado] = useState(false);
   return (
-    <button
-      type="button"
-      className={
-        className ??
-        "rounded-full border border-petroleo/30 px-4 py-2 text-sm font-medium text-petroleo hover:bg-gelo"
-      }
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(url);
-          setCopiado(true);
-          setTimeout(() => setCopiado(false), 2000);
-        } catch {
-          window.prompt("Copie o link:", url);
+    <>
+      <button
+        type="button"
+        className={
+          className ??
+          "rounded-full border border-petroleo/30 px-4 py-2 text-sm font-medium text-petroleo hover:bg-gelo"
         }
-      }}
-    >
-      <span aria-live="polite">{copiado ? "Copiado!" : rotulo}</span>
-    </button>
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            setCopiado(true);
+            setTimeout(() => setCopiado(false), 2000);
+          } catch {
+            window.prompt("Copie o link:", url);
+          }
+        }}
+      >
+        {copiado ? "Copiado!" : rotulo}
+      </button>
+      {/* região de status fixa, fora do botão: leitores de tela anunciam a cópia */}
+      <span role="status" className="sr-only">
+        {copiado ? "Link copiado" : ""}
+      </span>
+    </>
   );
 }

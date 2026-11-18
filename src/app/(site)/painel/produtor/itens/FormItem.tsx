@@ -34,7 +34,7 @@ export type ItemInicial = {
 };
 
 const estiloCampo =
-  "w-full rounded-xl border border-petroleo/20 bg-branco px-4 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none";
+  "w-full rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none";
 const valor = (v: number | null | undefined) => (v == null ? "" : String(v).replace(".", ","));
 
 export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: string; supabaseUrl: string }) {
@@ -62,7 +62,7 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
           ].map(([v, rotulo]) => (
             <label
               key={v}
-              className="flex-1 cursor-pointer rounded-full border border-petroleo/20 px-3 py-2 text-center text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
+              className="flex-1 cursor-pointer rounded-full border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-3 py-2 text-center text-sm has-[:checked]:border-petroleo has-[:checked]:bg-petroleo has-[:checked]:text-branco"
             >
               <input type="radio" name="tipo" value={v} checked={tipo === v} onChange={() => setTipo(v)} className="sr-only" />
               {rotulo}
@@ -125,7 +125,7 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
           ].map(([v, rotulo, dica]) => (
             <label
               key={v}
-              className="flex flex-1 cursor-pointer flex-col rounded-2xl border border-petroleo/20 px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
+              className="flex flex-1 cursor-pointer flex-col rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
             >
               <span className="flex items-center gap-2 font-medium">
                 <input
@@ -133,7 +133,7 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
                   name="aprovacao_afiliacao"
                   value={v}
                   defaultChecked={(item?.aprovacao_afiliacao ?? "automatica") === v}
-                  className="h-4 w-4 accent-petroleo"
+                  className="h-5 w-5 shrink-0 accent-petroleo"
                 />
                 {rotulo}
               </span>
@@ -175,7 +175,7 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
             />
           </div>
           <label className="flex gap-3 text-sm">
-            <input type="checkbox" name="retirada_local" value="sim" defaultChecked={item?.retirada_local} className="mt-0.5 h-4 w-4 accent-petroleo" />
+            <input type="checkbox" name="retirada_local" value="sim" defaultChecked={item?.retirada_local} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
             Aceito retirada no local (endereço de envio do cadastro)
           </label>
         </div>
@@ -227,7 +227,7 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
 
       {/* REGRA 2: declaração registrada com data do servidor */}
       <label className="flex gap-3 rounded-2xl border border-petroleo/20 p-4 text-sm">
-        <input type="checkbox" name="declaracao_nf" value="sim" defaultChecked={item?.declaracao_nf} className="mt-0.5 h-4 w-4 shrink-0 accent-petroleo" />
+        <input type="checkbox" name="declaracao_nf" value="sim" defaultChecked={item?.declaracao_nf} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
         <span>
           <strong className="font-medium">Declaro que emito nota fiscal de todas as vendas</strong> deste produto.
         </span>

@@ -17,13 +17,13 @@ function OpcaoPapel({
   marcado?: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/20 p-4 has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
+    <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo p-4 has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
       <input
         type="checkbox"
         name="papeis"
         value={valor}
         defaultChecked={marcado}
-        className="mt-1 h-4 w-4 accent-petroleo"
+        className="mt-1 h-5 w-5 shrink-0 accent-petroleo"
       />
       <span>
         <span className="block font-medium">{titulo}</span>
@@ -88,16 +88,16 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
 
       {/* Regra 7: aceite registrado com data e versão */}
       <label className="flex gap-3 text-sm">
-        <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-4 w-4 accent-petroleo" />
+        <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
         <span>
           Tenho 18 anos ou mais e li e aceito os{" "}
           <Link href="/termos" target="_blank" className="font-medium underline">
             Termos de Uso
-          </Link>{" "}
+          <span className="sr-only"> (abre em nova aba)</span></Link>{" "}
           e a{" "}
           <Link href="/privacidade" target="_blank" className="font-medium underline">
             Política de Privacidade
-          </Link>
+          <span className="sr-only"> (abre em nova aba)</span></Link>
           .
         </span>
       </label>

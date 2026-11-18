@@ -51,7 +51,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
       (!nicho || i.categoria === nicho) && (!tipo || i.tipo === tipo) && Number(i.comissao_percentual) >= comissao,
   );
 
-  const seletor = "rounded-xl border border-petroleo/20 bg-branco px-3 py-2.5 text-base";
+  const seletor = "rounded-xl border border-petroleo/60 bg-branco px-3 py-2.5 text-base";
 
   return (
     <div className="flex flex-col gap-5">

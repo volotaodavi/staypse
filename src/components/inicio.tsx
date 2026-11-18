@@ -40,7 +40,7 @@ export const IconeCheck = ({ className = "h-5 w-5 shrink-0" }: IconeProps) => (
 // "host": endereço do site sem https:// (vem de urlDoSite — nunca fixo no código)
 export function VitrineSplit({ host }: { host: string }) {
   return (
-    <figure className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
+    <figure role="img" className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
       {/* celular */}
       <div className="rounded-[2.2rem] bg-[#0B3A3F] p-2.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
         <div className="overflow-hidden rounded-[1.75rem] bg-branco text-petroleo">
@@ -57,7 +57,7 @@ export function VitrineSplit({ host }: { host: string }) {
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-petroleo text-sm font-extrabold text-ciano">A</span>
               <div className="leading-tight">
                 <p className="text-sm font-medium">Vitrine da Ana</p>
-                <p className="text-[11px] text-petroleo/60">Beleza e cuidados</p>
+                <p className="text-[11px] text-petroleo/75">Beleza e cuidados</p>
               </div>
             </div>
 
@@ -80,7 +80,7 @@ export function VitrineSplit({ host }: { host: string }) {
                 </span>
               </div>
               <p className="mt-3 text-sm font-medium">Kit cuidados com a pele</p>
-              <p className="text-xs text-petroleo/60">Enviado pelo produtor</p>
+              <p className="text-xs text-petroleo/75">Enviado pelo produtor</p>
             </div>
 
             <div className="mt-3 w-full rounded-full bg-petroleo py-2.5 text-center text-sm font-medium text-branco">Comprar</div>
@@ -101,7 +101,7 @@ export function VitrineSplit({ host }: { host: string }) {
           <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-ciano" />Revendedor</li>
           <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-petroleo/30" />Staypse</li>
         </ul>
-        <p className="mt-2 text-[11px] text-petroleo/60">Ilustrativo. A comissão de cada produto é definida pelo produtor.</p>
+        <p className="mt-2 text-[11px] text-petroleo/75">Ilustrativo. A comissão de cada produto é definida pelo produtor.</p>
       </figcaption>
     </figure>
   );

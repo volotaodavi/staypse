@@ -89,13 +89,13 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
               className={`${botao} bg-[var(--loja-principal)] text-[var(--loja-principal-texto)]`}
             >
               Compartilhar no WhatsApp
-            </a>
+            <span className="sr-only"> (abre em nova aba)</span></a>
             <CopiarLink url={url} className={`${botao} border border-neutral-300 text-neutral-900`} />
           </div>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-8">
+      <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-8">
         <section aria-labelledby="titulo-produtos">
           <h2 id="titulo-produtos" className="mb-4 text-base font-semibold">
             Produtos

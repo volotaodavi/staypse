@@ -16,20 +16,71 @@
   --font-sans: var(--font-outfit), system-ui, sans-serif;
 }
 
-html {
-  /* evita zoom automático em campos no iPhone */
-  -webkit-text-size-adjust: 100%;
+/* Estilos de base ficam na camada "base": as classes do Tailwind (ex.:
+   font-semibold num título de loja) sempre podem sobrescrever. */
+@layer base {
+  html {
+    /* evita zoom automático em campos no iPhone */
+    -webkit-text-size-adjust: 100%;
+    /* âncoras (#lista) não ficam escondidas atrás do cabeçalho fixo ou da barra de baixo */
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: 6rem;
+  }
+
+  body {
+    background: var(--color-branco);
+    color: var(--color-petroleo);
+  }
+
+  /* Títulos da marca em Outfit ExtraBold 800 (as lojas usam a própria fonte e peso) */
+  h1,
+  h2,
+  h3 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
 }
 
-body {
-  background: var(--color-branco);
-  color: var(--color-petroleo);
-}
-
-/* Foco visível para quem navega pelo teclado */
+/* Foco visível para quem navega pelo teclado (WCAG 2.4.7 / 1.4.11):
+   anel petróleo com halo branco (contraste em fundo claro); sobre fundo
+   petróleo, anel ciano. */
 :focus-visible {
-  outline: 3px solid var(--color-ciano);
+  outline: 3px solid var(--color-petroleo);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-branco);
+}
+.bg-petroleo :focus-visible,
+.bg-petroleo:focus-visible {
+  outline-color: var(--color-ciano);
+  box-shadow: none;
+}
+
+/* Quem pediu "reduzir movimento" no aparelho não vê animações nem rolagem suave */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Link "Pular para o conteúdo": invisível até receber foco pelo teclado */
+.pular-conteudo {
+  position: absolute;
+  left: 0.5rem;
+  top: -4rem;
+  z-index: 50;
+  border-radius: 9999px;
+  background: var(--color-petroleo);
+  color: var(--color-branco);
+  padding: 0.75rem 1.25rem;
+  font-weight: 500;
+}
+.pular-conteudo:focus {
+  top: 0.5rem;
 }
 
 /* A única animação automática da página inicial: a barra do split se divide
@@ -51,12 +102,4 @@ body {
   .split-segmento {
     animation: none;
   }
-}
-
-/* Títulos sempre em Outfit ExtraBold 800 */
-h1,
-h2,
-h3 {
-  font-weight: 800;
-  letter-spacing: -0.02em;
 }

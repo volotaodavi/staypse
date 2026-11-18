@@ -9,7 +9,7 @@ export default function NaoEncontrada() {
   return (
     <>
       <Cabecalho preLancamento />
-      <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-gelo px-4 py-16 text-center">
+      <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col items-center justify-center gap-4 bg-gelo px-4 py-16 text-center">
         <h1 className="text-3xl">Página não encontrada</h1>
         <p className="max-w-md text-petroleo/80">
           Esse endereço não existe ou saiu do ar. Se alguém te enviou o link, confira se ele está completo.

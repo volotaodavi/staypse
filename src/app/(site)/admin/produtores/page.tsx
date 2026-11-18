@@ -14,7 +14,7 @@ export const instant = false;
 
 // Consulta oficial de CNPJ na Receita Federal (o admin confere manualmente)
 const RECEITA_CNPJ = "https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp";
-const estiloCampo = "w-full rounded-xl border border-petroleo/20 bg-branco px-3 py-2 text-base";
+const estiloCampo = "w-full rounded-xl border border-petroleo/60 bg-branco px-3 py-2 text-base";
 
 type ProdutorAdmin = {
   id: string;
@@ -142,7 +142,7 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="decisao" value="aprovar" />
                     <label className="flex gap-2 text-sm">
-                      <input type="checkbox" name="cnpj_ativo" value="sim" required className="mt-0.5 h-4 w-4 shrink-0 accent-petroleo" />
+                      <input type="checkbox" name="cnpj_ativo" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
                       Conferi na Receita: o CNPJ está ATIVO e confere com os documentos.
                     </label>
                     <button className="rounded-full bg-petroleo px-4 py-2 text-sm font-medium text-branco">Aprovar produtor</button>

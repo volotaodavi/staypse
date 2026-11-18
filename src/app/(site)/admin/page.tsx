@@ -33,7 +33,7 @@ export default async function Admin() {
 
   return (
     <>
-      <p className="text-sm font-medium uppercase tracking-wide text-petroleo/60">Admin</p>
+      <p className="text-sm font-medium uppercase tracking-wide text-petroleo/75">Admin</p>
       <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {numeros.map(([rotulo, valor]) => (

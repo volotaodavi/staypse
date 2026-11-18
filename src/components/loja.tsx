@@ -57,7 +57,7 @@ export function FotoProduto({
       {caminho ? (
         <Image src={urlFoto(supabaseUrl(), caminho)} alt={alt} fill sizes={sizes} priority={prioridade} className="object-cover" />
       ) : (
-        <span className="absolute inset-0 flex items-center justify-center text-sm text-neutral-500">Sem foto</span>
+        <span className="absolute inset-0 flex items-center justify-center text-sm text-neutral-600">Sem foto</span>
       )}
     </div>
   );
@@ -89,7 +89,7 @@ export function CartaoProdutoLoja({
 }) {
   const conteudo = (
     <>
-      <FotoProduto caminho={foto} alt={nome} formato={formato} sizes="(min-width: 768px) 25vw, 50vw" prioridade={prioridade} />
+      <FotoProduto caminho={foto} alt="" formato={formato} sizes="(min-width: 768px) 25vw, 50vw" prioridade={prioridade} />
       <span className="line-clamp-2 text-sm group-hover:underline">{nome}</span>
       <span className="text-base font-semibold">{formatarPreco(precoCentavos)}</span>
       {rodape}

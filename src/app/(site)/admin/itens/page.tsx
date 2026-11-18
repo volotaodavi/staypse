@@ -96,7 +96,7 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
               className={`rounded-2xl bg-branco p-4 sm:p-5 ${i.alerta_palavras.length ? "ring-2 ring-red-700" : ""}`}
             >
               {i.alerta_palavras.length > 0 && (
-                <p role="alert" className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800" data-alerta>
+                <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800" data-alerta>
                   <strong className="font-medium">⚠ Revisar: termos da lista de proibidos</strong> —{" "}
                   {i.alerta_palavras.join(", ")}
                 </p>
@@ -178,7 +178,7 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
                       rows={2}
                       placeholder="Motivo da recusa (o produtor vai ler)"
                       aria-label="Motivo da recusa"
-                      className="w-full rounded-xl border border-petroleo/20 bg-branco px-3 py-2 text-base"
+                      className="w-full rounded-xl border border-petroleo/60 bg-branco px-3 py-2 text-base"
                     />
                     <button className="rounded-full border border-red-800 px-4 py-2 text-sm font-medium text-red-800">Recusar</button>
                   </form>

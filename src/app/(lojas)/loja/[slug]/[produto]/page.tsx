@@ -78,7 +78,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           className="text-sm font-semibold text-[var(--loja-link)] underline"
         >
           Enviar no WhatsApp
-        </a>
+        <span className="sr-only"> (abre em nova aba)</span></a>
 
         {item.descricao && (
           <section className="flex flex-col gap-2 border-t border-neutral-200 pt-6">

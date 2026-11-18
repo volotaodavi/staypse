@@ -174,9 +174,9 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
             <table className="mt-3 w-full text-sm">
               <thead>
                 <tr className="text-left text-petroleo/70">
-                  <th className="py-2 font-medium">Item</th>
-                  <th className="py-2 text-right font-medium">7 dias</th>
-                  <th className="py-2 text-right font-medium">30 dias</th>
+                  <th scope="col" className="py-2 font-medium">Item</th>
+                  <th scope="col" className="py-2 text-right font-medium">7 dias</th>
+                  <th scope="col" className="py-2 text-right font-medium">30 dias</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-petroleo/10">
@@ -184,7 +184,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
                   <tr key={`${c.titulo}-${i}`}>
                     <td className="py-2 pr-2">
                       {c.titulo}
-                      {c.tipo === "externo" && <span className="ml-1 text-xs text-petroleo/60">(indicação externa)</span>}
+                      {c.tipo === "externo" && <span className="ml-1 text-xs text-petroleo/75">(indicação externa)</span>}
                     </td>
                     <td className="py-2 text-right font-medium tabular-nums">{c.cliques_7d}</td>
                     <td className="py-2 text-right font-medium tabular-nums">{c.cliques_30d}</td>

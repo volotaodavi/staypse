@@ -14,7 +14,7 @@ const ROTULO_TIPO_PRODUTO: Record<string, string> = Object.fromEntries(
   TIPOS_PRODUTO.map((t) => [t.valor, t.rotulo]),
 );
 const estiloCampo =
-  "rounded-xl border border-petroleo/20 bg-branco px-3 py-2 text-base focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none";
+  "rounded-xl border border-petroleo/60 bg-branco px-3 py-2 text-base focus:border-petroleo focus:ring-2 focus:ring-ciano focus:outline-none";
 
 export default async function AdminLista({ searchParams }: PageProps<"/admin/lista">) {
   await exigirPapel("admin");

@@ -56,7 +56,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
 
   return (
     <>
-      <p className="text-sm font-medium tracking-wide text-petroleo/60 uppercase">Produtor</p>
+      <p className="text-sm font-medium tracking-wide text-petroleo/75 uppercase">Produtor</p>
       <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
 
       {aviso.enviado && (
@@ -95,7 +95,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
         {produtor && <p className="mt-1">{produtor.razao_social}</p>}
 
         {produtor?.status_verificacao === "recusado" && (
-          <p role="alert" className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
             <strong className="font-medium">Motivo da recusa:</strong> {produtor.motivo_rejeicao}
           </p>
         )}
@@ -222,7 +222,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
                             type="number"
                             min={0}
                             defaultValue={item.estoque ?? 0}
-                            className="w-20 rounded-lg border border-petroleo/20 px-2 py-1.5"
+                            className="w-20 rounded-lg border border-petroleo/60 px-2 py-1.5"
                           />
                         </label>
                         <button className="rounded-full border border-petroleo px-3 py-1.5 text-sm">OK</button>

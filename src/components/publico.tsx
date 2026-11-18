@@ -20,7 +20,7 @@ export function FotoItem({
   sizes?: string;
 }) {
   if (!caminho) {
-    return <div className="flex aspect-square w-full items-center justify-center bg-gelo text-sm text-petroleo/50">Sem foto</div>;
+    return <div className="flex aspect-square w-full items-center justify-center bg-gelo text-sm text-petroleo/75">Sem foto</div>;
   }
   return (
     <div className="relative aspect-square w-full overflow-hidden bg-gelo">
@@ -49,7 +49,7 @@ export function CartaoItem({
 }) {
   return (
     <Link href={href} className="group flex w-full flex-col overflow-hidden rounded-2xl bg-branco ring-1 ring-petroleo/10 transition hover:ring-petroleo/30">
-      <FotoItem caminho={foto} alt={nome} prioridade={prioridade} />
+      <FotoItem caminho={foto} alt="" prioridade={prioridade} />
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{nome}</p>
         <p className="text-base font-extrabold">{formatarPreco(precoCentavos)}</p>
@@ -84,7 +84,7 @@ export function CartaoLink({ link, vitrine }: { link: LinkExterno; vitrine: stri
           className="h-20 w-20 shrink-0 rounded-xl bg-gelo object-cover"
         />
       ) : (
-        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gelo text-xs font-medium text-petroleo/60">
+        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gelo text-xs font-medium text-petroleo/75">
           {PLATAFORMAS[link.plataforma] ?? "Link"}
         </span>
       )}
@@ -117,7 +117,7 @@ export function BotaoWhatsapp({ texto, rotulo = "Compartilhar no WhatsApp", clas
     >
       <IconeWhatsapp />
       {rotulo}
-    </a>
+    <span className="sr-only"> (abre em nova aba)</span></a>
   );
 }
 

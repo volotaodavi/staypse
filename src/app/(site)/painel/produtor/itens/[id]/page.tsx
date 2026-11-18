@@ -36,7 +36,7 @@ export default async function EditarItem({ params }: PageProps<"/painel/produtor
       <h1 className="mt-2 text-3xl">Editar item</h1>
       <p className="mt-1 mb-5 text-sm text-petroleo/75">Situação: {STATUS_ITEM[item.status_aprovacao]}</p>
       {item.status_aprovacao === "recusado" && (
-        <p role="alert" className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
           <strong className="font-medium">Item recusado:</strong> {item.motivo_rejeicao}
         </p>
       )}

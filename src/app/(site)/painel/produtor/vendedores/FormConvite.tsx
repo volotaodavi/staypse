@@ -33,7 +33,7 @@ export function FormConvite({ loja }: { loja: string }) {
             className="rounded-full bg-petroleo px-4 py-2 text-sm font-medium text-branco"
           >
             Enviar no WhatsApp
-          </a>
+          <span className="sr-only"> (abre em nova aba)</span></a>
         </div>
         <a href="/painel/produtor/vendedores" className="text-sm underline">
           Convidar outra pessoa
@@ -56,8 +56,8 @@ export function FormConvite({ loja }: { loja: string }) {
       />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium">Forma de pagamento da comissão</legend>
-        <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/20 px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
-          <input type="radio" name="forma_pagamento" value="folha" checked={forma === "folha"} onChange={() => setForma("folha")} className="mt-0.5 h-4 w-4 accent-petroleo" />
+        <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
+          <input type="radio" name="forma_pagamento" value="folha" checked={forma === "folha"} onChange={() => setForma("folha")} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>
             <span className="block font-medium">Folha de pagamento (padrão, CLT)</span>
             <span className="block text-petroleo/70">
@@ -65,8 +65,8 @@ export function FormConvite({ loja }: { loja: string }) {
             </span>
           </span>
         </label>
-        <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/20 px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
-          <input type="radio" name="forma_pagamento" value="split_direto" checked={forma === "split_direto"} onChange={() => setForma("split_direto")} className="mt-0.5 h-4 w-4 accent-petroleo" />
+        <label className="flex cursor-pointer gap-3 rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo">
+          <input type="radio" name="forma_pagamento" value="split_direto" checked={forma === "split_direto"} onChange={() => setForma("split_direto")} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>
             <span className="block font-medium">Split direto</span>
             <span className="block text-petroleo/70">Só para vendedor autônomo ou MEI com contrato. Ele recebe a parte dele no split automático.</span>
@@ -75,7 +75,7 @@ export function FormConvite({ loja }: { loja: string }) {
       </fieldset>
       {forma === "split_direto" && (
         <label className="flex gap-3 rounded-2xl bg-gelo px-4 py-3 text-sm">
-          <input type="checkbox" name="declaracao_nao_empregado" value="sim" required className="mt-0.5 h-4 w-4 shrink-0 accent-petroleo" />
+          <input type="checkbox" name="declaracao_nao_empregado" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>
             <strong className="font-medium">Este vendedor não é meu empregado.</strong> Declaro que a relação é de prestação de
             serviço (autônomo ou MEI), com contrato.

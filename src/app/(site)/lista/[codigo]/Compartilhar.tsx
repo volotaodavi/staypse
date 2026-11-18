@@ -32,6 +32,7 @@ export function Compartilhar({ link }: { link: string }) {
         className="rounded-full bg-ciano px-6 py-4 text-center font-medium text-petroleo hover:brightness-95"
       >
         Compartilhar no WhatsApp
+        <span className="sr-only"> (abre em nova aba)</span>
       </a>
 
       <label className="text-sm font-medium" htmlFor="link-indicacao">
@@ -42,7 +43,7 @@ export function Compartilhar({ link }: { link: string }) {
           id="link-indicacao"
           readOnly
           value={link}
-          className="min-w-0 flex-1 rounded-xl border border-petroleo/20 bg-gelo px-3 py-3 text-sm"
+          className="min-w-0 flex-1 rounded-xl border border-petroleo/60 bg-gelo px-3 py-3 text-sm"
         />
         <button
           type="button"
@@ -52,6 +53,9 @@ export function Compartilhar({ link }: { link: string }) {
           {copiado ? "Copiado!" : "Copiar"}
         </button>
       </div>
+      <span role="status" className="sr-only">
+        {copiado ? "Link copiado" : ""}
+      </span>
     </div>
   );
 }
