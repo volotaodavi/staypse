@@ -8,7 +8,17 @@ const ALTURA = 160;
 const MARGEM_ESQ = 32;
 const MARGEM_BAIXO = 22;
 
-export function GraficoBarras({ titulo, pontos, formatar }: { titulo: string; pontos: Ponto[]; formatar: (n: number) => string }) {
+export function GraficoBarras({
+  titulo,
+  pontos,
+  formatar,
+  vazio = "Sem vendas no período.",
+}: {
+  titulo: string;
+  pontos: Ponto[];
+  formatar: (n: number) => string;
+  vazio?: string;
+}) {
   const max = Math.max(1, ...pontos.map((p) => p.valor));
   const largura = Math.max(320, pontos.length * 14 + MARGEM_ESQ);
   const passo = (largura - MARGEM_ESQ) / Math.max(1, pontos.length);
@@ -22,7 +32,7 @@ export function GraficoBarras({ titulo, pontos, formatar }: { titulo: string; po
     <figure className="flex flex-col gap-2 rounded-2xl bg-branco p-4">
       <figcaption className="text-sm font-medium">{titulo}</figcaption>
       {total === 0 ? (
-        <p className="py-8 text-center text-sm text-petroleo/75">Sem vendas no período.</p>
+        <p className="py-8 text-center text-sm text-petroleo/75">{vazio}</p>
       ) : (
         <svg viewBox={`0 0 ${largura} ${ALTURA}`} className="h-44 w-full" role="img" aria-label={`${titulo}: total ${formatar(total)}`} preserveAspectRatio="none">
           {/* grade discreta: base e topo */}
