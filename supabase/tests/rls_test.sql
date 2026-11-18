@@ -1048,6 +1048,54 @@ select public.apagar_dados_vencidos();
 select teste.ok((select status = 'cancelado' from public.orders where codigo = :'ped4'), 'pedido não pago em 3 dias é cancelado sozinho');
 
 -- =========================================================================
+-- 17. Painéis (Etapa 5): relatórios por período e bloqueio de afiliado
+-- =========================================================================
+reset role;
+select teste.ok((select bool_and(enviado_em is not null) from public.order_items oi join public.orders o on o.id = oi.order_id
+                 where o.codigo = :'ped1' and oi.status_entrega in ('enviado', 'entregue', 'devolvido')),
+                'marcar como enviado registra a data do envio');
+:comoA
+select teste.ok((select (r ->> 'vendas')::int >= 1 and jsonb_array_length(r -> 'serie') = 7
+                 from public.painel_loja_resumo(now() - interval '6 days', now() + interval '1 hour') r),
+                'resumo da loja: vendas do período e série com um ponto por dia');
+select teste.ok((select (r ->> 'vendas')::int = 0 from public.painel_loja_resumo(now() - interval '400 days', now() - interval '300 days') r),
+                'período sem vendas devolve zero (estado vazio)');
+select teste.ok((select count(*) from public.painel_loja_produtos(now() - interval '30 days', now())) >= 2,
+                'desempenho por produto da própria loja');
+:comoD
+select teste.ok((select (r ->> 'vendas')::int = 0 from public.painel_loja_resumo(now() - interval '30 days', now() + interval '1 hour') r),
+                'outra loja não vê as vendas da Ana');
+select teste.ok((select count(*) from public.painel_loja_produtos(now() - interval '30 days', now())
+                 where nome in ('Kit Banho', 'Sérum Facial')) = 0, 'outra loja não vê os produtos da Ana');
+:comoAnon
+select teste.bloqueia($$select public.painel_loja_resumo(now() - interval '1 day', now())$$, 'visitante não lê relatório de loja');
+
+-- bloquear afiliado: links e checkout deixam de atribuir; ele não se afilia de novo
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', true);
+reset role;
+select teste.ok((select count(*) from public.afiliacoes a join public.items i on i.id = a.item_id
+                 join public.producers p on p.id = i.producer_id
+                 where p.user_id = '00000000-0000-0000-0000-00000000000a' and a.afiliado_id = '00000000-0000-0000-0000-00000000000b'
+                   and a.origem = 'catalogo' and a.status = 'aprovada') = 0,
+                'afiliado bloqueado perde as afiliações de catálogo da loja');
+:comoA
+select teste.ok((select bloqueado from public.painel_loja_afiliados(now() - interval '30 days', now())
+                 where afiliado_id = '00000000-0000-0000-0000-00000000000b'), 'loja vê o afiliado como bloqueado');
+:comoB
+select teste.bloqueia(format('select public.afiliar_se(%L)', :'kit'), 'afiliado bloqueado não se afilia de novo');
+:comoD
+select teste.ok((select count(*) from public.loja_afiliados_bloqueados) = 0, 'outra loja não vê o bloqueio da Ana');
+-- o desbloqueio vale só para a loja de quem chama: o da Ana continua
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', false);
+reset role;
+select teste.ok((select count(*) from public.loja_afiliados_bloqueados) = 1, 'outra loja não desfaz o bloqueio da Ana');
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', false);
+:comoB
+select teste.ok((select status from public.afiliar_se(:'kit')) in ('aprovada', 'pendente'), 'desbloqueado pode se afiliar de novo');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;
