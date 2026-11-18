@@ -13,13 +13,13 @@ import { FormLista } from "./lista/FormLista";
 const PASSOS = [
   ["O produtor cadastra", "Fábricas, lojas e criadores cadastram produtos físicos ou digitais e definem a comissão de cada um."],
   ["Você indica pelo seu link", "Você monta a sua vitrine com um endereço só seu e compartilha onde quiser. Sem estoque."],
-  ["O pagamento é dividido na hora", "Quando alguém compra, o valor é dividido automaticamente entre produtor, revendedor e Staypse."],
+  ["O pagamento é dividido automaticamente", "Quando alguém compra, a instituição de pagamento divide o valor entre produtor, revendedor e Staypse."],
 ] as const;
 
 const REGRAS = [
   [IconeSplit, "Split automático", "Cada parte recebe a sua parte direto no pagamento. A Staypse não guarda o dinheiro de ninguém."],
   [IconeSelo, "Produtores verificados", "Só entra empresa com CNPJ ativo, que emite nota fiscal de todas as vendas. Todo produto passa por análise."],
-  [IconeVolta, "Compra com garantia", "O comprador tem 7 dias para desistir, com reembolso proporcional ao split."],
+  [IconeVolta, "Compra com garantia", "O comprador tem 7 dias para desistir e recebe de volta tudo o que pagou."],
   [IconePessoa, "Sem pirâmide", "Você ganha só sobre as suas vendas. Não existe taxa de adesão nem ganho por recrutar pessoas."],
 ] as const;
 

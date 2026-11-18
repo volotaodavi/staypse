@@ -37,7 +37,7 @@ export async function cadastrar(
   const proximo = proximoSeguro(formData.get("proximo"));
   const convite = proximo.startsWith("/convite/");
   if (papeis.length === 0 && !convite) return { valores, erro: "Escolha se quer ser produtor, revendedor ou os dois." };
-  if (!aceitou) return { valores, erro: "Para criar a conta é preciso aceitar os Termos e a Política de Privacidade." };
+  if (!aceitou) return { valores, erro: "Para criar a conta é preciso ter 18 anos ou mais e aceitar os Termos e a Política de Privacidade." };
 
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase.auth.signUp({

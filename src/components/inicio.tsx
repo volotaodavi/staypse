@@ -90,7 +90,7 @@ export function VitrineSplit({ host }: { host: string }) {
 
       {/* o split */}
       <figcaption className="relative -mt-8 mx-3 rounded-2xl bg-branco p-4 text-petroleo shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)]">
-        <p className="text-sm font-medium">Um pagamento, dividido na hora</p>
+        <p className="text-sm font-medium">Um pagamento, dividido automaticamente</p>
         <div className="mt-3 flex h-3 gap-1 overflow-hidden" aria-hidden="true">
           <span className="split-segmento rounded-l-full bg-petroleo" style={{ flexGrow: 66 }} />
           <span className="split-segmento bg-ciano" style={{ flexGrow: 26, animationDelay: "120ms" }} />
@@ -114,7 +114,7 @@ export const PERGUNTAS: [string, string][] = [
   ["Como recebo a minha parte?", "No pagamento, a instituição de pagamento parceira divide o valor automaticamente entre produtor, revendedor e Staypse. A Staypse não recebe nem guarda o dinheiro de ninguém."],
   ["Ganho por trazer outros revendedores?", "Não. Você ganha somente sobre as suas próprias vendas. Indicar amigos para a lista de espera só adianta a sua entrada no acesso antecipado."],
   ["Quem pode vender produtos?", "Empresas com CNPJ ativo que emitem nota fiscal de todas as vendas. Cada produtor e cada produto passam por análise antes de aparecer nas vitrines."],
-  ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra. O reembolso é proporcional ao que cada parte recebeu no split."],
+  ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra e recebe de volta tudo o que pagou, inclusive o frete. Entre produtor, revendedor e Staypse, a devolução segue a mesma proporção do split."],
   ["Quando a Staypse abre?", "Estamos montando as primeiras vitrines. Quem está na lista de espera recebe o aviso pelo WhatsApp, e quem trouxer mais pessoas entra primeiro."],
 ];
 

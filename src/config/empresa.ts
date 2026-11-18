@@ -27,8 +27,9 @@ export const EMPRESA = {
 // troque esta versão (use a data da mudança). Cada novo aceite fica gravado
 // no banco com a versão vigente.
 // =========================================================================
-export const TERMOS_VERSAO = "2026-11-16";
+export const TERMOS_VERSAO = "2026-11-18";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.
-export const CONTRATO_PRODUTOR_VERSAO = "2026-11-18";
+// (versão "2026-11-18.2": texto completo com vendedores da loja, taxa e LGPD)
+export const CONTRATO_PRODUTOR_VERSAO = "2026-11-18.2";

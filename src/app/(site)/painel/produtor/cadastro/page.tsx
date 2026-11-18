@@ -156,7 +156,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
               <li>Você emite nota fiscal de todas as vendas.</li>
               <li>Você define a comissão do revendedor, entre 10% e 70%.</li>
               <li>O pagamento é dividido automaticamente no split; a Staypse não recebe nem guarda o dinheiro.</li>
-              <li>O comprador pode desistir em 7 dias, com reembolso proporcional ao split.</li>
+              <li>O comprador pode desistir em 7 dias e recebe tudo de volta; entre as partes, a devolução segue a proporção do split.</li>
               <li>Produtos proibidos não são aceitos.</li>
             </ul>
             <Link href="/contrato-produtor" target="_blank" className="text-sm font-medium underline">

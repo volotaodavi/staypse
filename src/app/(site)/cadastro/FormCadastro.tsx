@@ -90,7 +90,7 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
       <label className="flex gap-3 text-sm">
         <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-4 w-4 accent-petroleo" />
         <span>
-          Li e aceito os{" "}
+          Tenho 18 anos ou mais e li e aceito os{" "}
           <Link href="/termos" target="_blank" className="font-medium underline">
             Termos de Uso
           </Link>{" "}
