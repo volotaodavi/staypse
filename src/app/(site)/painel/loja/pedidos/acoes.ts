@@ -10,8 +10,10 @@ import { lerPreco } from "@/lib/produtor";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
-const voltar = (msg: string, erro = false): never =>
-  redirect(`/painel/produtor/pedidos?${new URLSearchParams({ [erro ? "erro" : "msg"]: msg }).toString()}`);
+const voltar = (msg: string, erro = false, codigo?: string): never =>
+  redirect(
+    `/painel/loja/pedidos${codigo ? `/${codigo}` : ""}?${new URLSearchParams({ [erro ? "erro" : "msg"]: msg }).toString()}`,
+  );
 
 // ---------- frete da loja ----------
 export async function salvarFrete(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
@@ -36,6 +38,7 @@ export async function salvarFrete(_a: EstadoFormulario, f: FormData): Promise<Es
   const { error } = await supabase.rpc("salvar_frete", { p_fixo: fixo, p_gratis_acima: gratis, p_prazo: prazo });
   if (error) return volta("Não foi possível salvar o frete. Tente de novo.");
   revalidatePath("/painel/produtor/frete");
+  revalidatePath("/painel/loja");
   return { sucesso: fixo == null ? "Envio desligado: só retirada no local e produtos digitais." : "Frete salvo.", valores };
 }
 
@@ -48,13 +51,14 @@ export async function registrarEnvio(f: FormData) {
   const url = texto(f, "nf_url");
   const rastreio = texto(f, "rastreio").toUpperCase();
   const acao = texto(f, "acao"); // "nota" | "enviado" | "entregue"
+  const codigo = texto(f, "codigo").replace(/[^A-Z0-9]/g, "").slice(0, 10) || undefined;
 
-  if (!numero || numero.length > 30) voltar("Informe o número da nota fiscal.", true);
-  if (!chave && !url) voltar("Informe a chave de acesso (44 números) ou o link da nota.", true);
-  if (chave && !/^[0-9]{44}([0-9]{6})?$/.test(chave)) voltar("A chave de acesso tem 44 números (NF-e) ou 50 (NFS-e).", true);
-  if (url && !/^https:\/\/\S+$/.test(url)) voltar("O link da nota precisa começar com https://", true);
-  if (acao === "enviado" && !rastreio) voltar("Informe o código de rastreio para marcar como enviado.", true);
-  if (rastreio.length > 40) voltar("Código de rastreio longo demais.", true);
+  if (!numero || numero.length > 30) voltar("Informe o número da nota fiscal.", true, codigo);
+  if (!chave && !url) voltar("Informe a chave de acesso (44 números) ou o link da nota.", true, codigo);
+  if (chave && !/^[0-9]{44}([0-9]{6})?$/.test(chave)) voltar("A chave de acesso tem 44 números (NF-e) ou 50 (NFS-e).", true, codigo);
+  if (url && !/^https:\/\/\S+$/.test(url)) voltar("O link da nota precisa começar com https://", true, codigo);
+  if (acao === "enviado" && !rastreio) voltar("Informe o código de rastreio para marcar como enviado.", true, codigo);
+  if (rastreio.length > 40) voltar("Código de rastreio longo demais.", true, codigo);
 
   const mudanca: Record<string, string | null> = {
     nota_fiscal_numero: numero,
@@ -67,13 +71,15 @@ export async function registrarEnvio(f: FormData) {
 
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase.from("order_items").update(mudanca).eq("id", itemPedido).select("id");
-  if (error || !data?.length) voltar("Não foi possível salvar. O pedido precisa estar pago e ser da sua loja.", true);
+  if (error || !data?.length) voltar("Não foi possível salvar. O pedido precisa estar pago e ser da sua loja.", true, codigo);
   voltar(
     acao === "entregue"
       ? "Entrega registrada. O prazo de 7 dias para desistência começou."
       : acao === "enviado"
         ? "Envio registrado."
         : "Nota fiscal salva.",
+    false,
+    codigo,
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { BotaoEnviar, Campo, FormAcao } from "@/components/formulario";
-import { salvarFrete } from "../pedidos/acoes";
+import { salvarFrete } from "../../loja/pedidos/acoes";
 
 export function FormFrete({ inicial }: { inicial: { envia: string; fixo: string; gratis: string; prazo: string } }) {
   const [envia, setEnvia] = useState(inicial.envia);

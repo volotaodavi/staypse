@@ -66,5 +66,5 @@ export async function decidirAfiliacaoAcao(f: FormData) {
   const { error } = await supabase.rpc("decidir_afiliacao", { p_afiliacao: texto(f, "afiliacao_id"), p_aprovar: aprovar });
   updateTag(ETIQUETA_VITRINES);
   const msg = error ? "Não foi possível registrar a decisão." : aprovar ? "Afiliação aprovada." : "Afiliação recusada.";
-  redirect(`/painel/produtor/afiliados?msg=${encodeURIComponent(msg)}`);
+  redirect(`/painel/loja/afiliados?msg=${encodeURIComponent(msg)}`);
 }

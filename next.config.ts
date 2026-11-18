@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   // não anuncia "X-Powered-By: Next.js"
   poweredByHeader: false,
+  // Endereços antigos dos painéis (Etapa 5: um painel por papel)
+  async redirects() {
+    return [
+      { source: "/painel/produtor/pedidos", destination: "/painel/loja/pedidos", permanent: true },
+      { source: "/painel/produtor/afiliados", destination: "/painel/loja/afiliados", permanent: true },
+      { source: "/painel/revendedor", destination: "/painel/afiliado", permanent: true },
+    ];
+  },
   // Cabeçalhos de segurança em todas as páginas
   headers() {
     const seguranca = [

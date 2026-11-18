@@ -137,7 +137,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
       {/* Loja pública e afiliados */}
       {produtor && (
         <nav className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Loja, pedidos, vendedores e afiliados">
-          <Link href="/painel/produtor/pedidos" className="rounded-3xl bg-petroleo p-5 text-branco hover:bg-petroleo/90">
+          <Link href="/painel/loja/pedidos" className="rounded-3xl bg-petroleo p-5 text-branco hover:bg-petroleo/90">
             <span className="block text-lg font-extrabold text-ciano">Pedidos</span>
             <span className="text-sm text-gelo/85">Nota fiscal, envio e entrega</span>
           </Link>
@@ -153,7 +153,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
             <span className="block text-lg font-extrabold">Vendedores próprios</span>
             <span className="text-sm text-petroleo/75">Sua equipe, comissões e relatório</span>
           </Link>
-          <Link href="/painel/produtor/afiliados" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+          <Link href="/painel/loja/afiliados" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
             <span className="block text-lg font-extrabold">Afiliados</span>
             <span className="text-sm text-petroleo/75">Quem indica seus itens</span>
           </Link>

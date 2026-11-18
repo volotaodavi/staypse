@@ -56,9 +56,9 @@ export async function exigirAlgumPapel(papeis: Papel[]): Promise<UsuarioAtual> {
 
 // Áreas do painel de cada papel
 export const AREAS: { papel: Papel; caminho: string; titulo: string; texto: string }[] = [
-  { papel: "produtor", caminho: "/painel/produtor", titulo: "Produtor", texto: "Empresa, produtos e vendedores." },
-  { papel: "revendedor", caminho: "/painel/revendedor", titulo: "Revendedor", texto: "Sua vitrine, links e cliques." },
-  { papel: "vendedor_proprio", caminho: "/painel/vendedor", titulo: "Vendedor da loja", texto: "Seus links e cliques na loja." },
+  { papel: "produtor", caminho: "/painel/loja", titulo: "Loja", texto: "Vendas, pedidos, produtos, afiliados e vendedores." },
+  { papel: "revendedor", caminho: "/painel/afiliado", titulo: "Afiliado", texto: "Suas indicações, comissões, vitrine e links." },
+  { papel: "vendedor_proprio", caminho: "/painel/vendedor", titulo: "Vendedor da loja", texto: "Seus links, vendas e comissão." },
 ];
 
 // Para onde vai cada pessoa depois de entrar.
