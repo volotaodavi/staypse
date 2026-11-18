@@ -137,19 +137,15 @@ select teste.ok((select status_verificacao from public.producers) = 'rascunho', 
 select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado'$$, 'produtor não se aprova');
 select teste.bloqueia($$update public.producers set lytex_recebedor_id = 'x'$$, 'produtor não altera id da Lytex');
 select teste.bloqueia($$update public.producers set inscricao_estadual = '12.345'$$, 'inscrição estadual com pontuação recusada');
-select teste.bloqueia($$update public.producers set documento_path = '00000000-0000-0000-0000-00000000000b/doc.pdf'$$,
-                      'documento precisa estar na pasta do próprio produtor');
 
 -- envio para análise: precisa de tudo
 select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem aceitar o Contrato do Produtor não envia');
 insert into public.terms_acceptances (user_id, documento, versao)
   values ('00000000-0000-0000-0000-00000000000a', 'termos_produtor', '2026-11-18');
-select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem endereço e documentos não envia');
+select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem endereço comercial não envia');
 update public.producers set cep = '50030230', logradouro = 'Rua do Bom Jesus', numero = '100', bairro = 'Recife',
-       cidade = 'Recife', uf = 'PE',
-       documento_path = '00000000-0000-0000-0000-00000000000a/cartao-cnpj.pdf';
-select teste.bloqueia($$select public.enviar_produtor_para_analise()$$, 'sem documento do responsável não envia');
-update public.producers set documento_responsavel_path = '00000000-0000-0000-0000-00000000000a/rg.jpg';
+       cidade = 'Recife', uf = 'PE';
+-- KYC é da Lytex: a Staypse não pede nem guarda documentos
 select public.enviar_produtor_para_analise();
 select teste.ok((select status_verificacao from public.producers) = 'em_analise', 'cadastro completo vai para análise');
 select teste.ok(teste.linhas($$update public.producers set razao_social = 'Outro'$$) = 0,
@@ -162,8 +158,8 @@ select teste.bloqueia($$select public.admin_decidir_produtor((select id from pub
 select teste.ok((select count(*) from public.audit_log) = 0, 'não admin não lê o log de auditoria');
 
 :comoServidor
-select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado', aprovado_em = now()$$,
-                      'aprovado sem CNPJ ativo confirmado é recusado pelo banco');
+select teste.bloqueia($$update public.producers set status_verificacao = 'aprovado'$$,
+                      'aprovado sem data de aprovação é recusado pelo banco');
 
 -- admin recusa com motivo
 :comoC
@@ -171,30 +167,47 @@ create temp table prod as select id from public.producers;
 grant select on prod to authenticated, anon, service_role;
 select teste.bloqueia($$select public.admin_decidir_produtor((select id from prod), false, '')$$,
                       'recusa sem motivo não é aceita');
-select public.admin_decidir_produtor((select id from prod), false, 'Cartão CNPJ ilegível, envie de novo.');
+select public.admin_decidir_produtor((select id from prod), false, 'Nome da loja diferente da marca, corrija.');
 
 :comoA
-select teste.ok((select status_verificacao = 'recusado' and motivo_rejeicao = 'Cartão CNPJ ilegível, envie de novo.'
+select teste.ok((select status_verificacao = 'recusado' and motivo_rejeicao = 'Nome da loja diferente da marca, corrija.'
                  from public.producers), 'produtor vê a recusa e o motivo');
-update public.producers set documento_path = '00000000-0000-0000-0000-00000000000a/cartao-cnpj-v2.pdf';
+update public.producers set whatsapp = '81998765433';
 select public.enviar_produtor_para_analise();
 select teste.ok((select status_verificacao = 'em_analise' and motivo_rejeicao is null from public.producers),
                 'depois de corrigir, reenvia para análise');
 
--- admin aprova: precisa confirmar o CNPJ ativo
+-- admin aprova a loja por conteúdo (a identidade é verificada pela Lytex)
 :comoC
-select teste.bloqueia($$select public.admin_decidir_produtor((select id from prod), true)$$,
-                      'aprovação sem confirmar CNPJ ativo é recusada');
-select public.admin_decidir_produtor((select id from prod), true, null, true);
-select teste.ok((select status_verificacao = 'aprovado' and cnpj_ativo_verificado_em is not null
-                        and aprovado_por = '00000000-0000-0000-0000-00000000000c'
-                 from public.producers), 'admin aprova com CNPJ ativo confirmado');
-select public.admin_definir_recebedor_lytex((select id from prod), 'rec_teste_123');
-select teste.ok((select lytex_recebedor_id from public.producers) = 'rec_teste_123', 'admin preenche id do recebedor Lytex');
+select public.admin_decidir_produtor((select id from prod), true);
+select teste.ok((select status_verificacao = 'aprovado' and aprovado_por = '00000000-0000-0000-0000-00000000000c'
+                 from public.producers), 'admin aprova a loja por conteúdo');
 select teste.ok((select string_agg(acao, ',' order by id) from public.audit_log where entidade = 'producer')
-                = 'enviado_para_analise,produtor_recusado,enviado_para_analise,produtor_aprovado,recebedor_lytex_definido',
+                = 'enviado_para_analise,loja_recusada,enviado_para_analise,loja_aprovada',
                 'log de auditoria registra cada passo');
-select teste.ok((select bool_and(ator_id is not null) from public.audit_log), 'log guarda quem fez cada ação');
+select teste.ok((select bool_and(ator_id is not null) from public.audit_log where entidade = 'producer'), 'log guarda quem fez cada ação');
+select teste.ok((select detalhes ? 'antes' and detalhes ? 'depois' from public.audit_log where acao = 'loja_aprovada'),
+                'log guarda o antes e o depois');
+select teste.ok((select count(*) from public.audit_log where acao = 'kyc_proprio_removido') = 1,
+                'remoção do KYC próprio registrada no log');
+
+-- recebedor da Ana na Lytex (simulado): em análise → aprovado por webhook
+:comoServidor
+select teste.bloqueia($$select public.registrar_recebedor('00000000-0000-0000-0000-00000000000a', 'produtor', '00.000.000/0001-91', 'mock', 'rec_a', 'em_analise', null)$$,
+                      'recebedor com CNPJ diferente do cadastro é recusado');
+select public.registrar_recebedor('00000000-0000-0000-0000-00000000000a', 'produtor', '11.222.333/0001-81', 'mock', 'rec_a', 'em_analise', null);
+select public.aplicar_status_recebedor('mock', 'rec_a', 'aprovado', null, '11222333000181');
+-- recebedor do afiliado B (CPF)
+select public.registrar_recebedor('00000000-0000-0000-0000-00000000000b', 'afiliado', '529.982.247-25', 'mock', 'rec_b', 'em_analise', null);
+select public.aplicar_status_recebedor('mock', 'rec_b', 'aprovado', null, null);
+-- B também vende como vendedor próprio "split direto": recebedor próprio para isso
+select public.registrar_recebedor('00000000-0000-0000-0000-00000000000b', 'vendedor', '529.982.247-25', 'mock', 'rec_b_vend', 'em_analise', null);
+select public.aplicar_status_recebedor('mock', 'rec_b_vend', 'aprovado', null, null);
+:comoA
+select teste.ok((select status_recebedor from public.recebedores) = 'aprovado', 'loja vê o status do próprio recebedor');
+:comoB
+select teste.ok((select count(*) from public.recebedores) = 2 and (select bool_and(user_id = '00000000-0000-0000-0000-00000000000b') from public.recebedores),
+                'cada um vê só o próprio recebedor');
 select teste.bloqueia($$update public.audit_log set acao = 'x'$$, 'nem o admin altera o log');
 select teste.bloqueia($$delete from public.audit_log$$, 'nem o admin apaga o log');
 
@@ -432,19 +445,17 @@ select teste.ok((select count(*) from public.waitlist) = 0, 'usuário comum não
 select teste.ok((select count(*) from public.waitlist) = 1, 'admin vê a lista de espera');
 
 -- =========================================================================
--- 8. Armazenamento
+-- 8. Armazenamento: sem documentos de identidade (KYC é da Lytex)
 -- =========================================================================
+reset role;
+select teste.ok(not exists (select 1 from storage.buckets where id = 'documentos-produtores'), 'não existe bucket de documentos');
+select teste.ok(not exists (select 1 from information_schema.columns
+                            where table_name = 'producers' and column_name like 'documento%path'),
+                'cadastro do produtor não guarda caminho de documento');
 :comoA
-insert into storage.objects (bucket_id, name)
-  values ('documentos-produtores', '00000000-0000-0000-0000-00000000000a/cartao-cnpj.pdf');
-select teste.ok(true, 'produtor envia documento na própria pasta');
 select teste.bloqueia($$insert into storage.objects (bucket_id, name)
-                        values ('documentos-produtores', '00000000-0000-0000-0000-00000000000b/x.pdf')$$,
-                      'não envia arquivo na pasta de outro');
-:comoB
-select teste.ok((select count(*) from storage.objects) = 0, 'outro usuário não vê documento do produtor');
-:comoC
-select teste.ok((select count(*) from storage.objects) = 1, 'admin vê documentos de produtores');
+                        values ('documentos-produtores', '00000000-0000-0000-0000-00000000000a/rg.jpg')$$,
+                      'ninguém envia documento de identidade');
 
 -- =========================================================================
 -- 10. Lista de espera com indicação (Etapa 2)
@@ -615,15 +626,14 @@ select teste.bloqueia($$update public.items set status_aprovacao = 'aprovado', a
 
 -- arquivos privados
 reset role;
-select teste.ok((select bool_and(not public) from storage.buckets
-                 where id in ('documentos-produtores', 'arquivos-digitais')),
-                'buckets de documentos e arquivos digitais são privados');
+select teste.ok((select bool_and(not public) from storage.buckets where id = 'arquivos-digitais'),
+                'bucket de arquivos digitais é privado');
 :comoA
 insert into storage.objects (bucket_id, name) values ('arquivos-digitais', '00000000-0000-0000-0000-00000000000a/ebook.pdf');
 :comoAnon
 select teste.ok((select count(*) from storage.objects
-                 where bucket_id in ('documentos-produtores', 'arquivos-digitais')) = 0,
-                'visitante não vê documentos nem arquivos digitais');
+                 where bucket_id = 'arquivos-digitais') = 0,
+                'visitante não vê arquivos digitais');
 :comoB
 select teste.ok((select count(*) from storage.objects where bucket_id = 'arquivos-digitais') = 0,
                 'outro usuário não vê o arquivo digital do produtor');
@@ -1128,6 +1138,91 @@ select teste.ok((select count(*) from public.profiles where id = '00000000-0000-
 select teste.bloqueia($$select email from auth.users$$, 'loja NÃO lê e-mails da tabela de usuários');
 :comoAnon
 select teste.bloqueia($$select public.minhas_comissoes('afiliado', now() - interval '1 day', now())$$, 'visitante não lê comissões');
+
+-- =========================================================================
+-- 19. KYC só pela Lytex: recebedor decide publicação, afiliação e vendas
+-- =========================================================================
+-- loja do Davi aprovada por conteúdo, com um produto digital completo
+reset role;
+update public.producers set whatsapp = '81990000000', email_contato = 'davi@teste.com', cep = '01001000',
+       logradouro = 'Praça da Sé', numero = '1', bairro = 'Sé', cidade = 'São Paulo', uf = 'SP',
+       status_verificacao = 'aprovado', aprovado_em = now()
+ where cnpj = '12ABC34501DE35';
+update public.items set descricao = 'Curso completo de fotografia.', fotos = array['00000000-0000-0000-0000-00000000000d/f.webp'],
+       categoria = 'cursos_digitais', declaracao_nf = true, tipo_digital = 'curso', link_acesso = 'https://exemplo.com/curso',
+       instrucoes_pos_compra = 'Acesse pelo link enviado.'
+ where nome = 'Produto do Davi';
+:comoD
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise' where nome = 'Produto do Davi'$$,
+                      'sem recebedor na Lytex a loja não publica produto');
+:comoServidor
+select public.registrar_recebedor('00000000-0000-0000-0000-00000000000d', 'produtor', '12.ABC.345/01DE-35', 'mock', 'rec_d', 'em_analise', null);
+:comoD
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise' where nome = 'Produto do Davi'$$,
+                      'recebedor "em análise" ainda não publica');
+select teste.bloqueia($$insert into public.recebedores (user_id, papel, documento, provedor, status_recebedor)
+                        values ('00000000-0000-0000-0000-00000000000d', 'afiliado', '52998224725', 'mock', 'aprovado')$$,
+                      'ninguém se dá status de recebedor (só o webhook da Lytex)');
+:comoServidor
+select teste.ok(public.aplicar_status_recebedor('mock', 'rec_d', 'aprovado', null, '12ABC34501DE35') = 'em_analise',
+                'webhook muda em_analise → aprovado');
+:comoD
+update public.items set status_aprovacao = 'em_analise' where nome = 'Produto do Davi';
+select teste.ok((select status_aprovacao from public.items where nome = 'Produto do Davi') = 'em_analise',
+                'recebedor aprovado: a loja publica (vai para a análise de conteúdo)');
+-- recusado: bloqueia e mostra o motivo da Lytex
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_d', 'recusado', 'Dados bancários não conferem com o titular.', null);
+:comoD
+select teste.ok((select status_recebedor = 'recusado' and motivo = 'Dados bancários não conferem com o titular.' from public.recebedores),
+                'recusado: a loja vê o motivo informado pela Lytex');
+update public.items set status_aprovacao = 'rascunho' where nome = 'Produto do Davi';
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise' where nome = 'Produto do Davi'$$,
+                      'recebedor recusado bloqueia a publicação');
+-- documento diferente na Lytex: bloqueia
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_d', 'aprovado', null, '11222333000181');
+:comoD
+select teste.bloqueia($$update public.items set status_aprovacao = 'em_analise' where nome = 'Produto do Davi'$$,
+                      'CNPJ do recebedor diferente do cadastro bloqueia');
+
+-- loja com recebedor suspenso não recebe pedido novo
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_a', 'suspenso', 'Conta em revisão.', null);
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L)',
+                             :'kit', 'retirada', 'Gil', 'gil@teste.com', '52998224725', '2026-11-18'),
+                      'loja com recebedor suspenso não vende');
+select public.aplicar_status_recebedor('mock', 'rec_a', 'aprovado', null, '11222333000181');
+-- vendedor split_direto suspenso: a venda acontece, mas sem comissão para ele
+select public.aplicar_status_recebedor('mock', 'rec_b_vend', 'suspenso', 'Conta em revisão.', null);
+select codigo as ped5 from public.criar_pedido(:'curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b', null,
+  'Gil', 'gil@teste.com', '52998224725', null, null, '2026-11-18') \gset
+reset role;
+select teste.ok((select o.revendedor_id is null and oi.comissao_percentual = 0 from public.orders o
+                 join public.order_items oi on oi.order_id = o.id where o.codigo = :'ped5'),
+                'indicação de recebedor suspenso não gera comissão (links param de gerar vendas)');
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_b_vend', 'aprovado', null, null);
+-- afiliado sem recebedor aprovado não se afilia
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', true);
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', false);
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_b', 'em_analise', null, null);
+:comoB
+select teste.bloqueia(format('select public.afiliar_se(%L)', :'kit'), 'afiliado sem recebedor aprovado não se afilia');
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_b', 'aprovado', null, null);
+
+-- webhook: o mesmo evento duas vezes não é registrado de novo
+insert into public.eventos_pagamento (provedor, evento_id, tipo, payload) values ('mock', 'ev_1', 'recebedor.status', '{}');
+select teste.bloqueia($$insert into public.eventos_pagamento (provedor, evento_id, tipo, payload) values ('mock', 'ev_1', 'recebedor.status', '{}')$$,
+                      'evento repetido do webhook não duplica (idempotência)');
+:comoA
+select teste.ok((select count(*) from public.eventos_pagamento) = 0, 'só o admin lê os eventos de pagamento');
+:comoServidor
+select teste.bloqueia($$delete from public.audit_log$$, 'nem o servidor apaga o log de auditoria');
+select teste.bloqueia($$update public.audit_log set acao = 'x'$$, 'nem o servidor altera o log de auditoria');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
