@@ -1096,6 +1096,40 @@ select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000b', false);
 select teste.ok((select status from public.afiliar_se(:'kit')) in ('aprovada', 'pendente'), 'desbloqueado pode se afiliar de novo');
 
 -- =========================================================================
+-- 18. Painéis do afiliado e do vendedor (Etapa 5): cada um só o seu
+-- =========================================================================
+:comoB
+select teste.ok((select count(*) from public.minhas_comissoes('afiliado', now() - interval '30 days', now() + interval '1 hour')) >= 1,
+                'afiliado vê as próprias comissões');
+select teste.ok((select bool_and(situacao in ('aguardando_pagamento', 'a_receber', 'repassada', 'estornada', 'cancelada'))
+                 from public.minhas_comissoes('afiliado', now() - interval '30 days', now() + interval '1 hour')),
+                'cada comissão tem uma situação (a receber, repassada, estornada...)');
+select teste.ok((select jsonb_array_length(r -> 'serie') = 7 and r ? 'a_receber_centavos' and r ? 'repassada_centavos'
+                 from public.painel_indicador('afiliado', now() - interval '6 days', now() + interval '1 hour') r),
+                'painel do afiliado: cards e série de cliques × vendas');
+:comoD
+select teste.ok((select count(*) from public.minhas_comissoes('afiliado', now() - interval '30 days', now() + interval '1 hour')) = 0,
+                'afiliado NÃO lê vendas de outro afiliado');
+select teste.ok((select (r ->> 'a_receber_centavos')::int = 0 and (r ->> 'repassada_centavos')::int = 0
+                 from public.painel_indicador('afiliado', now() - interval '30 days', now() + interval '1 hour') r),
+                'cards de outro afiliado não somam vendas alheias');
+-- B é vendedor próprio da loja da Ana: não enxerga o faturamento da loja
+:comoB
+select teste.ok((select (r ->> 'vendas')::int = 0 and (r ->> 'faturamento_centavos')::int = 0
+                 from public.painel_loja_resumo(now() - interval '30 days', now() + interval '1 hour') r),
+                'vendedor próprio NÃO lê o faturamento da loja');
+select teste.ok((select count(*) from public.painel_loja_vendedores(now() - interval '30 days', now())) = 0,
+                'vendedor próprio NÃO vê o ranking dos colegas');
+select teste.ok((select count(*) from public.orders) = 0, 'vendedor/afiliado não lê pedidos (dados do comprador)');
+-- a loja não lê dados pessoais dos afiliados
+:comoA
+select teste.ok((select count(*) from public.profiles where id = '00000000-0000-0000-0000-00000000000b') = 0,
+                'loja NÃO lê o perfil (nome, documento, telefone) do afiliado');
+select teste.bloqueia($$select email from auth.users$$, 'loja NÃO lê e-mails da tabela de usuários');
+:comoAnon
+select teste.bloqueia($$select public.minhas_comissoes('afiliado', now() - interval '1 day', now())$$, 'visitante não lê comissões');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;
