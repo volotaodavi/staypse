@@ -43,13 +43,16 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
   if (produtor) {
     const supabase = await criarClienteServidor();
     // itens_privados(): inclui o conteúdo do produto digital, que a API pública não mostra
-    const { data } = await supabase
+    const { data, error } = await supabase
       .rpc("itens_privados")
       .select(
-        "id, nome, descricao, fotos, preco_centavos, comissao_percentual, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao",
+        "id, nome, descricao, fotos, preco_centavos, comissao_percentual, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao, criado_em",
       )
       .eq("producer_id", produtor.id)
+      // em rpc, o PostgREST só ordena por coluna que está no select (criado_em acima)
       .order("criado_em", { ascending: false });
+    // lista vazia por erro enganaria o produtor ("cadê meus produtos?")
+    if (error) throw new Error(`Produtos indisponíveis: ${error.message}`);
     itens = (data ?? []) as ItemLista[];
   }
   const base = supabaseUrl();

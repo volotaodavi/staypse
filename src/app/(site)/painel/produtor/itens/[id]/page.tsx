@@ -21,12 +21,13 @@ export default async function EditarItem({ params }: PageProps<"/painel/produtor
   const { data: item } = await supabase
     .rpc("itens_privados")
     .select(
-      "id, slug, nome, descricao, fotos, preco_centavos, comissao_percentual, aprovacao_afiliacao, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, retirada_local, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao, producers!inner(user_id)",
+      "id, slug, nome, descricao, fotos, preco_centavos, comissao_percentual, aprovacao_afiliacao, categoria, tipo, estoque, peso_gramas, altura_cm, largura_cm, comprimento_cm, prazo_postagem_dias, retirada_local, tipo_digital, arquivo_path, link_acesso, instrucoes_pos_compra, declaracao_nf, status_aprovacao, motivo_rejeicao, producers(user_id)",
     )
     .eq("id", id)
-    .eq("producers.user_id", usuario.id)
-    .maybeSingle<ItemInicial & { motivo_rejeicao: string | null }>();
-  if (!item) notFound();
+    .maybeSingle<ItemInicial & { motivo_rejeicao: string | null; producers: { user_id: string } | null }>();
+  // itens_privados() já filtra dono/admin; aqui garantimos que é o PRÓPRIO produtor
+  // (em rpc, o PostgREST não aceita filtro em tabela relacionada)
+  if (!item || item.producers?.user_id !== usuario.id) notFound();
 
   return (
     <div className="mx-auto max-w-md">

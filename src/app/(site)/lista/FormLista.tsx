@@ -31,7 +31,8 @@ export function FormLista() {
 
   // Depois de um erro, o React limpa o formulário: reaproveitamos o que veio de volta
   const v = estado?.valores ?? {};
-  const abaAtual = (v.interesse as TipoInscricao) || tipo;
+  // a aba vem só do estado local: depois de um erro a pessoa ainda pode trocar
+  const abaAtual = tipo;
   const nichosMarcados = (v.nichos ?? "").split(",");
 
   if (estado?.sucesso) return <Aviso estado={estado} />;
@@ -56,8 +57,8 @@ export function FormLista() {
         {botaoAba("produtor", "Tenho produtos")}
       </div>
 
-      {/* "key" troca o formulário inteiro ao mudar de aba */}
-      <form key={abaAtual} action={acao} className="flex flex-col gap-4">
+      {/* sem "key": ao trocar de aba, nome, e-mail e WhatsApp continuam preenchidos */}
+      <form action={acao} className="flex flex-col gap-4">
         <input type="hidden" name="interesse" value={abaAtual} />
         <input type="hidden" name="ref" value={ref} />
 
