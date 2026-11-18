@@ -1,21 +1,22 @@
 // Cadastro do produtor em 5 passos (pensado para o celular):
-// 1 Empresa · 2 Endereço de envio · 3 Documentos · 4 Contrato · 5 Revisar e enviar
+// 1 Empresa · 2 Endereço de envio · 3 Recebimento (Lytex) · 4 Contrato · 5 Revisar e enviar
+// A Staypse NÃO pede documentos de identidade: quem verifica é a Lytex, no cadastro de recebimento.
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { EnviarArquivo } from "@/components/arquivos";
+import { Recebimento } from "@/components/painel/Recebimento";
 import { BotaoEnviar, Campo, FormAcao } from "@/components/formulario";
 import { CONTRATO_PRODUTOR_VERSAO } from "@/config/empresa";
 import { UFS } from "@/lib/lista";
 import { exigirPapel } from "@/lib/papeis";
 import { STATUS_PRODUTOR, formatarCnpj, pendenciasProdutor } from "@/lib/produtor";
 import { cadastroEditavel, meuProdutor } from "../dados";
-import { aceitarContrato, enviarParaAnalise, salvarDocumentos, salvarEmpresa, salvarEndereco } from "./acoes";
+import { aceitarContrato, enviarParaAnalise, salvarEmpresa, salvarEndereco } from "./acoes";
 
 export const metadata = { title: "Cadastro do produtor" };
 // Lê a sessão (cookie) a cada acesso: página sempre renderizada no servidor.
 export const instant = false;
 
-const PASSOS = ["Empresa", "Endereço", "Documentos", "Contrato", "Enviar"];
+const PASSOS = ["Empresa", "Endereço", "Recebimento", "Contrato", "Enviar"];
 
 export default async function CadastroProdutor({ searchParams }: PageProps<"/painel/produtor/cadastro">) {
   const usuario = await exigirPapel("produtor");
@@ -118,35 +119,17 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
         )}
 
         {passo === 3 && (
-          <FormAcao acao={salvarDocumentos}>
-            <h2 className="text-xl">Documentos</h2>
-            <p className="text-sm text-petroleo/75">
-              Ficam guardados em área privada: só você e a equipe Staypse têm acesso.
+          <div className="flex flex-col gap-4">
+            <h2 className="text-xl">Recebimento</h2>
+            <p className="text-sm text-petroleo/80">
+              A verificação de identidade da empresa e os dados bancários ficam na Lytex, a instituição que processa os
+              pagamentos e divide o valor entre as partes. A Staypse não pede nem guarda documentos.
             </p>
-            <EnviarArquivo
-              bucket="documentos-produtores"
-              campo="documento_path"
-              rotulo="Contrato social ou cartão CNPJ"
-              uid={usuario.id}
-              prefixo="empresa"
-              aceita="application/pdf,image/jpeg,image/png"
-              caminhoInicial={produtor?.documento_path}
-              tamanhoMaximoMb={10}
-              dica="PDF, JPG ou PNG, até 10 MB."
-            />
-            <EnviarArquivo
-              bucket="documentos-produtores"
-              campo="documento_responsavel_path"
-              rotulo="Documento com foto do responsável (RG ou CNH)"
-              uid={usuario.id}
-              prefixo="responsavel"
-              aceita="application/pdf,image/jpeg,image/png"
-              caminhoInicial={produtor?.documento_responsavel_path}
-              tamanhoMaximoMb={10}
-              dica="Frente e verso legíveis. PDF, JPG ou PNG, até 10 MB."
-            />
-            <BotaoEnviar>Salvar e continuar</BotaoEnviar>
-          </FormAcao>
+            <Recebimento papel="produtor" />
+            <Link href="/painel/produtor/cadastro?passo=4" className="rounded-full bg-ciano px-6 py-3 text-center font-medium text-petroleo">
+              Continuar
+            </Link>
+          </div>
         )}
 
         {passo === 4 && (
@@ -202,8 +185,8 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             ) : (
               <>
                 <p className="text-sm text-petroleo/80">
-                  Tudo pronto. A equipe Staypse confere o CNPJ na Receita e os documentos. Você vê o
-                  resultado aqui no painel.
+                  Tudo pronto. A equipe Staypse confere os dados da loja (curadoria). A identidade é verificada pela
+                  Lytex no cadastro de recebimento. Você vê o resultado aqui no painel.
                 </p>
                 <BotaoEnviar>Enviar para análise</BotaoEnviar>
               </>

@@ -9,6 +9,7 @@ const ABAS = [
   ["/painel/loja/produtos", "Produtos"],
   ["/painel/loja/afiliados", "Afiliados"],
   ["/painel/loja/vendedores", "Vendedores"],
+  ["/painel/loja/recebimentos", "Recebimentos"],
   ["/painel/loja/minha-loja", "Minha loja"],
 ] as const;
 

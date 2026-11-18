@@ -18,7 +18,6 @@ function mensagemDeErro(erro: { code?: string; message: string }): string {
   if (m.includes("inscricao_estadual")) return "Inscrição estadual: use só números, ou escreva ISENTO.";
   if (m.includes("email_contato")) return "E-mail de contato inválido.";
   if (m.includes("cep")) return "CEP inválido (8 números).";
-  if (m.includes("documento_fora_da_pasta")) return "Envie o documento de novo.";
   if (m.includes("contrato_nao_aceito")) return "Aceite o Contrato do Produtor antes de enviar.";
   if (m.includes("producers_cadastro_completo")) return "Ainda faltam dados. Confira a lista abaixo.";
   if (m.includes("status_nao_permite_envio")) return "Seu cadastro já está em análise ou aprovado.";
@@ -84,18 +83,6 @@ export async function salvarEndereco(_a: EstadoFormulario, f: FormData): Promise
   redirect("/painel/produtor/cadastro?passo=3");
 }
 
-// Passo 3 — Documentos (os arquivos já foram enviados ao bucket privado;
-// aqui só gravamos os caminhos)
-export async function salvarDocumentos(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
-  const documento_path = texto(f, "documento_path");
-  const documento_responsavel_path = texto(f, "documento_responsavel_path");
-  if (!documento_path) return { erro: "Envie o contrato social ou cartão CNPJ." };
-  if (!documento_responsavel_path) return { erro: "Envie o documento com foto do responsável." };
-
-  const erro = await gravar({ documento_path, documento_responsavel_path });
-  if (erro) return { erro };
-  redirect("/painel/produtor/cadastro?passo=4");
-}
 
 // Passo 4 — Aceite do Contrato do Produtor (versão + data do servidor)
 export async function aceitarContrato(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {

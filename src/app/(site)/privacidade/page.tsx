@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 const FINALIDADES: [string, string, string][] = [
   ["Lista de espera e aviso de lançamento", "Nome, e-mail, WhatsApp, cidade/UF, interesse e nichos; para produtores, empresa, CNPJ (opcional) e o que vende", "Consentimento (inciso I), dado ao se inscrever"],
   ["Criar e manter sua conta", "Nome, e-mail, senha (guardada de forma cifrada), papéis na plataforma e aceite dos termos", "Execução de contrato (inciso V)"],
-  ["Aprovar produtores e prevenir fraudes", "Razão social, CNPJ, inscrição estadual, endereço, contatos, cartão CNPJ ou contrato social e documento do responsável", "Execução de contrato (V) e legítimo interesse na prevenção a fraudes (IX)"],
+  ["Cadastro da loja e curadoria", "Razão social, CNPJ, inscrição estadual, endereço comercial e contatos (sem documentos de identidade: quem verifica é a instituição de pagamento)", "Execução de contrato (V) e legítimo interesse na prevenção a fraudes (IX)"],
+  ["Cadastro de recebimento (instituição de pagamento)", "CPF ou CNPJ de quem recebe e a situação do cadastro (em análise, aprovado, recusado ou suspenso) com o motivo informado pela instituição. Documentos e dados bancários vão direto para a instituição de pagamento; a Staypse não recebe nem guarda", "Execução de contrato (V)"],
   ["Mostrar quem vende cada produto", "Razão social, CNPJ, endereço e contato da empresa produtora", "Obrigação legal — Decreto 7.962/2013 (II)"],
   ["Vitrines, links e atribuição de vendas", "Seu @, nome da vitrine, foto e links; nos cliques: data, produto, origem e o IP transformado em código irreversível (hash)", "Execução de contrato com o afiliado (V) e legítimo interesse (IX)"],
   ["Vendedores da loja", "E-mail do convite, comissão combinada, forma de pagamento e histórico de alterações (informados pela loja)", "Execução de contrato (V)"],
@@ -81,7 +82,7 @@ export default function Privacidade() {
               <Itens>
                 <li><strong className="font-medium">Supabase</strong>: banco de dados, login e armazenamento de arquivos, com servidores em São Paulo (Brasil).</li>
                 <li><strong className="font-medium">Vercel</strong>: hospedagem do site, que pode processar dados de navegação fora do Brasil.</li>
-                <li><strong className="font-medium">Instituição de pagamento parceira</strong>: processa os pagamentos e o split, quando as vendas estiverem abertas.</li>
+                <li><strong className="font-medium">Instituição de pagamento parceira (Lytex)</strong>: processa os pagamentos e o split e faz a verificação de identidade de lojas, afiliados e vendedores no cadastro de recebimento — como controladora desses dados, pela política dela.</li>
                 <li><strong className="font-medium">Produtores</strong>: recebem os dados de entrega e de nota fiscal dos pedidos que vendem e só podem usá-los para cumprir o pedido.</li>
                 <li><strong className="font-medium">Revendedores e vendedores da loja</strong>: veem apenas data, produto, valor, comissão e situação das próprias vendas — nunca nome, e-mail ou telefone do comprador.</li>
                 <li><strong className="font-medium">Autoridades</strong>: quando houver ordem judicial ou obrigação legal.</li>

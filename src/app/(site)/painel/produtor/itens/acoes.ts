@@ -22,6 +22,9 @@ const numero = (f: FormData, c: string) => {
 };
 
 function mensagemDeErro(m: string, dados: DadosItem): string {
+  if (m.includes("recebedor_pendente")) {
+    return "Para enviar para análise, complete o cadastro de recebimento na Lytex (Painel da loja → Recebimentos). Enquanto isso, use \"Salvar rascunho\".";
+  }
   if (m.includes("items_comissao_faixa")) return "A comissão do revendedor deve ficar entre 10% e 70%.";
   if (m.includes("items_slug_por_loja")) return "Esse endereço já é usado por outro produto da sua loja.";
   if (m.includes("slug_conflita_afiliado")) {

@@ -68,6 +68,8 @@ export async function salvarVitrine(_a: EstadoFormulario, f: FormData): Promise<
 const ERROS_AFILIACAO: Record<string, string> = {
   apenas_revendedor: "Apenas revendedores podem se afiliar.",
   crie_sua_vitrine: "Crie sua vitrine antes de se afiliar.",
+  recebedor_pendente: "Para se afiliar, complete seu cadastro de recebimento na Lytex (Painel do afiliado → Recebimentos).",
+  afiliado_bloqueado: "A loja não aceita mais suas indicações.",
   item_indisponivel: "Este item não está mais disponível.",
   afiliacao_propria: "Você não pode se afiliar ao seu próprio produto.",
   endereco_repetido: "Você já indica outro produto com o mesmo endereço de link. Peça à loja para mudar o endereço deste produto.",

@@ -42,8 +42,6 @@ export type DadosProdutor = {
   bairro?: string | null;
   cidade?: string | null;
   uf?: string | null;
-  documento_path?: string | null;
-  documento_responsavel_path?: string | null;
 };
 
 // O que falta no cadastro do produtor para enviar para análise.
@@ -52,8 +50,6 @@ export function pendenciasProdutor(p: DadosProdutor | null, contratoAceito: bool
   if (!p?.razao_social || !p?.cnpj) falta.push("Razão social e CNPJ");
   if (!p?.whatsapp || !p?.email_contato) falta.push("WhatsApp e e-mail de contato");
   if (!p?.cep || !p?.logradouro || !p?.numero || !p?.bairro || !p?.cidade || !p?.uf) falta.push("Endereço de envio");
-  if (!p?.documento_path) falta.push("Contrato social ou cartão CNPJ");
-  if (!p?.documento_responsavel_path) falta.push("Documento com foto do responsável");
   if (!contratoAceito) falta.push("Aceite do Contrato do Produtor");
   return falta;
 }

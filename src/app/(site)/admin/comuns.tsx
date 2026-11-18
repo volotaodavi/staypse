@@ -7,6 +7,10 @@ const ACOES: Record<string, string> = {
   produtor_aprovado: "Produtor aprovado",
   produtor_recusado: "Produtor recusado",
   recebedor_lytex_definido: "Id Lytex definido",
+  loja_aprovada: "Loja aprovada",
+  loja_recusada: "Loja recusada",
+  recebedor_iniciado: "Cadastro de recebimento iniciado",
+  recebedor_status: "Status do recebedor atualizado",
   item_aprovado: "Item aprovado",
   item_recusado: "Item recusado",
 };

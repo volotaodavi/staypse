@@ -20,7 +20,7 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
   if (!item) notFound();
 
   const supabase = await criarClienteServidor();
-  const [{ data: opcoes }, usuario] = await Promise.all([
+  const [{ data: opcoes }, usuario, { data: podeVender }] = await Promise.all([
     supabase.rpc("entregas_do_item", { p_item: item.id }).maybeSingle<{
       envio: boolean;
       retirada: boolean;
@@ -30,6 +30,8 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
       frete_prazo_dias: number | null;
     }>(),
     usuarioAtual(),
+    // sem recebedor aprovado na Lytex, a loja não recebe pedido novo
+    supabase.rpc("loja_pode_vender", { p_item: item.id }),
   ]);
   const temEntrega = opcoes && (opcoes.envio || opcoes.retirada || opcoes.digital);
 
@@ -44,7 +46,11 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
           {item.nome} · {formatarPreco(item.preco_centavos)}
         </p>
       </div>
-      {!temEntrega ? (
+      {!podeVender ? (
+        <p role="alert" className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Esta loja ainda não pode receber pagamentos. Volte mais tarde ou fale com a loja.
+        </p>
+      ) : !temEntrega ? (
         <p role="alert" className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
           A loja ainda não configurou a entrega deste produto. Fale com a loja ou volte mais tarde.
         </p>

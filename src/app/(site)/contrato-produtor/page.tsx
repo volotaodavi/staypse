@@ -45,8 +45,9 @@ export default function ContratoProdutor() {
           titulo: "Requisitos e aprovação",
           conteudo: (
             <Itens>
-              <li>Só são aprovadas empresas com CNPJ ativo na Receita Federal, que enviem cartão CNPJ ou contrato social e documento com foto do responsável, e que tenham poderes para assinar por ela.</li>
-              <li>A Staypse confere os dados antes de aprovar e pode pedir documentos adicionais, recusar ou suspender o cadastro, sempre informando o motivo.</li>
+              <li>A verificação de identidade da empresa e de quem a representa é feita pela instituição de pagamento parceira (Lytex), no cadastro de recebimento. A Staypse não pede nem guarda documentos de identidade ou dados bancários.</li>
+              <li>A loja só publica produtos e recebe pedidos com o cadastro de recebimento aprovado pela instituição de pagamento, com o mesmo CNPJ informado na Staypse. Se ele for recusado ou suspenso, as vendas novas param e a Staypse mostra o motivo informado pela instituição.</li>
+              <li>A Staypse aprova a loja e cada produto por conteúdo (curadoria e produtos proibidos) e pode recusar ou suspender, sempre informando o motivo.</li>
               <li>O Produtor mantém os dados do cadastro corretos e atualizados.</li>
             </Itens>
           ),

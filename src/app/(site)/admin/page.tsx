@@ -57,7 +57,8 @@ export default async function Admin() {
       </div>
       <nav className="mt-6 flex flex-col flex-wrap gap-3 sm:flex-row" aria-label="Áreas do admin">
         {[
-          ["/admin/produtores", "Analisar produtores →"],
+          ["/admin/produtores", "Curadoria de lojas →"],
+          ["/admin/recebedores", "Recebedores (Lytex) →"],
           ["/admin/itens", "Analisar itens →"],
           ["/admin/lista", "Lista de espera →"],
           ["/admin/pedidos", "Pedidos →"],

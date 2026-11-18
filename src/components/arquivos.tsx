@@ -22,7 +22,7 @@ export function EnviarArquivo({
   dica,
   tamanhoMaximoMb,
 }: {
-  bucket: "documentos-produtores" | "arquivos-digitais" | "fotos-itens";
+  bucket: "arquivos-digitais" | "fotos-itens";
   campo: string; // nome do campo escondido no formulário
   rotulo: string;
   uid: string;

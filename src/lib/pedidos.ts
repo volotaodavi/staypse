@@ -53,6 +53,7 @@ export const ASSUNTOS_ATENDIMENTO: Record<string, string> = {
 export const ERROS_PEDIDO: Record<string, string> = {
   quantidade_invalida: "Escolha uma quantidade entre 1 e 99.",
   item_indisponivel: "Este produto não está disponível agora.",
+  loja_sem_recebedor: "Esta loja ainda não pode receber pagamentos. Tente mais tarde.",
   sem_estoque: "Não há estoque suficiente para essa quantidade.",
   entrega_invalida: "Escolha uma forma de entrega disponível para este produto.",
   frete_nao_configurado: "A loja ainda não configurou o frete. Escolha retirada no local ou fale com a loja.",

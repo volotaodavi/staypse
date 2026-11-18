@@ -3,6 +3,8 @@ import Link from "next/link";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";
 import { GraficoBarras } from "@/components/painel/GraficoBarras";
 import { NotaPagamentos, Numeros, inteiro, percentual } from "@/components/painel/Numeros";
+import { meuRecebedor, recebedorOk } from "@/components/painel/Recebimento";
+import { ROTULO_STATUS_RECEBEDOR } from "@/lib/pagamentos/recebedores";
 import { diaCurto, formatarDia, lerPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
 import { AbasLoja } from "./AbasLoja";
@@ -45,7 +47,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
     );
   }
 
-  const [{ data, error }, { count: semNota }, { data: recusados }] = await Promise.all([
+  const [{ data, error }, { count: semNota }, { data: recusados }, recebedor] = await Promise.all([
     supabase.rpc("painel_loja_resumo", { p_inicio: periodo.inicio, p_fim: periodo.fim }),
     // pedidos pagos com item ainda sem nota fiscal (regra 2)
     supabase
@@ -56,7 +58,9 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
       .is("order_items.nota_fiscal_numero", null),
     // itens recusados na análise, com o motivo (coluna privada: itens_privados)
     supabase.rpc("itens_privados").select("id, nome, motivo_rejeicao").eq("producer_id", loja.id).eq("status_aprovacao", "recusado"),
+    meuRecebedor("produtor"),
   ]);
+  const recebe = recebedorOk(recebedor);
   if (error) throw new Error(`Resumo indisponível: ${error.message}`);
   const itensRecusados = (recusados ?? []) as unknown as { id: string; nome: string; motivo_rejeicao: string | null }[];
   const r = data as Resumo;
@@ -78,8 +82,18 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
       <AbasLoja />
       <FiltroPeriodo periodo={periodo} caminho="/painel/loja" />
 
-      {((semNota ?? 0) > 0 || itensRecusados.length > 0 || r.aguardando_envio > 0 || r.desistencias > 0 || loja.frete_fixo_centavos == null) && (
+      {(!recebe || (semNota ?? 0) > 0 || itensRecusados.length > 0 || r.aguardando_envio > 0 || r.desistencias > 0 || loja.frete_fixo_centavos == null) && (
         <ul className="flex flex-col gap-2 text-sm" aria-label="Pendências" data-pendencias>
+          {!recebe && (
+            <li className="rounded-2xl bg-amber-50 px-4 py-3 text-amber-900" data-pendencia-recebedor>
+              Cadastro de recebimento: {ROTULO_STATUS_RECEBEDOR[recebedor?.status_recebedor ?? "nao_iniciado"]}
+              {recebedor?.motivo ? ` — ${recebedor.motivo}` : ""}. Sem ele aprovado na Lytex, a loja não publica produtos nem
+              recebe pedidos.{" "}
+              <Link href="/painel/loja/recebimentos" className="font-medium underline">
+                Completar cadastro de recebimento
+              </Link>
+            </li>
+          )}
           {(semNota ?? 0) > 0 && (
             <li className="rounded-2xl bg-red-50 px-4 py-3 text-red-800">
               <Link href="/painel/loja/pedidos?status=a_enviar" className="font-medium underline">

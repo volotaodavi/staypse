@@ -1223,6 +1223,10 @@ select teste.ok((select count(*) from public.eventos_pagamento) = 0, 'só o admi
 :comoServidor
 select teste.bloqueia($$delete from public.audit_log$$, 'nem o servidor apaga o log de auditoria');
 select teste.bloqueia($$update public.audit_log set acao = 'x'$$, 'nem o servidor altera o log de auditoria');
+reset role;
+select teste.bloqueia($$update public.audit_log set ator_id = null, acao = 'x' where ator_id is not null$$, 'anonimizar não permite mudar o resto do registro');
+update public.audit_log set ator_id = null where id = (select min(id) from public.audit_log where ator_id is not null);
+select teste.ok(true, 'excluir a conta anonimiza o autor no log (LGPD), sem apagar o registro');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas

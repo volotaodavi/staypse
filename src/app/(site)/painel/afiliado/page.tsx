@@ -6,6 +6,8 @@ import { GraficoBarras } from "@/components/painel/GraficoBarras";
 import { NotaPagamentos, Numeros, inteiro, percentual } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { TabelaVendas } from "@/components/painel/TabelaVendas";
+import { meuRecebedor, recebedorOk } from "@/components/painel/Recebimento";
+import { ROTULO_STATUS_RECEBEDOR } from "@/lib/pagamentos/recebedores";
 import { BotaoWhatsapp } from "@/components/publico";
 import { CopiarLink } from "@/components/rastreio";
 import { exigirPapel } from "@/lib/papeis";
@@ -40,11 +42,12 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
   const usuario = await exigirPapel("revendedor");
   const periodo = lerPeriodo(await searchParams);
   const supabase = await criarClienteServidor();
-  const [{ data: vitrine }, ind, vendas, { data: produtosBrutos }] = await Promise.all([
+  const [{ data: vitrine }, ind, vendas, { data: produtosBrutos }, recebedor] = await Promise.all([
     supabase.from("storefronts").select("slug, nome_exibicao, publicada").eq("revendedor_id", usuario.id).maybeSingle(),
     lerIndicadores("afiliado", periodo),
     lerComissoes("afiliado", periodo),
     supabase.rpc("meus_produtos_afiliado", { p_inicio: periodo.inicio, p_fim: periodo.fim }),
+    meuRecebedor("afiliado"),
   ]);
   const produtos = (produtosBrutos ?? []) as Produto[];
   const site = urlDoSite();
@@ -61,6 +64,16 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
         </Link>
       </div>
 
+      {!recebedorOk(recebedor) && (
+        <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900" data-pendencia-recebedor>
+          Cadastro de recebimento: {ROTULO_STATUS_RECEBEDOR[recebedor?.status_recebedor ?? "nao_iniciado"]}
+          {recebedor?.motivo ? ` — ${recebedor.motivo}` : ""}. Você pode ver o catálogo, mas só se afilia e recebe comissões com
+          ele aprovado na Lytex.{" "}
+          <Link href="/painel/afiliado/recebimentos" className="font-medium underline">
+            Completar cadastro de recebimento
+          </Link>
+        </p>
+      )}
       {!vitrine ? (
         <section className="flex flex-col items-start gap-3 rounded-2xl bg-branco p-5">
           <p>Para indicar produtos, crie sua vitrine: nome, @, nicho e visual. Sem taxa de adesão.</p>
@@ -129,7 +142,9 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
                     inteiro(Number(p.cliques)),
                     inteiro(Number(p.vendas)),
                     p.status === "aprovada" ? (
-                      <div key="l" className="flex flex-wrap gap-2">
+                      <div key="l" className="flex flex-wrap items-center gap-2">
+                        {/* link curto visível: a pessoa confere o que vai compartilhar */}
+                        <span className="w-full break-all text-xs text-petroleo/75">{`/@${p.vitrine_slug}/${p.produto_slug}`}</span>
                         <CopiarLink url={link} rotulo="Copiar link" className="min-h-11 rounded-full border border-petroleo/40 px-3 text-sm font-medium" />
                         <BotaoWhatsapp
                           texto={`${p.nome}\n${link}`}
@@ -176,6 +191,9 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
               </Link>
               <Link href="/painel/revendedor/links" className="inline-flex min-h-11 items-center px-2 font-medium underline">
                 Links externos
+              </Link>
+              <Link href="/painel/afiliado/recebimentos" className="inline-flex min-h-11 items-center px-2 font-medium underline">
+                Recebimentos
               </Link>
             </div>
             <p className="text-sm text-petroleo/80">

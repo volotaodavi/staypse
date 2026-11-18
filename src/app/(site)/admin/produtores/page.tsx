@@ -1,19 +1,19 @@
-// /admin/produtores — fila de análise de produtores.
-// Documentos (links temporários de 10 min), dados do CNPJ, contrato aceito,
-// aprovar (com confirmação de CNPJ ativo) ou recusar com motivo, id Lytex e histórico.
+// /admin/produtores — curadoria de LOJAS (conteúdo, não identidade).
+// A verificação de identidade é da Lytex (cadastro do recebedor): aqui o admin
+// vê só o STATUS do recebedor, os dados públicos da loja e o contrato aceito.
 import Link from "next/link";
 import { exigirPapel } from "@/lib/papeis";
 import { STATUS_PRODUTOR, formatarCnpj } from "@/lib/produtor";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { FiltroStatus, Historico, MensagemAdmin, buscarHistorico, um } from "../comuns";
-import { decidirProdutor, definirRecebedorLytex } from "../decisoes";
+import { ROTULO_STATUS_RECEBEDOR } from "@/lib/pagamentos/recebedores";
+import type { StatusRecebedor } from "@/lib/pagamentos/tipos";
+import { decidirProdutor } from "../decisoes";
 
 export const metadata = { title: "Produtores" };
 // Lê a sessão (cookie) a cada acesso: página sempre renderizada no servidor.
 export const instant = false;
 
-// Consulta oficial de CNPJ na Receita Federal (o admin confere manualmente)
-const RECEITA_CNPJ = "https://solucoes.receita.fazenda.gov.br/servicos/cnpjreva/cnpjreva_solicitacao.asp";
 const estiloCampo = "w-full rounded-xl border border-petroleo/60 bg-branco px-3 py-2 text-base";
 
 type ProdutorAdmin = {
@@ -31,11 +31,8 @@ type ProdutorAdmin = {
   bairro: string | null;
   cidade: string | null;
   uf: string | null;
-  documento_path: string | null;
-  documento_responsavel_path: string | null;
   status_verificacao: string;
   motivo_rejeicao: string | null;
-  lytex_recebedor_id: string | null;
   enviado_para_analise_em: string | null;
 };
 
@@ -48,22 +45,18 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
   const { data } = await supabase
     .from("producers")
     .select(
-      "id, user_id, razao_social, cnpj, inscricao_estadual, whatsapp, email_contato, cep, logradouro, numero, complemento, bairro, cidade, uf, documento_path, documento_responsavel_path, status_verificacao, motivo_rejeicao, lytex_recebedor_id, enviado_para_analise_em",
+      "id, user_id, razao_social, cnpj, inscricao_estadual, whatsapp, email_contato, cep, logradouro, numero, complemento, bairro, cidade, uf, status_verificacao, motivo_rejeicao, enviado_para_analise_em",
     )
     .eq("status_verificacao", status)
     .order("enviado_para_analise_em", { ascending: true, nullsFirst: false })
     .returns<ProdutorAdmin[]>();
   const produtores = data ?? [];
 
-  // Links temporários para os documentos (bucket privado; só admin consegue gerar)
-  const caminhos = produtores.flatMap((p) => [p.documento_path, p.documento_responsavel_path]).filter(Boolean) as string[];
-  const { data: assinados } = caminhos.length
-    ? await supabase.storage.from("documentos-produtores").createSignedUrls(caminhos, 600)
+  // status do recebedor na Lytex (só leitura)
+  const { data: recs } = produtores.length
+    ? await supabase.from("recebedores").select("user_id, status_recebedor, motivo").eq("papel", "produtor").in("user_id", produtores.map((p) => p.user_id))
     : { data: [] };
-  // só links gerados com sucesso
-  const link = new Map<string, string>(
-    (assinados ?? []).flatMap((a) => (a.path && a.signedUrl ? [[a.path, a.signedUrl] as [string, string]] : [])),
-  );
+  const recebedor = new Map((recs ?? []).map((r) => [r.user_id, r]));
 
   // Aceite do contrato do produtor (versão e data)
   const { data: aceites } = produtores.length
@@ -85,7 +78,10 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
       <Link href="/admin" className="inline-block py-2 text-sm underline">
         ← Admin
       </Link>
-      <h1 className="mt-2 text-3xl">Produtores</h1>
+      <h1 className="mt-2 text-3xl">Lojas</h1>
+      <p className="mt-1 text-sm text-petroleo/80">
+        Curadoria por conteúdo (nome, marca, produtos). A identidade é verificada pela Lytex no cadastro de recebimento.
+      </p>
       <MensagemAdmin msg={um(params.msg)} tipo={um(params.tipo)} />
       <FiltroStatus caminho="/admin/produtores" atual={status} opcoes={STATUS_PRODUTOR} />
 
@@ -112,21 +108,13 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
                 <p className="text-xs text-petroleo/70">Enviado em {dataBr(p.enviado_para_analise_em)}</p>
               )}
 
-              <div className="mt-3 flex flex-wrap gap-2 text-sm">
-                {p.documento_path && link.get(p.documento_path) && (
-                  <a href={link.get(p.documento_path)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gelo px-3 py-1.5 underline">
-                    Contrato social / cartão CNPJ
-                  </a>
-                )}
-                {p.documento_responsavel_path && link.get(p.documento_responsavel_path) && (
-                  <a href={link.get(p.documento_responsavel_path)} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gelo px-3 py-1.5 underline">
-                    Documento do responsável
-                  </a>
-                )}
-                <a href={RECEITA_CNPJ} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gelo px-3 py-1.5 underline">
-                  Consultar CNPJ na Receita ↗
-                </a>
-              </div>
+              <p className="mt-2 text-sm" data-recebedor>
+                Recebedor na Lytex:{" "}
+                <strong className="font-medium">
+                  {ROTULO_STATUS_RECEBEDOR[(recebedor.get(p.user_id)?.status_recebedor ?? "nao_iniciado") as StatusRecebedor]}
+                </strong>
+                {recebedor.get(p.user_id)?.motivo ? ` · ${recebedor.get(p.user_id)?.motivo}` : ""}
+              </p>
               <p className="mt-2 text-sm">
                 Contrato do Produtor:{" "}
                 {aceite ? `aceito na versão ${aceite.versao} em ${dataBr(aceite.aceito_em)}` : "não aceito"}
@@ -141,11 +129,8 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
                   <form action={decidirProdutor} className="flex flex-col gap-2 rounded-xl border border-petroleo/20 p-3">
                     <input type="hidden" name="id" value={p.id} />
                     <input type="hidden" name="decisao" value="aprovar" />
-                    <label className="flex gap-2 text-sm">
-                      <input type="checkbox" name="cnpj_ativo" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
-                      Conferi na Receita: o CNPJ está ATIVO e confere com os documentos.
-                    </label>
-                    <button className="rounded-full bg-petroleo px-4 py-2 text-sm font-medium text-branco">Aprovar produtor</button>
+                    <p className="text-sm">Loja de acordo com as regras de conteúdo e os produtos proibidos.</p>
+                    <button className="min-h-11 rounded-full bg-petroleo px-4 text-sm font-medium text-branco">Aprovar loja</button>
                   </form>
                   <form action={decidirProdutor} className="flex flex-col gap-2 rounded-xl border border-petroleo/20 p-3">
                     <input type="hidden" name="id" value={p.id} />
@@ -162,20 +147,6 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
                     <button className="rounded-full border border-red-800 px-4 py-2 text-sm font-medium text-red-800">Recusar</button>
                   </form>
                 </div>
-              )}
-
-              {p.status_verificacao === "aprovado" && (
-                <form action={definirRecebedorLytex} className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <input type="hidden" name="id" value={p.id} />
-                  <input
-                    name="lytex_recebedor_id"
-                    defaultValue={p.lytex_recebedor_id ?? ""}
-                    placeholder="Id do recebedor na Lytex"
-                    aria-label="Id do recebedor na Lytex"
-                    className={estiloCampo}
-                  />
-                  <button className="shrink-0 rounded-full bg-petroleo px-4 py-2 text-sm font-medium text-branco">Salvar id Lytex</button>
-                </form>
               )}
 
               <Historico registros={historico.get(p.id)} />

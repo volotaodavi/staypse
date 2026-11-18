@@ -17,8 +17,6 @@ export type Produtor = {
   bairro: string | null;
   cidade: string | null;
   uf: string | null;
-  documento_path: string | null;
-  documento_responsavel_path: string | null;
   status_verificacao: string;
   motivo_rejeicao: string | null;
 };
@@ -29,7 +27,7 @@ export async function meuProdutor(userId: string) {
     supabase
       .from("producers")
       .select(
-        "id, razao_social, cnpj, inscricao_estadual, whatsapp, email_contato, cep, logradouro, numero, complemento, bairro, cidade, uf, documento_path, documento_responsavel_path, status_verificacao, motivo_rejeicao",
+        "id, razao_social, cnpj, inscricao_estadual, whatsapp, email_contato, cep, logradouro, numero, complemento, bairro, cidade, uf, status_verificacao, motivo_rejeicao",
       )
       .eq("user_id", userId)
       .maybeSingle<Produtor>(),

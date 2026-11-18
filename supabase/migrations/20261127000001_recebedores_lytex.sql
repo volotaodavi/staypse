@@ -24,6 +24,13 @@ alter table public.audit_log add constraint audit_log_entidade_check
 create or replace function public.audit_log_imutavel()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  -- única mudança aceita: anonimizar o autor quando a conta é excluída (LGPD),
+  -- feita pela chave estrangeira (on delete set null). O registro continua.
+  if tg_op = 'UPDATE' and old.ator_id is not null and new.ator_id is null
+     and (new.criado_em, new.acao, new.entidade, new.entidade_id, new.detalhes)
+         is not distinct from (old.criado_em, old.acao, old.entidade, old.entidade_id, old.detalhes) then
+    return new;
+  end if;
   raise exception 'audit_log_imutavel';
 end; $$;
 create trigger audit_log_sem_alteracao before update or delete on public.audit_log

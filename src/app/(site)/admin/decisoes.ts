@@ -10,7 +10,7 @@ import { criarClienteServidor } from "@/lib/supabase/servidor";
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
 
 const MENSAGENS: Record<string, string> = {
-  confirme_cnpj_ativo: "Confirme que o CNPJ está ATIVO na Receita antes de aprovar.",
+  recebedor_pendente: "A loja ainda não tem cadastro de recebimento aprovado na Lytex: o produto não pode ser aprovado.",
   motivo_obrigatorio: "Escreva o motivo da recusa (pelo menos 5 caracteres).",
   produtor_nao_esta_em_analise: "Este produtor não está mais em análise.",
   item_nao_esta_em_analise: "Este item não está mais em análise.",
@@ -36,19 +36,8 @@ export async function decidirProdutor(f: FormData) {
     p_producer: texto(f, "id"),
     p_aprovar: aprovar,
     p_motivo: aprovar ? null : texto(f, "motivo"),
-    p_cnpj_ativo_confirmado: f.get("cnpj_ativo") === "sim",
   });
-  voltar("/admin/produtores", error, aprovar ? "Produtor aprovado." : "Produtor recusado. O motivo aparece para ele.");
-}
-
-export async function definirRecebedorLytex(f: FormData) {
-  await exigirPapel("admin");
-  const supabase = await criarClienteServidor();
-  const { error } = await supabase.rpc("admin_definir_recebedor_lytex", {
-    p_producer: texto(f, "id"),
-    p_recebedor: texto(f, "lytex_recebedor_id"),
-  });
-  voltar("/admin/produtores", error, "Id do recebedor na Lytex salvo.");
+  voltar("/admin/produtores", error, aprovar ? "Loja aprovada." : "Loja recusada. O motivo aparece para ela.");
 }
 
 export async function decidirItem(f: FormData) {
