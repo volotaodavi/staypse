@@ -117,7 +117,8 @@ export function BotaoWhatsapp({ texto, rotulo = "Compartilhar no WhatsApp", clas
     >
       <IconeWhatsapp />
       {rotulo}
-    <span className="sr-only"> (abre em nova aba)</span></a>
+      <span className="sr-only"> (abre em nova aba)</span>
+    </a>
   );
 }
 

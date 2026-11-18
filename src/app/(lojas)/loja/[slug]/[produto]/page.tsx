@@ -75,10 +75,11 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           href={linkWhatsapp(`${item.nome} — ${formatarPreco(item.preco_centavos)}\n${url}`)}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm font-semibold text-[var(--loja-link)] underline"
+          className="inline-block py-2 text-sm font-semibold text-[var(--loja-link)] underline"
         >
           Enviar no WhatsApp
-        <span className="sr-only"> (abre em nova aba)</span></a>
+          <span className="sr-only"> (abre em nova aba)</span>
+        </a>
 
         {item.descricao && (
           <section className="flex flex-col gap-2 border-t border-neutral-200 pt-6">
@@ -122,7 +123,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
             )}
             {loja.email_contato && <span>{loja.email_contato}</span>}
           </address>
-          <Link href={`/loja/${slug}`} className="text-sm font-semibold text-[var(--loja-link)] underline">
+          <Link href={`/loja/${slug}`} className="inline-block py-2 text-sm font-semibold text-[var(--loja-link)] underline">
             Ver todos os produtos da loja
           </Link>
         </section>

@@ -23,19 +23,19 @@ export function Rodape() {
         </div>
 
         <nav aria-label="Informações legais" className="flex flex-col gap-2 text-sm">
-          <Link href="/termos" className="hover:text-ciano">
+          <Link href="/termos" className="inline-block py-1 hover:text-ciano">
             Termos de uso
           </Link>
-          <Link href="/privacidade" className="hover:text-ciano">
+          <Link href="/privacidade" className="inline-block py-1 hover:text-ciano">
             Política de privacidade
           </Link>
-          <Link href="/privacidade#canal-lgpd" className="hover:text-ciano">
+          <Link href="/privacidade#canal-lgpd" className="inline-block py-1 hover:text-ciano">
             Canal de privacidade (LGPD)
           </Link>
-          <Link href="/cookies" className="hover:text-ciano">
+          <Link href="/cookies" className="inline-block py-1 hover:text-ciano">
             Política de cookies
           </Link>
-          <Link href="/produtos-proibidos" className="hover:text-ciano">
+          <Link href="/produtos-proibidos" className="inline-block py-1 hover:text-ciano">
             Produtos proibidos
           </Link>
         </nav>

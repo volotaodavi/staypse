@@ -37,7 +37,7 @@ export default async function Afiliados({ searchParams }: PageProps<"/painel/pro
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <h1 className="text-3xl">Afiliados</h1>

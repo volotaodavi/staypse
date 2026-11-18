@@ -55,7 +55,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/painel/revendedor" className="text-sm underline">
+      <Link href="/painel/revendedor" className="inline-block py-2 text-sm underline">
         ← Voltar ao painel
       </Link>
       <h1 className="text-3xl">Catálogo</h1>
@@ -122,7 +122,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
                     {item.tipo === "digital" ? "Digital" : "Físico"}
                     {item.categoria ? ` · ${ROTULO_NICHO[item.categoria] ?? item.categoria}` : ""} · {item.produtor_nome}
                   </p>
-                  <Link href={`/loja/${item.loja_slug}/${item.slug}`} className="font-medium leading-snug underline-offset-2 hover:underline">
+                  <Link href={`/loja/${item.loja_slug}/${item.slug}`} className="block py-1 font-medium leading-snug underline-offset-2 hover:underline">
                     {item.nome}
                   </Link>
                   <div className="flex items-baseline justify-between gap-2">

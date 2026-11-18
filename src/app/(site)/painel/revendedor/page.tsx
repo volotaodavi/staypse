@@ -148,7 +148,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
                     {a.origem === "catalogo" ? (
                       <form action={cancelarAfiliacao}>
                         <input type="hidden" name="afiliacao_id" value={a.id} />
-                        <button className="text-xs text-petroleo/70 underline">
+                        <button className="min-h-11 py-2 text-sm text-petroleo/75 underline">
                           {a.status === "pendente" ? "Cancelar pedido" : "Sair da afiliação"}
                         </button>
                       </form>
@@ -175,8 +175,8 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
               <thead>
                 <tr className="text-left text-petroleo/70">
                   <th scope="col" className="py-2 font-medium">Item</th>
-                  <th scope="col" className="py-2 text-right font-medium">7 dias</th>
-                  <th scope="col" className="py-2 text-right font-medium">30 dias</th>
+                  <th scope="col" className="whitespace-nowrap py-2 pl-3 text-right font-medium">7 dias</th>
+                  <th scope="col" className="whitespace-nowrap py-2 pl-3 text-right font-medium">30 dias</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-petroleo/10">

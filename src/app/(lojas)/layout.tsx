@@ -17,16 +17,16 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
             {EMPRESA.nomeEmpresarial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.endereco} · {EMPRESA.email} · {EMPRESA.whatsapp}
           </p>
           <nav className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Informações legais">
-            <Link href="/termos" className="underline">
+            <Link href="/termos" className="inline-block py-1 underline">
               Termos de uso
             </Link>
-            <Link href="/privacidade" className="underline">
+            <Link href="/privacidade" className="inline-block py-1 underline">
               Privacidade
             </Link>
-            <Link href="/privacidade#canal-lgpd" className="underline">
+            <Link href="/privacidade#canal-lgpd" className="inline-block py-1 underline">
               Seus dados (LGPD)
             </Link>
-            <Link href="/cookies" className="underline">
+            <Link href="/cookies" className="inline-block py-1 underline">
               Cookies
             </Link>
           </nav>

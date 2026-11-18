@@ -33,7 +33,8 @@ export function FormConvite({ loja }: { loja: string }) {
             className="rounded-full bg-petroleo px-4 py-2 text-sm font-medium text-branco"
           >
             Enviar no WhatsApp
-          <span className="sr-only"> (abre em nova aba)</span></a>
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
         </div>
         <a href="/painel/produtor/vendedores" className="text-sm underline">
           Convidar outra pessoa

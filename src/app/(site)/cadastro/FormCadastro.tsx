@@ -93,11 +93,13 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
           Tenho 18 anos ou mais e li e aceito os{" "}
           <Link href="/termos" target="_blank" className="font-medium underline">
             Termos de Uso
-          <span className="sr-only"> (abre em nova aba)</span></Link>{" "}
+            <span className="sr-only"> (abre em nova aba)</span>
+          </Link>
           e a{" "}
           <Link href="/privacidade" target="_blank" className="font-medium underline">
             Política de Privacidade
-          <span className="sr-only"> (abre em nova aba)</span></Link>
+            <span className="sr-only"> (abre em nova aba)</span>
+          </Link>
           .
         </span>
       </label>

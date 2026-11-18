@@ -23,7 +23,7 @@ export default async function PaginaVitrine() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4">
-      <Link href={voltar} className="text-sm underline">
+      <Link href={voltar} className="inline-block py-2 text-sm underline">
         ← Voltar ao painel
       </Link>
       <h1 className="text-3xl">{vitrine?.publicada ? "Editar vitrine" : "Crie sua vitrine"}</h1>

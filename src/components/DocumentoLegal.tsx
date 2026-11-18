@@ -39,7 +39,7 @@ export function DocumentoLegal({
           <ol className="mt-3 grid list-decimal gap-1.5 pl-5 text-sm sm:grid-cols-2">
             {secoes.map((s) => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="underline-offset-2 hover:underline">
+                <a href={`#${s.id}`} className="inline-block py-1 underline-offset-2 hover:underline">
                   {s.titulo}
                 </a>
               </li>

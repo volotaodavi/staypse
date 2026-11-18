@@ -31,7 +31,7 @@ export default async function EditarItem({ params }: PageProps<"/painel/produtor
 
   return (
     <div className="mx-auto max-w-md">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <h1 className="mt-2 text-3xl">Editar item</h1>

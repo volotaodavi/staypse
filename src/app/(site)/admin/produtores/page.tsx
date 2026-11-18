@@ -82,7 +82,7 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
 
   return (
     <>
-      <Link href="/admin" className="text-sm underline">
+      <Link href="/admin" className="inline-block py-2 text-sm underline">
         ← Admin
       </Link>
       <h1 className="mt-2 text-3xl">Produtores</h1>

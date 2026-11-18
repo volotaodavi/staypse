@@ -31,7 +31,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
 
   return (
     <div className="mx-auto max-w-md">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <h1 className="mt-2 text-3xl">Cadastro do produtor</h1>
@@ -161,7 +161,8 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             </ul>
             <Link href="/contrato-produtor" target="_blank" className="text-sm font-medium underline">
               Ler o contrato completo (versão {CONTRATO_PRODUTOR_VERSAO})
-            <span className="sr-only"> (abre em nova aba)</span></Link>
+              <span className="sr-only"> (abre em nova aba)</span>
+            </Link>
             {contratoAceito ? (
               <p className="rounded-xl bg-gelo px-4 py-3 text-sm">✓ Você já aceitou esta versão do contrato.</p>
             ) : (

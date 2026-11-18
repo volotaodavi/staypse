@@ -89,7 +89,8 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
               className={`${botao} bg-[var(--loja-principal)] text-[var(--loja-principal-texto)]`}
             >
               Compartilhar no WhatsApp
-            <span className="sr-only"> (abre em nova aba)</span></a>
+              <span className="sr-only"> (abre em nova aba)</span>
+            </a>
             <CopiarLink url={url} className={`${botao} border border-neutral-300 text-neutral-900`} />
           </div>
         </div>

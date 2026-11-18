@@ -17,7 +17,7 @@ export default async function NovoItem() {
 
   return (
     <div className="mx-auto max-w-md">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <h1 className="mt-2 mb-5 text-3xl">Novo item</h1>

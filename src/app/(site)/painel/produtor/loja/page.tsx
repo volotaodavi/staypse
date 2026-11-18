@@ -29,7 +29,7 @@ export default async function PaginaLoja() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <h1 className="text-3xl">Sua loja</h1>

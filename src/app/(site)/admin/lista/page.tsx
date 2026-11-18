@@ -28,7 +28,7 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
 
   return (
     <>
-      <Link href="/admin" className="text-sm underline">
+      <Link href="/admin" className="inline-block py-2 text-sm underline">
         ← Admin
       </Link>
       <h1 className="mt-2 text-3xl">Lista de espera</h1>

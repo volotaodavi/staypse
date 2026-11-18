@@ -59,7 +59,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/painel/produtor" className="text-sm underline">
+      <Link href="/painel/produtor" className="inline-block py-2 text-sm underline">
         ← Painel do produtor
       </Link>
       <div>
@@ -130,14 +130,14 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
                       <form action={alternarVendedor}>
                         <input type="hidden" name="vendedor_id" value={v.id} />
                         <input type="hidden" name="acao" value={v.status === "ativo" ? "desativar" : "ativar"} />
-                        <button className={v.status === "ativo" ? "text-red-800 underline" : "underline"}>
+                        <button className={`min-h-11 py-2 underline ${v.status === "ativo" ? "text-red-800" : ""}`}>
                           {v.status === "ativo" ? "Desativar vendedor" : "Reativar vendedor"}
                         </button>
                       </form>
                     )}
                     {hist.length > 0 && (
                       <details>
-                        <summary className="cursor-pointer underline">Histórico de alterações</summary>
+                        <summary className="cursor-pointer py-1 underline">Histórico de alterações</summary>
                         <table className="mt-2 text-xs">
                           <thead>
                             <tr className="text-left text-petroleo/70">

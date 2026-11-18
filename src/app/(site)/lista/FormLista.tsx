@@ -188,7 +188,8 @@ export function FormLista() {
             Concordo que a Staypse use meus dados para me avisar sobre o lançamento, conforme a{" "}
             <Link href="/privacidade" target="_blank" className="font-medium underline">
               Política de Privacidade
-            <span className="sr-only"> (abre em nova aba)</span></Link>
+              <span className="sr-only"> (abre em nova aba)</span>
+            </Link>
             .
           </span>
         </label>

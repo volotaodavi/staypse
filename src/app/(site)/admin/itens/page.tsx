@@ -84,7 +84,7 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
 
   return (
     <>
-      <Link href="/admin" className="text-sm underline">
+      <Link href="/admin" className="inline-block py-2 text-sm underline">
         ← Admin
       </Link>
       <h1 className="mt-2 text-3xl">Itens</h1>

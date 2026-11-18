@@ -42,7 +42,8 @@ export function LinkRastreado({
       onClick={() => enviarClique({ vitrine, link: linkId })}
     >
       {children}
-    <span className="sr-only"> (abre em nova aba)</span></a>
+      <span className="sr-only"> (abre em nova aba)</span>
+    </a>
   );
 }
 

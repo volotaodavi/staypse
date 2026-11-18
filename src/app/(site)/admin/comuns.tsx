@@ -39,7 +39,7 @@ export function Historico({ registros }: { registros?: Registro[] }) {
   if (!registros?.length) return null;
   return (
     <details className="mt-3 text-sm">
-      <summary className="cursor-pointer font-medium">Histórico ({registros.length})</summary>
+      <summary className="cursor-pointer py-1 font-medium">Histórico ({registros.length})</summary>
       <ul className="mt-2 space-y-1 text-petroleo/80" data-historico>
         {registros.map((r, i) => (
           <li key={i}>
