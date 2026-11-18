@@ -3,22 +3,28 @@
 // o cookie é próprio, sem publicidade de terceiros (legítimo interesse — ver
 // /cookies). Some depois do "Entendi" (guardado só neste navegador).
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 const CHAVE = "staypse_aviso_cookies";
 
+// lê o armazenamento local; no servidor (ou se não houver), finge "já visto"
+const lerVisto = () => {
+  try {
+    return localStorage.getItem(CHAVE);
+  } catch {
+    return "sem-armazenamento";
+  }
+};
+const assinar = (avisar: () => void) => {
+  window.addEventListener("storage", avisar);
+  return () => window.removeEventListener("storage", avisar);
+};
+
 export function AvisoCookies() {
-  const [mostrar, setMostrar] = useState(false);
+  const visto = useSyncExternalStore(assinar, lerVisto, () => "servidor");
+  const [fechado, setFechado] = useState(false);
 
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem(CHAVE)) setMostrar(true);
-    } catch {
-      // navegador sem armazenamento local: não insiste no aviso
-    }
-  }, []);
-
-  if (!mostrar) return null;
+  if (visto || fechado) return null;
   return (
     <div role="region" aria-label="Aviso sobre cookies" className="border-b border-neutral-200 bg-neutral-50 text-neutral-800">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2 text-sm">
@@ -34,7 +40,7 @@ export function AvisoCookies() {
             try {
               localStorage.setItem(CHAVE, new Date().toISOString());
             } catch {}
-            setMostrar(false);
+            setFechado(true);
           }}
           className="min-h-9 rounded-md border border-neutral-400 px-3 font-medium hover:bg-white"
         >
