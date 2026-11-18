@@ -24,7 +24,7 @@ export function TabelaVendas({
         <h2 id="t-vendas" className="text-base font-medium">
           Minhas vendas
         </h2>
-        <LinkCsv caminho="/painel/afiliado/vendas/csv" periodo={periodo} extras={{ papel }}>
+        <LinkCsv caminho={`/painel/${papel}/vendas/csv`} periodo={periodo} extras={{ papel }}>
           Exportar CSV
         </LinkCsv>
       </div>
