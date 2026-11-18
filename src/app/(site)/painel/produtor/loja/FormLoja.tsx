@@ -137,8 +137,8 @@ export function FormLoja({
               ))}
             </select>
           </label>
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Layout</span>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-sm font-medium">Layout</legend>
             {(Object.keys(LAYOUTS_LOJA) as LayoutLoja[]).map((l) => (
               <label
                 key={l}
@@ -151,7 +151,7 @@ export function FormLoja({
                 </span>
               </label>
             ))}
-          </div>
+          </fieldset>
         </fieldset>
 
         <BotaoEnviar>Salvar loja</BotaoEnviar>

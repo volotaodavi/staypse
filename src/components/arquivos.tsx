@@ -63,11 +63,11 @@ export function EnviarArquivo({
       <span>{rotulo}</span>
       <input type="hidden" name={campo} value={caminho} />
       <label
-        className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 font-normal ${
+        className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 font-normal has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo ${
           estado === "ok" ? "border-petroleo bg-gelo" : "border-petroleo/40"
         }`}
       >
-        <span className="truncate">
+        <span className="truncate" role="status">
           {estado === "enviando" && "Enviando..."}
           {estado === "ok" && `✓ Enviado${mensagem ? `: ${mensagem}` : ""}`}
           {(estado === "" || estado === "erro") && "Toque para escolher o arquivo"}
@@ -78,12 +78,17 @@ export function EnviarArquivo({
         <input
           type="file"
           accept={aceita}
+          aria-label={rotulo}
           className="sr-only"
           data-campo={campo}
           onChange={(e) => enviar(e.target.files?.[0])}
         />
       </label>
-      {estado === "erro" && <span className="font-normal text-red-800">{mensagem}</span>}
+      {estado === "erro" && (
+        <span role="alert" className="font-normal text-red-800">
+          {mensagem}
+        </span>
+      )}
       {dica && <span className="text-xs font-normal text-petroleo/70">{dica}</span>}
     </div>
   );
@@ -138,7 +143,7 @@ export function Fotos({ uid, iniciais, supabaseUrl }: { uid: string; iniciais: s
             <button
               type="button"
               onClick={() => setFotos((atuais) => atuais.filter((f) => f !== caminho))}
-              className="absolute top-1 right-1 rounded-full bg-petroleo/90 px-2 py-0.5 text-xs text-branco"
+              className="absolute top-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-petroleo/90 text-sm text-branco"
               aria-label={`Remover foto ${i + 1}`}
             >
               ✕
@@ -151,12 +156,13 @@ export function Fotos({ uid, iniciais, supabaseUrl }: { uid: string; iniciais: s
           </div>
         ))}
         {fotos.length < MAX_FOTOS && (
-          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-petroleo/40 text-center text-xs font-normal">
-            {enviando ? "Enviando..." : "+ Adicionar"}
+          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-petroleo/40 text-center text-xs font-normal has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo">
+            <span role="status">{enviando ? "Enviando..." : "+ Adicionar foto"}</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
+              aria-label="Adicionar fotos"
               className="sr-only"
               data-campo="fotos"
               onChange={(e) => adicionar(e.target.files)}
@@ -164,7 +170,11 @@ export function Fotos({ uid, iniciais, supabaseUrl }: { uid: string; iniciais: s
           </label>
         )}
       </div>
-      {erro && <span className="font-normal text-red-800">{erro}</span>}
+      {erro && (
+        <span role="alert" className="font-normal text-red-800">
+          {erro}
+        </span>
+      )}
       <span className="text-xs font-normal text-petroleo/70">
         A primeira é a capa. As fotos são reduzidas automaticamente antes do envio.
       </span>
