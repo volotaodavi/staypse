@@ -16,10 +16,11 @@ export async function proxy(request: NextRequest) {
   // reescrita): /@ana → vitrine; /@ana/tenis-runner → abre o link (clique +
   // atribuição + redirecionamento para a loja). A barra de endereço não muda.
   // só letras, números e hífen (o mesmo formato dos endereços no banco)
-  const arroba = request.nextUrl.pathname.match(/^\/(?:@|%40)([A-Za-z0-9-]{1,60})(?:\/([a-z0-9-]{1,60}))?\/?$/);
+  // /@ana/tenis-runner/comprar → mesmo link, mas leva direto ao checkout da loja.
+  const arroba = request.nextUrl.pathname.match(/^\/(?:@|%40)([A-Za-z0-9-]{1,60})(?:\/([a-z0-9-]{1,60})(\/comprar)?)?\/?$/);
   if (arroba) {
     const url = request.nextUrl.clone();
-    url.pathname = arroba[2] ? `/ir/${arroba[1]}/${arroba[2]}` : `/v/${arroba[1].toLowerCase()}`;
+    url.pathname = arroba[2] ? `/ir/${arroba[1]}/${arroba[2]}${arroba[3] ?? ""}` : `/v/${arroba[1].toLowerCase()}`;
     return NextResponse.rewrite(url);
   }
 

@@ -145,7 +145,9 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
                       <div key="l" className="flex flex-wrap items-center gap-2">
                         {/* link curto visível: a pessoa confere o que vai compartilhar */}
                         <span className="w-full break-all text-xs text-petroleo/75">{`/@${p.vitrine_slug}/${p.produto_slug}`}</span>
-                        <CopiarLink url={link} rotulo="Copiar link" className="min-h-11 rounded-full border border-petroleo/40 px-3 text-sm font-medium" />
+                        <CopiarLink url={link} rotulo="Copiar link da página" className="min-h-11 rounded-full border border-petroleo/40 px-3 text-sm font-medium" />
+                        {/* segunda modalidade: leva direto ao checkout da loja (bom para anúncio e WhatsApp) */}
+                        <CopiarLink url={`${link}/comprar`} rotulo="Copiar link do checkout" className="min-h-11 rounded-full border border-petroleo/40 px-3 text-sm font-medium" />
                         <BotaoWhatsapp
                           texto={`${p.nome}\n${link}`}
                           rotulo="WhatsApp"

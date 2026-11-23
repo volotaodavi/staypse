@@ -150,7 +150,9 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
                     <p className="text-sm text-petroleo/75">A loja desativou seu vínculo: este link não registra novas indicações.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      <CopiarLink url={link} rotulo="Copiar link" className="min-h-11 rounded-full border border-petroleo/40 px-4 text-sm font-medium" />
+                      <CopiarLink url={link} rotulo="Copiar link da página" className="min-h-11 rounded-full border border-petroleo/40 px-4 text-sm font-medium" />
+                        {/* segunda modalidade: leva direto ao checkout da loja (bom para anúncio e WhatsApp) */}
+                        <CopiarLink url={`${link}/comprar`} rotulo="Copiar link do checkout" className="min-h-11 rounded-full border border-petroleo/40 px-4 text-sm font-medium" />
                       <BotaoWhatsapp
                         texto={`${a.items!.nome}\n${link}`}
                         rotulo="WhatsApp"
