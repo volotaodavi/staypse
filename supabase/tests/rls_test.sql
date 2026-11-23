@@ -1951,6 +1951,179 @@ select teste.ok((select count(*) from public.minhas_comissoes('vendedor', now() 
                  where origem_atribuicao = 'link') >= 1, 'e a origem "link" nas vendas pelo link');
 
 -- =========================================================================
+-- 23. Cobrança com split, webhook, chargeback e conciliação (migração 20261206000001)
+-- =========================================================================
+reset role;
+update public.recebedores set status_recebedor = 'aprovado', documento_provedor = null where provedor_id is not null;
+select id as cb_curso from public.items where nome = 'Curso de Maquiagem' \gset
+select id as cb_kit from public.items where nome = 'Kit Banho' \gset
+select estoque as cb_est0 from public.items where id = :'cb_kit' \gset
+:comoServidor
+-- pedido do curso, indicado pela Bia (afiliada), comprado por uma conta logada (Fabi)
+select id as cb1, codigo as cb1_cod, token as cb1_tok from public.criar_pedido(:'cb_curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b',
+  '00000000-0000-0000-0000-00000000000f', 'Cris', 'cris@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as cb2 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Dani', 'dani@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as cb3 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Edu', 'edu@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as cb4 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Fran', 'fran@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as cb5 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Gui', 'gui@teste.com', '52998224725', null, null, '2026-11-18') \gset
+
+-- dados do split: loja + indicação (afiliado) + taxa da Staypse vinda da configuração
+select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador') = 'afiliado'
+                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador_provedor_id') = 'rec_b'
+                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'produtor_provedor_id') is not null
+                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'taxa_staypse_percentual')::numeric = 5,
+                'split: loja, afiliado e taxa da Staypse (configuração) montados pelo banco');
+select teste.ok((public.dados_split_pedido(:'cb2', 'mock') ->> 'indicador') = 'nenhum', 'split: pedido sem indicação não tem indicador');
+select teste.bloqueia(format('select public.dados_split_pedido(%L, %L)', :'cb1', 'lytex'),
+                      'sem recebedor aprovado no provedor não se monta cobrança (nada de cobrar sem como repassar)');
+
+-- só o servidor registra a cobrança, uma vez só
+select public.registrar_cobranca(:'cb1', 'mock', 'mock_cob_t1', '/simulador-pagamentos/cobranca/mock_cob_t1',
+                                 '{"versao":1,"partes":[{"papel":"produtor","valorCentavos":1}]}');
+select public.registrar_cobranca(id, 'mock', 'mock_cob_t' || n, null, '{"versao":1}')
+from (values (:'cb2', 2), (:'cb3', 3), (:'cb4', 4), (:'cb5', 5)) v(id, n);
+select teste.bloqueia(format('select public.registrar_cobranca(%L, %L, %L, null, %L)', :'cb1', 'mock', 'mock_cob_outra', '{}'),
+                      'o pedido guarda uma cobrança só');
+select teste.bloqueia(format('select public.registrar_cobranca(%L, %L, %L, null, %L)', :'cb2', 'mock', 'mock_cob_t1', '{}'),
+                      'a mesma cobrança não vale para dois pedidos');
+reset role;
+select teste.ok((select cobranca_provedor = 'mock' and split_snapshot ->> 'versao' = '1' and cobranca_criada_em is not null
+                 from public.orders where id = :'cb1'), 'pedido guarda a referência da cobrança e o snapshot do split');
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'cobranca_criada' and entidade_id = :'cb1'),
+                'criação da cobrança fica no audit_log');
+
+-- quem pode chamar o que
+:comoAnon
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L)', 'mock', 'mock_cob_t1', 'paga'), 'visitante não aplica status de cobrança');
+:comoA
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L)', 'mock', 'mock_cob_t1', 'paga'), 'loja não aplica status de cobrança');
+select teste.bloqueia(format('select public.registrar_cobranca(%L, %L, %L, null, %L)', :'cb2', 'mock', 'x', '{}'), 'loja não registra cobrança');
+select teste.bloqueia(format('select * from public.cobrancas_para_conciliar(%L)', 'mock'), 'loja não lista cobranças para conciliar');
+:comoC
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L)', 'mock', 'mock_cob_t1', 'paga'), 'nem o admin aplica status pelo app (só o servidor, com a assinatura do provedor)');
+select teste.bloqueia($$update public.orders set status = 'inventado'$$, 'status de pedido fora da lista é recusado');
+
+-- WEBHOOK pago: confirma UMA vez só (estoque baixa uma vez)
+:comoServidor
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t2', 'paga', :'cb2') = 'confirmado', 'webhook pago confirma o pedido');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t2', 'paga', :'cb2') = 'sem_efeito', 'o mesmo aviso de pago de novo não faz nada (idempotente)');
+reset role;
+select teste.ok((select status = 'pago' and pago_em is not null from public.orders where id = :'cb2'), 'pedido pago pelo aviso do provedor');
+select teste.ok((select estoque = :'cb_est0'::int - 1 from public.items where id = :'cb_kit'), 'pago duas vezes baixou o estoque uma vez só');
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'pedido_confirmado' and entidade_id = :'cb2'), 'só um registro de confirmação');
+:comoServidor
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L)', 'mock', 'mock_cob_inexistente', 'paga'), 'cobrança desconhecida é erro (o provedor reenvia)');
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L, %L)', 'mock', 'mock_cob_t2', 'paga', :'cb3'), 'aviso de cobrança de outro pedido é recusado');
+select teste.bloqueia(format('select public.aplicar_status_cobranca(%L, %L, %L)', 'mock', 'mock_cob_t2', 'PAID'), 'status fora do vocabulário é recusado');
+
+-- idempotência por evento_id (tabela eventos_pagamento)
+insert into public.eventos_pagamento (provedor, evento_id, tipo, payload) values ('mock', 'ev-cb-1', 'cobranca.status', '{"id":"ev-cb-1"}');
+select teste.bloqueia($$insert into public.eventos_pagamento (provedor, evento_id, tipo, payload) values ('mock', 'ev-cb-1', 'cobranca.status', '{"id":"ev-cb-1"}')$$,
+                      'o mesmo evento_id não é registrado duas vezes (payload bruto guardado uma vez)');
+
+-- comissão: pendente enquanto no prazo de 7 dias → estornada no chargeback
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'paga', :'cb1') = 'confirmado', 'pedido indicado pago');
+select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') -> 'itens' -> 0 -> 'acesso') <> 'null'::jsonb, 'pago: conteúdo digital liberado');
+:comoB
+select teste.ok((select situacao from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'a_receber',
+                'comissão pendente (pago, dentro do prazo de 7 dias)');
+:comoServidor
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'estorno_pendente', :'cb1') = 'sem_efeito', 'estorno pendente no provedor não muda o pedido');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'chargeback', :'cb1') = 'chargeback', 'chargeback aplicado');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'chargeback', :'cb1') = 'sem_efeito', 'chargeback repetido não faz nada');
+reset role;
+select teste.ok((select status = 'chargeback' and chargeback_em is not null from public.orders where id = :'cb1'), 'pedido em chargeback');
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'pedido_chargeback' and entidade_id = :'cb1'
+                   and detalhes ->> 'cobranca_id' = 'mock_cob_t1'), 'chargeback registrado no audit_log (uma vez)');
+:comoB
+select teste.ok((select situacao from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'estornada',
+                'chargeback estorna a comissão do afiliado');
+select teste.ok((public.painel_indicador('afiliado', now() - interval '1 day', now() + interval '1 day') ->> 'estornada_centavos')::bigint > 0,
+                'painel do afiliado soma a comissão estornada');
+:comoServidor
+select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') ->> 'status') = 'chargeback', 'comprador vê o pedido em chargeback');
+select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') -> 'itens' -> 0 -> 'acesso') = 'null'::jsonb,
+                'chargeback fecha o acesso ao conteúdo digital');
+select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') ->> 'pode_desistir')::boolean = false, 'pedido em chargeback não aceita desistência');
+
+-- chargeback devolve o estoque do que não saiu; reembolso pelo provedor também
+:comoServidor
+select public.aplicar_status_cobranca('mock', 'mock_cob_t3', 'paga', :'cb3');
+select public.aplicar_status_cobranca('mock', 'mock_cob_t4', 'paga', :'cb4');
+reset role;
+select teste.ok((select estoque = :'cb_est0'::int - 3 from public.items where id = :'cb_kit'), 'três pedidos pagos baixaram três unidades');
+:comoServidor
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t3', 'chargeback', :'cb3') = 'chargeback', 'chargeback no kit');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t4', 'estornada', :'cb4') = 'reembolsado', 'estorno confirmado pelo provedor reembolsa o pedido pago');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t4', 'estornada', :'cb4') = 'sem_efeito', 'estorno repetido não devolve o estoque de novo');
+reset role;
+select teste.ok((select estoque = :'cb_est0'::int - 1 from public.items where id = :'cb_kit'), 'chargeback e reembolso devolveram o estoque do que não saiu (uma vez só)');
+select teste.ok((select status = 'reembolsado' and reembolsado_em is not null from public.orders where id = :'cb4'), 'pedido reembolsado só com a confirmação do provedor');
+
+-- recusa/expiração cancela; pago depois de cancelado não ressuscita o pedido
+:comoServidor
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t5', 'recusada', :'cb5') = 'cancelado', 'recusa do provedor cancela o pedido que aguardava pagamento');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t5', 'paga', :'cb5') = 'pago_em_pedido_cancelado', 'pagamento tardio em pedido cancelado é sinalizado, não ressuscita');
+reset role;
+select teste.ok((select status = 'cancelado' from public.orders where id = :'cb5'), 'pedido segue cancelado');
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'pedido_pago_em_pedido_cancelado' and entidade_id = :'cb5'), 'pagamento tardio fica no audit_log para o admin devolver');
+
+-- reembolso: com cobrança no provedor, o admin NÃO conclui à mão
+update public.orders set status = 'em_reembolso' where id = :'cb2';
+:comoC
+select teste.bloqueia(format('select public.concluir_reembolso(%L)', :'cb2'), 'pedido com cobrança só é reembolsado quando o provedor confirmar');
+:comoServidor
+select public.registrar_estorno_solicitado(:'cb2', '00000000-0000-0000-0000-00000000000c', 'estorno_pendente');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t2', 'estornada', :'cb2') = 'reembolsado', 'desistência + estorno confirmado: reembolsado');
+reset role;
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'estorno_solicitado' and entidade_id = :'cb2'), 'pedido de estorno fica no audit_log');
+
+-- CONCILIAÇÃO: pendentes há mais de 1 hora, status aplicado pelo mesmo caminho do webhook
+:comoServidor
+select id as cb6 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Hana', 'hana@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as cb7 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Ivo', 'ivo@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select public.registrar_cobranca(:'cb6', 'mock', 'mock_cob_t6', null, '{}');
+select public.registrar_cobranca(:'cb7', 'mock', 'mock_cob_t7', null, '{}');
+reset role;
+update public.orders set cobranca_criada_em = now() - interval '2 hours' where id = :'cb6';
+:comoServidor
+select teste.ok((select count(*) = 1 and bool_and(cobranca_id = 'mock_cob_t6') from public.cobrancas_para_conciliar('mock')),
+                'conciliação lista só a cobrança pendente há mais de 1 hora (a recente fica de fora)');
+select teste.ok((select count(*) = 0 from public.cobrancas_para_conciliar('lytex')), 'conciliação respeita o provedor ativo');
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t6', 'paga', :'cb6') = 'confirmado', 'conciliação aplica o status "paga" que o provedor informou');
+select teste.ok((select count(*) = 0 from public.cobrancas_para_conciliar('mock')), 'depois de aplicada, a cobrança sai da fila de conciliação');
+select public.registrar_conciliacao('{"provedor":"mock","consultadas":1,"aplicadas":{"confirmado":1},"sem_mudanca":0,"erros":0}');
+reset role;
+select teste.ok((select status = 'pago' from public.orders where id = :'cb6'), 'pedido pago pela conciliação');
+select teste.ok((select count(*) = 1 from public.audit_log where acao = 'conciliacao_cobrancas' and entidade = 'sistema'
+                   and (detalhes ->> 'consultadas')::int = 1), 'resumo da conciliação registrado no audit_log');
+select teste.bloqueia($$delete from public.audit_log where acao = 'conciliacao_cobrancas'$$, 'o resumo da conciliação não pode ser apagado do log');
+
+-- privacidade: snapshot do split e link de pagamento só o servidor lê
+:comoD
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'terceiro não lê o snapshot do split');
+select teste.bloqueia($$select * from public.orders$$, 'select * em pedidos (inclui o snapshot) é barrado para usuário logado');
+:comoA
+select teste.ok((select count(*) >= 1 from (select cobranca_id, status, chargeback_em from public.orders) x), 'loja continua lendo os próprios pedidos (sem o snapshot)');
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'loja não lê o snapshot do split (o split de outros recebedores)');
+select teste.bloqueia($$select cobranca_url from public.orders$$, 'loja não lê o link de pagamento (pode carregar o link secreto do comprador)');
+:comoB
+select teste.ok((select count(*) = 0 from public.orders), 'afiliado segue sem ler pedidos (LGPD)');
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'afiliado não lê o snapshot do split');
+:comoC
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'admin também não lê o snapshot pelo app (auditoria é pelo servidor)');
+:comoAnon
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'visitante não lê o snapshot do split');
+:comoF
+select teste.ok((select count(*) = 1 from public.orders where id = :'cb1'), 'comprador logado vê o próprio pedido');
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'comprador não lê o snapshot do split');
+select teste.bloqueia($$select * from public.simulador_cobrancas$$, 'usuário logado não lê o estado do simulador');
+:comoAnon
+select teste.bloqueia($$select * from public.simulador_cobrancas$$, 'visitante não lê o estado do simulador');
+reset role;
+select teste.ok((select split_snapshot ->> 'versao' = '1' from public.orders where id = :'cb1'), 'o snapshot continua guardado (só o servidor lê)');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;
