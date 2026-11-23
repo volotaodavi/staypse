@@ -15,7 +15,7 @@ export default async function Frete() {
   const supabase = await criarClienteServidor();
   const { data: p } = await supabase
     .from("producers")
-    .select("frete_fixo_centavos, frete_gratis_acima_centavos, frete_prazo_dias")
+    .select("frete_fixo_centavos, frete_gratis_acima_centavos, frete_prazo_dias, frete_quem_paga")
     .eq("user_id", usuario.id)
     .maybeSingle();
 
@@ -26,7 +26,7 @@ export default async function Frete() {
       </Link>
       <h1 className="text-3xl">Frete da loja</h1>
       <p className="text-petroleo/80">
-        Um valor fixo por pedido, com a opção de frete grátis acima de um valor. O comprador vê o frete e o total no resumo,
+        Você decide quem paga o frete: a loja (o comprador vê &quot;Frete grátis&quot;) ou o comprador (valor fixo por pedido, com a opção de frete grátis acima de um valor). O comprador vê o frete e o total no resumo,
         antes de pagar. A retirada no local é marcada em cada produto.
       </p>
       {!p ? (
@@ -36,6 +36,7 @@ export default async function Frete() {
           <FormFrete
             inicial={{
               envia: p.frete_fixo_centavos != null ? "sim" : "nao",
+              quem: p.frete_quem_paga === "loja" ? "loja" : "comprador",
               fixo: reais(p.frete_fixo_centavos),
               gratis: reais(p.frete_gratis_acima_centavos),
               prazo: p.frete_prazo_dias ? String(p.frete_prazo_dias) : "",

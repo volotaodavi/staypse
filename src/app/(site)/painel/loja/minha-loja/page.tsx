@@ -16,7 +16,7 @@ export default async function MinhaLoja() {
       "Empresa e documentos (KYC)",
       loja ? `Situação: ${STATUS_PRODUTOR[loja.status_verificacao] ?? loja.status_verificacao}` : "Cadastre sua empresa",
     ],
-    ["/painel/produtor/frete", "Frete", loja?.frete_fixo_centavos == null ? "Envio desligado" : "Valor, frete grátis e prazo"],
+    ["/painel/produtor/frete", "Frete", loja?.frete_fixo_centavos == null ? "Envio desligado" : "Quem paga o frete, valor e prazo"],
     ["/painel/produtor/itens/novo", "Novo produto", "Cadastro com fotos, preço e comissão"],
   ];
   return (

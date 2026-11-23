@@ -1,5 +1,5 @@
 // CSV "Minhas vendas" (afiliado ou vendedor): data, produto, loja, valores e situação.
-// Nenhum dado do comprador. ?papel=vendedor para o painel do vendedor próprio.
+// Do comprador, só o nome e o valor pago. ?papel=vendedor para o painel do vendedor próprio.
 import { montarCsv } from "@/lib/csv";
 import { exigirPapel } from "@/lib/papeis";
 import { ROTULO_ORIGEM_ATRIBUICAO, dataHora } from "@/lib/pedidos";
@@ -15,13 +15,15 @@ export async function GET(request: Request) {
   const periodo = lerPeriodo(sp);
   const vendas = await lerComissoes(papel, periodo);
   const csv = montarCsv(
-    ["Data", "Produto", "Quantidade", "Loja", "Origem", "Valor da venda (R$)", "Comissão (R$)", "Situação"],
+    ["Data", "Produto", "Quantidade", "Loja", "Origem", "Comprador", "Valor pago (R$)", "Valor da venda (R$)", "Comissão (R$)", "Situação"],
     vendas.map((v) => [
       dataHora(v.data),
       v.produto,
       v.quantidade,
       v.loja,
       ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "",
+      v.comprador_nome,
+      v.valor_pago_centavos == null ? "" : reais(v.valor_pago_centavos),
       reais(v.valor_centavos),
       reais(v.comissao_centavos),
       SITUACAO_COMISSAO[v.situacao] ?? v.situacao,

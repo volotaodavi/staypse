@@ -1,5 +1,5 @@
 // "Minhas vendas" de quem indica (afiliado ou vendedor): data, produto, loja,
-// comissão e situação. Sem nenhum dado do comprador (LGPD).
+// comissão e situação. Do comprador, só o nome e o valor pago (LGPD: nunca contato, CPF ou endereço).
 import { LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { SITUACAO_COMISSAO, type Comissao } from "@/app/(site)/painel/afiliado/consulta";
@@ -35,6 +35,8 @@ export function TabelaVendas({
           { titulo: "Data" },
           { titulo: "Loja" },
           { titulo: "Origem" },
+          { titulo: "Comprador" },
+          { titulo: "Valor pago", numero: true },
           { titulo: "Venda", numero: true },
           { titulo: "Comissão", numero: true },
           { titulo: "Situação" },
@@ -48,6 +50,8 @@ export function TabelaVendas({
             dataHora(v.data),
             v.loja,
             <span key="o" data-origem={v.origem_atribuicao ?? ""}>{ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "—"}</span>,
+            v.comprador_nome,
+            v.valor_pago_centavos == null ? "—" : formatarPreco(Number(v.valor_pago_centavos)),
             formatarPreco(Number(v.valor_centavos)),
             formatarPreco(Number(v.comissao_centavos)),
             <span key="s" data-situacao={v.situacao}>

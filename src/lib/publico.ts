@@ -138,6 +138,8 @@ export type EntregaProduto = {
   frete_fixo_centavos: number | null;
   frete_gratis_acima_centavos: number | null;
   frete_prazo_dias: number | null;
+  // quem paga o frete: o comprador (fixo, grátis acima de X) ou a loja (frete grátis sempre)
+  frete_quem_paga: "comprador" | "loja";
 };
 
 export async function buscarEntrega(itemId: string): Promise<EntregaProduto | null> {

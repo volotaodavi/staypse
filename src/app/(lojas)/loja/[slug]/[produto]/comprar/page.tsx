@@ -29,6 +29,7 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
       frete_fixo_centavos: number | null;
       frete_gratis_acima_centavos: number | null;
       frete_prazo_dias: number | null;
+      frete_quem_paga: "comprador" | "loja";
     }>(),
     usuarioAtual(),
     // sem recebedor aprovado na Lytex, a loja não recebe pedido novo

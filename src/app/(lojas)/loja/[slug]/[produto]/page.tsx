@@ -37,7 +37,7 @@ const ICONES = {
   ponto: "M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11zM12 12a2 2 0 100-4 2 2 0 000 4",
 };
 
-// Frete e prazo reais da loja (mesma regra do checkout: frete fixo, grátis acima de X)
+// Frete e prazo reais da loja (mesma regra do checkout: frete fixo, grátis acima de X, ou a loja assume o frete)
 function linhasEntrega(tipo: string, prazoPostagem: number | null, retirada: boolean, e: EntregaProduto | null) {
   const linhas: { icone: keyof typeof ICONES; titulo: string; texto?: string }[] = [];
   if (tipo !== "fisico") {
@@ -50,6 +50,7 @@ function linhasEntrega(tipo: string, prazoPostagem: number | null, retirada: boo
       icone: "caixa",
       titulo: gratis ? "Frete grátis" : `Frete ${formatarPreco(e.frete_fixo_centavos)}`,
       texto: [
+        e.frete_quem_paga === "loja" ? "A loja paga o envio." : "",
         !gratis && e.frete_gratis_acima_centavos ? `Grátis em compras a partir de ${formatarPreco(e.frete_gratis_acima_centavos)}.` : "",
         prazoPostagem != null ? `Postagem em até ${prazoPostagem} dia(s) útil(eis) depois do pagamento.` : "",
         e.frete_prazo_dias ? `Chega em até ${e.frete_prazo_dias} dia(s) útil(eis) depois da postagem.` : "",

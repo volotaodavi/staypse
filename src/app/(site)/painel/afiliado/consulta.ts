@@ -1,5 +1,6 @@
 // Dados do painel de quem indica (afiliado ou vendedor próprio): tudo vem de
-// funções do banco filtradas pela própria pessoa. Sem dados do comprador.
+// funções do banco filtradas pela própria pessoa. Do comprador, só o básico: nome e valor pago
+// (nunca e-mail, telefone, CPF, endereço ou código de acesso).
 import type { Periodo } from "@/lib/periodo";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -27,6 +28,9 @@ export type Comissao = {
   previsao: string | null;
   // como a venda chegou até você: "link" (link curto) ou "codigo" (digitado no checkout)
   origem_atribuicao: "link" | "codigo" | null;
+  // o básico do comprador, para acompanhar a comissão: nome e total pago (null até o pagamento)
+  comprador_nome: string;
+  valor_pago_centavos: number | null;
 };
 
 export const SITUACAO_COMISSAO: Record<string, string> = {

@@ -2125,6 +2125,91 @@ reset role;
 select teste.ok((select split_snapshot ->> 'versao' = '1' from public.orders where id = :'cb1'), 'o snapshot continua guardado (só o servidor lê)');
 
 -- =========================================================================
+-- 8b. Frete: quem paga (loja assume ou comprador) e o básico do comprador para o afiliado
+-- =========================================================================
+reset role;
+update public.items set estoque = 50 where id = :'kit';  -- os testes anteriores consumiram o estoque
+-- padrão: lojas existentes continuam com o comprador pagando o frete
+select teste.ok((select frete_quem_paga = 'comprador' from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'),
+                'frete: loja existente segue com o comprador pagando');
+:comoA
+select public.salvar_frete(1500, 12000, 5, 'comprador');
+:comoAnon
+select teste.ok((select frete_centavos = 1500 and total_centavos = 6500 from public.cotar_pedido(:'kit', 1, 'envio')),
+                'frete (comprador paga): frete fixo cobrado abaixo do valor mínimo');
+select teste.ok((select frete_centavos = 0 from public.cotar_pedido(:'kit', 3, 'envio')),
+                'frete (comprador paga): grátis acima de X continua valendo');
+select teste.ok((select frete_quem_paga = 'comprador' and frete_fixo_centavos = 1500 from public.entregas_do_item(:'kit')),
+                'frete (comprador paga): a tela recebe o frete fixo');
+:comoB
+select teste.bloqueia($$select public.salvar_frete(0, null, 5, 'loja')$$, 'quem não tem loja não escolhe quem paga o frete');
+:comoA
+select teste.bloqueia($$select public.salvar_frete(1500, null, 5, 'ninguem')$$, 'quem paga o frete só aceita comprador ou loja');
+-- loja assume: mesmo mandando valor fixo e "grátis acima de", o banco grava frete 0 e sem limite
+select public.salvar_frete(1500, 12000, 5, 'loja');
+select teste.ok((select frete_quem_paga = 'loja' and frete_fixo_centavos = 0 and frete_gratis_acima_centavos is null
+                 from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'),
+                'frete (loja assume): gravado como frete 0, sem "grátis acima de"');
+:comoAnon
+select teste.ok((select frete_centavos = 0 and total_centavos = subtotal_centavos from public.cotar_pedido(:'kit', 1, 'envio')),
+                'frete (loja assume): comprador paga frete 0 em compra pequena');
+select teste.ok((select frete_quem_paga = 'loja' and envio and frete_fixo_centavos = 0 and frete_gratis_acima_centavos is null
+                 from public.entregas_do_item(:'kit')),
+                'frete (loja assume): a tela recebe "Frete grátis" e nenhum limite');
+:comoServidor
+select id as fr1 from public.criar_pedido(:'kit', 1, 'envio', null, null, 'Gabi', 'gabi@teste.com', '52998224725',
+  null, '{"cep":"01001000","logradouro":"Rua A","numero":"1","bairro":"Centro","cidade":"São Paulo","uf":"SP"}', '2026-11-18') \gset
+reset role;
+select teste.ok((select frete_centavos = 0 and total_centavos = subtotal_centavos from public.orders where id = :'fr1'),
+                'frete (loja assume): o pedido criado tem frete 0 e total = subtotal');
+-- volta ao comprador pagando: a cobrança de frete retorna
+:comoA
+select public.salvar_frete(1500, null, 5, 'comprador');
+:comoAnon
+select teste.ok((select frete_centavos = 1500 from public.cotar_pedido(:'kit', 1, 'envio')), 'frete: voltar para "comprador paga" cobra o frete de novo');
+
+-- afiliado vê SÓ o básico do comprador (nome e valor pago) das próprias vendas
+reset role;
+insert into public.orders (id, producer_id, comprador_nome, comprador_email, comprador_documento,
+                           comprador_telefone, endereco_entrega, subtotal_centavos, frete_centavos, total_centavos,
+                           status, resumo_aceito_em, termos_versao, codigo, acesso_hash)
+  select '00000000-0000-0000-0000-0000000000f8', p.id, 'Helena Basica',
+         'helena.secreta@teste.com', '52998224725', '11999990000', '{"logradouro":"Rua Secreta"}'::jsonb,
+         5000, 1500, 6500, 'pago', now(), '2026-11-18', 'BASICO0001', 'hash-basico'
+  from public.producers p where p.user_id = '00000000-0000-0000-0000-00000000000a';
+insert into public.order_items (order_id, item_id, nome_item, tipo_item, quantidade, preco_unitario_centavos, comissao_percentual)
+  select '00000000-0000-0000-0000-0000000000f8', id, nome, tipo, 1, preco_centavos, 10 from public.items where id = :'kit';
+-- a indicação é ligada depois do insert (o gatilho de criação só mantém indicadores com recebedor aprovado)
+update public.orders set revendedor_id = '00000000-0000-0000-0000-00000000000d' where id = '00000000-0000-0000-0000-0000000000f8';
+:comoD
+select teste.ok((select count(*) = 1 and bool_and(comprador_nome = 'Helena Basica' and valor_pago_centavos = 6500)
+                 from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day')
+                 where pedido_id = '00000000-0000-0000-0000-0000000000f8'),
+                'afiliado vê o nome do comprador e o valor pago (total) das próprias vendas');
+select teste.ok(not exists (
+                  select 1 from unnest((select proargnames from pg_proc where proname = 'minhas_comissoes')) as coluna
+                  where coluna ilike any (array['%email%', '%telefone%', '%documento%', '%cpf%', '%endereco%', '%acesso%', '%codigo%', '%whatsapp%'])),
+                'afiliado: minhas_comissoes só expõe nome e valor pago do comprador (sem e-mail/telefone/CPF/endereço/código)');
+select teste.ok((select count(*) = 0 from public.orders), 'afiliado não lê a tabela de pedidos (nenhum campo do comprador por essa via)');
+select teste.ok((select count(comprador_email) = 0 from public.orders), 'afiliado não lê o e-mail do comprador (a RLS não devolve nenhuma linha)');
+select teste.ok((select count(comprador_telefone) = 0 from public.orders), 'afiliado não lê o telefone do comprador (a RLS não devolve nenhuma linha)');
+select teste.ok((select count(comprador_documento) = 0 from public.orders), 'afiliado não lê o CPF do comprador (a RLS não devolve nenhuma linha)');
+select teste.ok((select count(endereco_entrega) = 0 from public.orders), 'afiliado não lê o endereço do comprador (a RLS não devolve nenhuma linha)');
+select teste.ok((select count(acesso_hash) = 0 from public.orders), 'afiliado não lê o código de acesso do pedido (a RLS não devolve nenhuma linha)');
+select teste.ok(not exists (
+                  select 1 from unnest((select proargnames from pg_proc where proname = 'minhas_vendas')) as coluna
+                  where coluna ilike any (array['%email%', '%telefone%', '%documento%', '%cpf%', '%endereco%', '%acesso%'])),
+                'afiliado: minhas_vendas também não expõe contato do comprador');
+-- outro afiliado não vê a venda dele
+:comoB
+select teste.ok((select count(*) = 0 from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day')
+                 where pedido_id = '00000000-0000-0000-0000-0000000000f8'),
+                'afiliado não vê (nem o nome do comprador) de venda de outro afiliado');
+:comoAnon
+select teste.bloqueia($$select * from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day')$$,
+                      'visitante não lê comissões nem o nome do comprador');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

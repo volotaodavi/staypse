@@ -47,7 +47,8 @@ export const contatoEmLinha = () =>
 // Resend, listados na Política de Privacidade)
 // (versão "2026-12-03.1": revisão jurídica — política de reembolso, avaliações, direitos
 // de imagem e aviso de infração, registros de acesso, BrasilAPI, idade mínima na compra)
-export const TERMOS_VERSAO = "2026-12-03.1";
+// (versão "2026-12-07.1": nome do comprador e valor pago mostrados ao afiliado ou vendedor que indicou a venda)
+export const TERMOS_VERSAO = "2026-12-07.1";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.

@@ -17,6 +17,7 @@ type Opcoes = {
   frete_fixo_centavos: number | null;
   frete_gratis_acima_centavos: number | null;
   frete_prazo_dias: number | null;
+  frete_quem_paga?: "comprador" | "loja";
 };
 
 const campo =
@@ -366,6 +367,7 @@ export function FormCompra({
                 {m === "envio" && opcoes.frete_fixo_centavos != null && (
                   <span className="block text-neutral-700">
                     Frete {opcoes.frete_fixo_centavos === 0 ? "grátis" : formatarPreco(opcoes.frete_fixo_centavos)}
+                    {opcoes.frete_quem_paga === "loja" ? " · a loja paga o envio" : ""}
                     {opcoes.frete_gratis_acima_centavos ? ` · grátis acima de ${formatarPreco(opcoes.frete_gratis_acima_centavos)}` : ""}
                     {opcoes.frete_prazo_dias ? ` · chega em até ${opcoes.frete_prazo_dias} dia(s) útil(eis) após a postagem` : ""}
                   </span>
