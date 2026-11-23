@@ -73,3 +73,84 @@ export function problemaNoSlug(slug: string): string | null {
 export function estimativaComissao(precoCentavos: number, percentual: number): number {
   return Math.floor((precoCentavos * percentual) / 100);
 }
+
+// ---------------------------------------------------------------------------
+// Organização da vitrine: destaques, coleções e ordem manual.
+// Espelha storefronts.organizacao (migração 20261201000001): ao mudar os
+// limites aqui, mude lá também. O banco é quem garante; isto serve para
+// avisar antes de enviar e para montar a página pública.
+// ---------------------------------------------------------------------------
+export const LIMITE_DESTAQUES = 4;
+export const LIMITE_COLECOES = 6;
+export const LIMITE_NOME_COLECAO = 40;
+
+export type Colecao = { nome: string; itens: string[] };
+export type OrganizacaoVitrine = { destaques: string[]; colecoes: Colecao[]; ordem: string[] };
+
+const ORGANIZACAO_VAZIA: OrganizacaoVitrine = { destaques: [], colecoes: [], ordem: [] };
+
+const listaDeIds = (v: unknown): string[] =>
+  Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === "string"))] : [];
+
+// Lê o JSON vindo do banco com tolerância: o que não faz sentido vira vazio.
+export function lerOrganizacao(bruto: unknown): OrganizacaoVitrine {
+  if (!bruto || typeof bruto !== "object") return ORGANIZACAO_VAZIA;
+  const o = bruto as Record<string, unknown>;
+  const colecoes: Colecao[] = Array.isArray(o.colecoes)
+    ? o.colecoes
+        .filter((c): c is Record<string, unknown> => Boolean(c) && typeof c === "object")
+        .map((c) => ({ nome: typeof c.nome === "string" ? c.nome : "", itens: listaDeIds(c.itens) }))
+        .filter((c) => c.nome.trim() !== "")
+        .slice(0, LIMITE_COLECOES)
+    : [];
+  return { destaques: listaDeIds(o.destaques).slice(0, LIMITE_DESTAQUES), colecoes, ordem: listaDeIds(o.ordem) };
+}
+
+// Confere o que o afiliado montou (mesmas regras do banco). Devolve a mensagem
+// de erro ou null.
+export function problemaNaOrganizacao(o: OrganizacaoVitrine): string | null {
+  if (o.destaques.length > LIMITE_DESTAQUES) return `Escolha no máximo ${LIMITE_DESTAQUES} destaques.`;
+  if (o.colecoes.length > LIMITE_COLECOES) return `Você pode ter no máximo ${LIMITE_COLECOES} coleções.`;
+  const nomes = new Set<string>();
+  for (const c of o.colecoes) {
+    const nome = c.nome.trim();
+    if (nome.length < 1) return "Dê um nome a cada coleção.";
+    if (nome.length > LIMITE_NOME_COLECAO) return `O nome da coleção pode ter até ${LIMITE_NOME_COLECAO} letras.`;
+    if (nomes.has(nome.toLowerCase())) return "Duas coleções não podem ter o mesmo nome.";
+    nomes.add(nome.toLowerCase());
+  }
+  return null;
+}
+
+// Move o elemento da posição i uma casa para cima (-1) ou para baixo (+1).
+export function mover<T>(lista: T[], i: number, passo: -1 | 1): T[] {
+  const j = i + passo;
+  if (i < 0 || i >= lista.length || j < 0 || j >= lista.length) return lista;
+  const copia = [...lista];
+  [copia[i], copia[j]] = [copia[j], copia[i]];
+  return copia;
+}
+
+// Ordena itens pela lista manual de ids: quem está na lista vem primeiro, na
+// ordem dela; os demais mantêm a ordem em que entraram na vitrine. Ids que não
+// existem mais (item saiu do ar) são ignorados.
+export function ordenarPorLista<T extends { id: string }>(itens: T[], ids: string[]): T[] {
+  const posicao = new Map(ids.map((id, i) => [id, i]));
+  const com = itens.filter((i) => posicao.has(i.id)).sort((a, b) => posicao.get(a.id)! - posicao.get(b.id)!);
+  return [...com, ...itens.filter((i) => !posicao.has(i.id))];
+}
+
+// Monta o que a vitrine pública mostra. "itens" são só os itens ativos
+// (itens_da_vitrine), então tudo que saiu do ar some aqui sozinho.
+export function organizarVitrine<T extends { id: string }>(itens: T[], organizacao: unknown) {
+  const org = lerOrganizacao(organizacao);
+  const porId = new Map(itens.map((i) => [i.id, i]));
+  const pegar = (ids: string[]) => ids.map((id) => porId.get(id)).filter((i): i is T => Boolean(i));
+  return {
+    destaques: pegar(org.destaques),
+    colecoes: org.colecoes
+      .map((c) => ({ nome: c.nome, itens: pegar(c.itens) }))
+      .filter((c) => c.itens.length > 0),
+    todos: ordenarPorLista(itens, org.ordem),
+  };
+}

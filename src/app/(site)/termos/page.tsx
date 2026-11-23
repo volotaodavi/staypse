@@ -5,6 +5,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DocumentoLegal, Itens } from "@/components/DocumentoLegal";
 import { EMPRESA, TERMOS_VERSAO } from "@/config/empresa";
+import {
+  ANUNCIO_IDENTIFICAR,
+  ANUNCIO_PERMITIDO,
+  ANUNCIO_PROIBIDO,
+  ANUNCIO_REGRA_DA_LOJA,
+} from "@/lib/anuncios";
 
 export const metadata: Metadata = {
   title: "Termos de uso",
@@ -90,8 +96,8 @@ export default function Termos() {
               <li>Antes de pagar, você vê o preço total (com frete, quando houver), as condições de pagamento e de entrega e um resumo das principais regras da compra.</li>
               <li>A página de cada produto mostra quem vende: razão social, CNPJ, endereço e contato da loja.</li>
               <li>O produtor emite a nota fiscal de toda venda e é responsável pela entrega, pela qualidade do produto e pela garantia.</li>
-              <li>Você tem todas as garantias do Código de Defesa do Consumidor, inclusive a garantia legal contra defeitos (art. 26) e o direito de arrependimento (item 10).</li>
-              <li>Se houver problema com o pedido, fale com a loja ou com a Staypse (item 16). A Staypse ajuda a resolver e acompanha a resposta da loja.</li>
+              <li>Você tem todas as garantias do Código de Defesa do Consumidor, inclusive a garantia legal contra defeitos (art. 26) e o direito de arrependimento (item 11).</li>
+              <li>Se houver problema com o pedido, fale com a loja ou com a Staypse (item 17). A Staypse ajuda a resolver e acompanha a resposta da loja.</li>
             </Itens>
           ),
         },
@@ -125,6 +131,30 @@ export default function Termos() {
               <li>Fale só o que é verdade sobre o produto. É proibido prometer o que o produtor não oferece, inventar descontos, enviar mensagens em massa sem consentimento (spam) ou usar marcas de terceiros para enganar.</li>
               <li>Os links de outros sites (Shopee, Mercado Livre, TikTok Shop) em &quot;Minhas indicações&quot; são de sua responsabilidade. A Staypse mostra esses links como publicidade, não os altera e não ganha com eles.</li>
             </Itens>
+          ),
+        },
+        {
+          id: "anuncios",
+          titulo: "Anúncios pagos",
+          conteudo: (
+            <>
+              <p>
+                <strong className={forte}>Pode:</strong> {ANUNCIO_PERMITIDO} O link leva a pessoa à loja que vende o produto.
+              </p>
+              <p>
+                <strong className={forte}>Não pode:</strong>
+              </p>
+              <Itens>
+                {ANUNCIO_PROIBIDO.map((regra) => (
+                  <li key={regra}>{regra}</li>
+                ))}
+              </Itens>
+              <p>{ANUNCIO_IDENTIFICAR}</p>
+              <p>
+                {ANUNCIO_REGRA_DA_LOJA} Anúncio que descumprir estas regras pode ser retirado, e a comissão das vendas dele pode ser anulada.
+              </p>
+              <p>Quem anuncia responde pelo conteúdo e pelo gasto do próprio anúncio. A Staypse não reembolsa verba de anúncio.</p>
+            </>
           ),
         },
         {
@@ -185,7 +215,7 @@ export default function Termos() {
                 meio de pagamento. Entre as partes da venda, a devolução é feita na proporção do split — o produtor, o revendedor e a Staypse
                 devolvem cada um a parte que receberam —, o que nunca reduz o seu reembolso.
               </p>
-              <p>O arrependimento pode ser pedido pelo mesmo canal usado na compra ou pelos contatos do item 16. Trocas por defeito seguem a garantia legal do CDC.</p>
+              <p>O arrependimento pode ser pedido pelo mesmo canal usado na compra ou pelos contatos do item 17. Trocas por defeito seguem a garantia legal do CDC.</p>
             </>
           ),
         },

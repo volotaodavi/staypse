@@ -10,7 +10,7 @@ import { lerPreco } from "@/lib/produtor";
 import { buscarPrevia, imagemPermitida, plataformaDoLink } from "@/lib/previa-link";
 import { ETIQUETA_VITRINES } from "@/lib/publico";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
-import { MODELOS_VISUAIS, NICHOS_VITRINE, problemaNoSlug } from "@/lib/vitrine";
+import { MODELOS_VISUAIS, NICHOS_VITRINE, lerOrganizacao, problemaNaOrganizacao, problemaNoSlug } from "@/lib/vitrine";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
 
@@ -62,6 +62,35 @@ export async function salvarVitrine(_a: EstadoFormulario, f: FormData): Promise<
   updateTag(ETIQUETA_VITRINES);
   // o vendedor próprio volta para o painel dele
   redirect(usuario.papeis.includes("revendedor") ? "/painel/revendedor?vitrine=salva" : "/painel/vendedor?vitrine=salva");
+}
+
+// ---------- organização da vitrine: destaques, coleções e ordem ----------
+// O banco confere tudo de novo (limites, formato e se cada item é de uma
+// afiliação aprovada desta pessoa); aqui só avisamos com mensagem clara.
+export async function salvarOrganizacao(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
+  await exigirAlgumPapel(["revendedor", "vendedor_proprio"]);
+  let bruto: unknown;
+  try {
+    bruto = JSON.parse(texto(f, "organizacao"));
+  } catch {
+    return { erro: "Não foi possível ler as suas escolhas. Recarregue a página e tente de novo." };
+  }
+  const org = lerOrganizacao(bruto);
+  org.colecoes = org.colecoes.map((c) => ({ ...c, nome: c.nome.trim() }));
+  const problema = problemaNaOrganizacao(org);
+  if (problema) return { erro: problema };
+
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("salvar_organizacao_vitrine", { p_org: org });
+  if (error) {
+    if (error.message.includes("item_nao_afiliado")) {
+      return { erro: "Algum produto não está mais entre as suas afiliações aprovadas. Recarregue a página e confira." };
+    }
+    if (error.message.includes("crie_sua_vitrine")) return { erro: "Crie sua vitrine antes de organizar os produtos." };
+    return { erro: "Não foi possível salvar. Tente novamente." };
+  }
+  updateTag(ETIQUETA_VITRINES);
+  return { sucesso: "Vitrine organizada! A vitrine pública já mostra a nova ordem." };
 }
 
 // ---------- afiliar-se a um item ----------

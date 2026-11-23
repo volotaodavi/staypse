@@ -16,9 +16,32 @@ import { formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarVitrine } from "@/lib/publico";
 import { supabaseUrl, urlDoSite } from "@/lib/supabase/env";
 import { montarTema } from "@/lib/tema";
-import { PLATAFORMAS, ROTULO_NICHO_VITRINE } from "@/lib/vitrine";
+import type { ItemVitrine } from "@/lib/publico";
+import { PLATAFORMAS, ROTULO_NICHO_VITRINE, organizarVitrine } from "@/lib/vitrine";
 
 export const instant = false;
+
+// Grade de produtos. Cada produto continua indo pelo link curto /@afiliado/produto,
+// que leva à loja vendedora (a compra nunca acontece aqui).
+function GradeProdutos({ slug, itens }: { slug: string; itens: ItemVitrine[] }) {
+  return (
+    <ul className={classeGrade}>
+      {itens.map((item, i) => (
+        <li key={`${item.produtor_nome}-${item.slug}`}>
+          <CartaoProdutoLoja
+            href={`/@${slug}/${item.slug}`}
+            redirecionamento
+            nome={item.nome}
+            foto={item.fotos[0]}
+            precoCentavos={item.preco_centavos}
+            prioridade={i < 2}
+            rodape={<span className="text-sm text-neutral-600">Vendido por {item.produtor_nome} · pagamento pela Staypse</span>}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 const nomeDa = (v: { nome_exibicao: string | null; slug: string }) => v.nome_exibicao || `@${v.slug}`;
 
@@ -41,6 +64,14 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
   const dados = await buscarVitrine(slug);
   if (!dados) notFound();
   const { vitrine, itens, links } = dados;
+  // destaques, coleções e ordem manual; item que saiu do ar já não está em "itens"
+  const { destaques, colecoes, todos } = organizarVitrine(itens, vitrine.organizacao);
+  const secoesNav = [
+    ...(destaques.length > 0 ? [{ id: "destaques", rotulo: "Destaques" }] : []),
+    ...colecoes.map((c, i) => ({ id: `colecao-${i + 1}`, rotulo: c.nome })),
+    ...(destaques.length > 0 || colecoes.length > 0 ? [{ id: "titulo-produtos", rotulo: "Todos os produtos" }] : []),
+  ];
+  const tituloSecao = "mb-4 text-base font-semibold";
   const proprio = vitrine.modelo_visual === "proprio";
   // padrão Staypse (petróleo/ciano, Outfit) ou "minhas cores" (cor principal)
   const tema = montarTema({ principal: proprio ? vitrine.cor_principal : null });
@@ -102,28 +133,50 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
       </header>
 
       <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-4 py-8">
-        <section aria-labelledby="titulo-produtos">
-          <h2 id="titulo-produtos" className="mb-4 text-base font-semibold">
-            Produtos
-          </h2>
-          {itens.length === 0 ? (
-            <p className="text-base text-neutral-600">Ainda não há produtos nesta vitrine.</p>
-          ) : (
-            <ul className={classeGrade}>
-              {itens.map((item, i) => (
-                <li key={`${item.produtor_nome}-${item.slug}`}>
-                  <CartaoProdutoLoja
-                    href={`/@${slug}/${item.slug}`}
-                    redirecionamento
-                    nome={item.nome}
-                    foto={item.fotos[0]}
-                    precoCentavos={item.preco_centavos}
-                    prioridade={i < 2}
-                    rodape={<span className="text-sm text-neutral-600">Vendido por {item.produtor_nome} · pagamento pela Staypse</span>}
-                  />
+        {/* atalhos para as seções (links comuns: funcionam sem JavaScript) */}
+        {destaques.length + colecoes.length > 0 && (
+          <nav aria-label="Seções da vitrine" className="-mt-4">
+            <ul className="flex flex-wrap gap-2">
+              {secoesNav.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className="inline-flex min-h-11 items-center rounded-full border border-neutral-300 px-4 text-sm font-medium text-neutral-900"
+                  >
+                    {s.rotulo}
+                  </a>
                 </li>
               ))}
             </ul>
+          </nav>
+        )}
+
+        {destaques.length > 0 && (
+          <section id="destaques" aria-labelledby="titulo-destaques" className="scroll-mt-4">
+            <h2 id="titulo-destaques" className={tituloSecao}>
+              Destaques
+            </h2>
+            <GradeProdutos slug={slug} itens={destaques} />
+          </section>
+        )}
+
+        {colecoes.map((c, i) => (
+          <section key={c.nome} id={`colecao-${i + 1}`} aria-labelledby={`titulo-colecao-${i + 1}`} className="scroll-mt-4">
+            <h2 id={`titulo-colecao-${i + 1}`} className={tituloSecao}>
+              {c.nome}
+            </h2>
+            <GradeProdutos slug={slug} itens={c.itens} />
+          </section>
+        ))}
+
+        <section aria-labelledby="titulo-produtos" className="scroll-mt-4">
+          <h2 id="titulo-produtos" className={tituloSecao}>
+            {destaques.length + colecoes.length > 0 ? "Todos os produtos" : "Produtos"}
+          </h2>
+          {todos.length === 0 ? (
+            <p className="text-base text-neutral-600">Ainda não há produtos nesta vitrine.</p>
+          ) : (
+            <GradeProdutos slug={slug} itens={todos} />
           )}
         </section>
 

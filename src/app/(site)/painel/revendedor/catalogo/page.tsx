@@ -4,6 +4,7 @@
 // vendidos nos últimos 7 dias; o banco só ordena, nenhum número de venda sai).
 import Link from "next/link";
 import { FotoItem } from "@/components/publico";
+import { ANUNCIO_IDENTIFICAR, ANUNCIO_PERMITIDO, ANUNCIO_PROIBIDO, ANUNCIO_REGRA_DA_LOJA } from "@/lib/anuncios";
 import { NICHOS, ROTULO_NICHO } from "@/lib/lista";
 import { exigirPapel } from "@/lib/papeis";
 import { formatarPreco } from "@/lib/produtor";
@@ -67,6 +68,27 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
       <p className="text-petroleo/80">
         Produtos aprovados pela Staypse. Ao se afiliar, o item entra na sua vitrine e você recebe um link só seu.
       </p>
+
+      {/* resumo das regras de anúncio (texto completo nos Termos de uso) */}
+      <details className="rounded-2xl bg-branco px-4 py-1" data-regras-anuncio>
+        <summary className="flex min-h-11 cursor-pointer items-center font-medium">Vai anunciar? Veja as regras de anúncios pagos</summary>
+        <div className="flex flex-col gap-2 pb-3 text-sm">
+          <p>
+            <strong className="font-medium">Pode:</strong> {ANUNCIO_PERMITIDO}
+          </p>
+          <p className="font-medium">Não pode:</p>
+          <ul className="list-disc pl-5">
+            {ANUNCIO_PROIBIDO.map((regra) => (
+              <li key={regra}>{regra}</li>
+            ))}
+          </ul>
+          <p>{ANUNCIO_IDENTIFICAR}</p>
+          <p>{ANUNCIO_REGRA_DA_LOJA}</p>
+          <Link href="/termos#anuncios" className="inline-flex min-h-11 items-center font-medium underline">
+            Ler nos Termos de uso
+          </Link>
+        </div>
+      </details>
 
       {!vitrine && (
         <p className="rounded-2xl bg-branco p-4">

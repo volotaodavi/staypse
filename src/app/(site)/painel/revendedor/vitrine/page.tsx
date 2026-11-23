@@ -33,6 +33,15 @@ export default async function PaginaVitrine() {
           próprias vendas.
         </p>
       )}
+      {vitrine?.publicada && (
+        <Link
+          href="/painel/revendedor/vitrine/organizar"
+          className="flex min-h-11 flex-col rounded-3xl bg-petroleo px-5 py-4 text-gelo hover:bg-petroleo/90"
+        >
+          <span className="text-lg font-extrabold text-branco">Organizar produtos</span>
+          <span className="text-sm text-gelo/85">Destaques, coleções e ordem da vitrine</span>
+        </Link>
+      )}
       <div className="rounded-3xl bg-branco p-5">
         <FormVitrine
           site={site}

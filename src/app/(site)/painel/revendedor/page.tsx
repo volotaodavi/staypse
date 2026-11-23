@@ -79,6 +79,9 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
               <Link href="/painel/revendedor/vitrine" className="rounded-full border border-gelo/40 px-4 py-2 text-sm font-medium">
                 Editar
               </Link>
+              <Link href="/painel/revendedor/vitrine/organizar" className="rounded-full border border-gelo/40 px-4 py-2 text-sm font-medium">
+                Organizar produtos
+              </Link>
             </div>
           </>
         ) : (

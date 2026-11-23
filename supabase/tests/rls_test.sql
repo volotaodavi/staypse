@@ -1637,6 +1637,67 @@ select teste.ok(public.tema_loja_valido(loja_tema), 'tema salvo continua válido
 reset role;
 
 -- =========================================================================
+-- 21. Organização da vitrine (migração 20261201000001): destaques, coleções, ordem
+-- =========================================================================
+reset role;
+select id as org_serum from public.items where slug = 'serum-facial' \gset
+select id as org_curso from public.items where slug = 'curso-de-maquiagem' \gset
+select id as org_davi from public.items where nome = 'Produto do Davi' \gset
+select jsonb_build_object('destaques', jsonb_build_array(:'org_curso'::text),
+         'colecoes', jsonb_build_array(jsonb_build_object('nome', 'Para presentear', 'itens', jsonb_build_array(:'org_serum'::text, :'org_curso'::text))),
+         'ordem', jsonb_build_array(:'org_curso'::text, :'org_serum'::text))::text as org_ok \gset
+
+-- formato (função pura): limites de 4 destaques e 6 coleções
+select teste.ok(public.organizacao_vitrine_valida(null) and public.organizacao_vitrine_valida(:'org_ok'::jsonb), 'organização vazia ou bem formada é válida');
+select teste.ok(public.organizacao_vitrine_valida(jsonb_build_object('destaques', (select jsonb_agg(gen_random_uuid()::text) from generate_series(1, 4)))),
+                'até 4 destaques é aceito');
+select teste.ok(not public.organizacao_vitrine_valida(jsonb_build_object('destaques', (select jsonb_agg(gen_random_uuid()::text) from generate_series(1, 5)))),
+                'o quinto destaque é recusado');
+select teste.ok(public.organizacao_vitrine_valida(jsonb_build_object('colecoes',
+                  (select jsonb_agg(jsonb_build_object('nome', 'Coleção ' || n, 'itens', '[]'::jsonb)) from generate_series(1, 6) n))),
+                'até 6 coleções é aceito');
+select teste.ok(not public.organizacao_vitrine_valida(jsonb_build_object('colecoes',
+                  (select jsonb_agg(jsonb_build_object('nome', 'Coleção ' || n, 'itens', '[]'::jsonb)) from generate_series(1, 7) n))),
+                'a sétima coleção é recusada');
+select teste.ok(not public.organizacao_vitrine_valida('{"colecoes":[{"nome":"","itens":[]}]}'), 'coleção sem nome é recusada');
+select teste.ok(not public.organizacao_vitrine_valida(jsonb_build_object('colecoes', jsonb_build_array(jsonb_build_object('nome', repeat('x', 41), 'itens', '[]'::jsonb)))),
+                'nome de coleção com mais de 40 letras é recusado');
+select teste.ok(public.organizacao_vitrine_valida(jsonb_build_object('colecoes', jsonb_build_array(jsonb_build_object('nome', repeat('x', 40), 'itens', '[]'::jsonb)))),
+                'nome de coleção com 40 letras é aceito');
+select teste.ok(not public.organizacao_vitrine_valida('{"colecoes":[{"nome":"A","itens":[]},{"nome":"a","itens":[]}]}'), 'nomes de coleção repetidos são recusados');
+select teste.ok(not public.organizacao_vitrine_valida('{"html":"<script>"}'), 'chave desconhecida é recusada');
+select teste.ok(not public.organizacao_vitrine_valida('{"destaques":["nao-e-id"]}'), 'destaque que não é id é recusado');
+select teste.ok(not public.organizacao_vitrine_valida(jsonb_build_object('destaques', jsonb_build_array(:'org_serum'::text, :'org_serum'::text))), 'destaque repetido é recusado');
+
+-- só o dono grava, e só itens de afiliação aprovada dele
+:comoB
+select public.salvar_organizacao_vitrine(:'org_ok'::jsonb);
+select teste.ok((select organizacao -> 'destaques' ->> 0 = :'org_curso' from public.storefronts where slug = 'loja-da-bia'), 'o dono salva destaques, coleções e ordem');
+select teste.bloqueia($$update public.storefronts set organizacao = '{"destaques":[]}'::jsonb where slug = 'loja-da-bia'$$, 'nem o dono grava a coluna direto (só pela função)');
+select teste.bloqueia(format('select public.salvar_organizacao_vitrine(%L::jsonb)', jsonb_build_object('destaques', jsonb_build_array(:'org_davi'::text))),
+                      'item sem afiliação do dono é recusado (destaque)');
+select teste.bloqueia(format('select public.salvar_organizacao_vitrine(%L::jsonb)',
+                             jsonb_build_object('colecoes', jsonb_build_array(jsonb_build_object('nome', 'X', 'itens', jsonb_build_array(:'org_davi'::text))))),
+                      'item sem afiliação do dono é recusado (coleção)');
+select teste.bloqueia(format('select public.salvar_organizacao_vitrine(%L::jsonb)', jsonb_build_object('ordem', jsonb_build_array(gen_random_uuid()::text))),
+                      'item que não existe é recusado (ordem)');
+select teste.ok((select organizacao -> 'destaques' ->> 0 = :'org_curso' from public.storefronts where slug = 'loja-da-bia'), 'gravação recusada não apaga a organização salva');
+
+:comoA
+select teste.bloqueia(format('update public.storefronts set organizacao = %L::jsonb where slug = %L', :'org_ok', 'loja-da-bia'), 'outra pessoa não edita a organização da vitrine');
+select teste.bloqueia(format('select public.salvar_organizacao_vitrine(%L::jsonb)', :'org_ok'), 'quem não tem vitrine não grava organização');
+:comoAnon
+select teste.bloqueia(format('select public.salvar_organizacao_vitrine(%L::jsonb)', :'org_ok'), 'visitante não grava organização');
+select teste.ok((select organizacao is not null from public.storefronts where slug = 'loja-da-bia'), 'o público lê a organização da vitrine publicada');
+select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia') where id in (:'org_serum', :'org_curso')) = 2, 'itens da vitrine trazem o id');
+
+-- item que sai do ar some da vitrine, mesmo citado na organização
+:comoA
+update public.items set preco_centavos = 11990 where slug = 'serum-facial';
+:comoAnon
+select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia') where id = :'org_serum') = 0, 'item que saiu do ar não aparece, mesmo na organização');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

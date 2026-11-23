@@ -12,6 +12,7 @@ export const ETIQUETA_VITRINES = "vitrines";
 const publico = () => createClient(supabaseUrl(), supabaseChavePublica(), { auth: { persistSession: false } });
 
 export type ItemVitrine = {
+  id: string;
   slug: string;
   nome: string;
   fotos: string[];
@@ -35,6 +36,8 @@ export type Vitrine = {
   cor_principal: string | null;
   foto_path: string | null;
   bio: string | null;
+  // destaques, coleções e ordem manual (JSON validado no banco; lido por lib/vitrine)
+  organizacao?: unknown;
 };
 
 export async function buscarVitrine(slug: string) {
@@ -44,7 +47,7 @@ export async function buscarVitrine(slug: string) {
   const sb = publico();
   const { data: vitrine } = await sb
     .from("storefronts")
-    .select("id, slug, nome_exibicao, nicho, modelo_visual, cor_principal, foto_path, bio")
+    .select("id, slug, nome_exibicao, nicho, modelo_visual, cor_principal, foto_path, bio, organizacao")
     .eq("slug", slug)
     .maybeSingle<Vitrine & { id: string }>();
   if (!vitrine) return null;
