@@ -71,10 +71,10 @@ export default async function Admin() {
                 f.valor > 0 ? "border-petroleo/30 bg-branco" : "border-petroleo/10 bg-branco"
               }`}
             >
-              {/* fila com trabalho: ponto ciano (decoração; o número já diz o resto) */}
-              {f.valor > 0 && <span aria-hidden="true" className="absolute right-4 top-4 size-2 rounded-full bg-ciano ring-1 ring-petroleo/30" />}
               <span className={`text-3xl font-semibold tabular-nums ${f.valor > 0 ? "text-petroleo" : "text-petroleo/75"}`}>{f.valor}</span>
               <span className="text-sm text-petroleo/80">{f.rotulo}</span>
+              {/* fila com trabalho: ponto ciano (decoração; o número já diz o resto) */}
+              {f.valor > 0 && <span aria-hidden="true" className="absolute right-4 top-4 size-2 rounded-full bg-ciano ring-1 ring-petroleo/30" />}
             </Link>
           </li>
         ))}

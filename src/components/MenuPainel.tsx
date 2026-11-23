@@ -133,13 +133,51 @@ function BarraInferior({ area, areas, ativo }: { area: AreaMenu; areas: AreaMenu
     <div
       data-barra-painel
       onKeyDown={aoTeclar}
-      className="fixed inset-x-0 bottom-0 z-30 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex flex-col-reverse lg:hidden"
       // sair do menu com o Tab fecha o "Mais"
       onBlur={(e) => {
         if (aberto && !caixa.current?.contains(e.relatedTarget as Node | null)) setAberto(false);
       }}
       ref={caixa}
     >
+      <nav aria-label={`Seções: ${area.titulo}`} className="border-t border-petroleo/10 bg-branco pb-[env(safe-area-inset-bottom)]">
+        <ul
+          className="mx-auto grid max-w-xl"
+          style={{
+            gridTemplateColumns: `repeat(${barra.length + (resto.length || areas.length > 1 ? 1 : 0)}, minmax(0, 1fr))`,
+          }}
+        >
+          {barra.map((i) => {
+            const a = ativo === i.href;
+            return (
+              <li key={i.href}>
+                <Link href={i.href} aria-current={a ? "page" : undefined} className={classeItem(a)}>
+                  {marca(a)}
+                  <Icone nome={i.icone} />
+                  <span className="max-w-full truncate">{i.curto ?? i.rotulo}</span>
+                </Link>
+              </li>
+            );
+          })}
+          {(resto.length > 0 || areas.length > 1) && (
+            <li>
+              <button
+                ref={botao}
+                type="button"
+                aria-expanded={aberto}
+                aria-controls={aberto ? idPainel : undefined}
+                onClick={() => setAberto((v) => !v)}
+                className={`${classeItem(atualNoResto)} w-full`}
+              >
+                {marca(atualNoResto)}
+                <Icone nome="mais" />
+                <span>Mais</span>
+              </button>
+            </li>
+          )}
+        </ul>
+      </nav>
+      {/* depois da barra no HTML (o Tab entra nele ao sair do "Mais"); aparece acima dela por flex-col-reverse */}
       {aberto && (
         <>
           <div aria-hidden="true" className="fixed inset-0 -z-10 bg-petroleo/30" onClick={() => setAberto(false)} />
@@ -184,43 +222,6 @@ function BarraInferior({ area, areas, ativo }: { area: AreaMenu; areas: AreaMenu
           </div>
         </>
       )}
-      <nav aria-label={`Seções: ${area.titulo}`} className="border-t border-petroleo/10 bg-branco pb-[env(safe-area-inset-bottom)]">
-        <ul
-          className="mx-auto grid max-w-xl"
-          style={{
-            gridTemplateColumns: `repeat(${barra.length + (resto.length || areas.length > 1 ? 1 : 0)}, minmax(0, 1fr))`,
-          }}
-        >
-          {barra.map((i) => {
-            const a = ativo === i.href;
-            return (
-              <li key={i.href}>
-                <Link href={i.href} aria-current={a ? "page" : undefined} className={classeItem(a)}>
-                  {marca(a)}
-                  <Icone nome={i.icone} />
-                  <span className="max-w-full truncate">{i.curto ?? i.rotulo}</span>
-                </Link>
-              </li>
-            );
-          })}
-          {(resto.length > 0 || areas.length > 1) && (
-            <li>
-              <button
-                ref={botao}
-                type="button"
-                aria-expanded={aberto}
-                aria-controls={aberto ? idPainel : undefined}
-                onClick={() => setAberto((v) => !v)}
-                className={`${classeItem(atualNoResto)} w-full`}
-              >
-                {marca(atualNoResto)}
-                <Icone nome="mais" />
-                <span>Mais</span>
-              </button>
-            </li>
-          )}
-        </ul>
-      </nav>
     </div>
   );
 }

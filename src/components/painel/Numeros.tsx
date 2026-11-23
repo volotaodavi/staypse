@@ -22,15 +22,13 @@ export function Numeros({ itens }: { itens: Numero[] }) {
         return (
           <div
             key={n.rotulo}
-            className={`flex flex-col justify-between gap-3 rounded-2xl p-4 lg:p-5 ${span} ${
+            className={`flex flex-col rounded-2xl p-4 lg:p-5 ${span} ${
               n.destaque ? "bg-petroleo text-branco" : "border border-petroleo/10 bg-branco"
             }`}
           >
-            <dt className={`text-sm ${n.destaque ? "text-gelo/85" : "text-petroleo/75"}`}>{n.rotulo}</dt>
-            <div className="flex flex-col gap-1">
-              <dd className={`font-semibold tabular-nums ${n.destaque ? "text-4xl lg:text-5xl" : "text-2xl lg:text-3xl"}`}>{n.valor}</dd>
-              {n.nota && <dd className={`text-sm ${n.destaque ? "text-gelo/85" : "text-petroleo/75"}`}>{n.nota}</dd>}
-            </div>
+            <dt className={`mb-3 text-sm ${n.destaque ? "text-gelo/85" : "text-petroleo/75"}`}>{n.rotulo}</dt>
+            <dd className={`mt-auto font-semibold tabular-nums ${n.destaque ? "text-4xl lg:text-5xl" : "text-2xl lg:text-3xl"}`}>{n.valor}</dd>
+            {n.nota && <dd className={`mt-1 text-sm ${n.destaque ? "text-gelo/85" : "text-petroleo/75"}`}>{n.nota}</dd>}
           </div>
         );
       })}
