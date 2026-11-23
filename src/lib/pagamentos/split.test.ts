@@ -1,102 +1,104 @@
 // Testes do cálculo do split: npm run test:unit
-// Os percentuais de taxa aqui são EXEMPLOS de teste, não as taxas da Lytex
-// (essas dependem do contrato, ver docs/lytex/PERGUNTAS.md).
+// Cenários da tabela de margem de docs/precificacao.md (pior caso: afiliado com 30% de comissão).
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { calcularSplit, type EntradaSplit } from "./split";
+import { MODALIDADES, TAXAS_PADRAO, modalidadeDoPagamento, type Modalidade } from "./taxas";
 
-const base: EntradaSplit = {
-  totalCentavos: 31990, // R$ 299,90 + R$ 20,00 de frete
-  subtotalCentavos: 29990,
-  taxaMeio: { percentual: 0.99, fixoCentavos: 0 }, // exemplo: Pix
-  taxaStaypse: { percentual: 5, fixoCentavos: 100 },
-  comissaoPercentual: 15,
-  indicador: "afiliado",
-  quemPagaTaxaMeio: "produtor",
+const entrada = (m: Modalidade, totalReais: number, ind: EntradaSplit["indicador"] = "afiliado", pct = 30, frete = 0): EntradaSplit => ({
+  totalCentavos: totalReais * 100 + frete,
+  subtotalCentavos: totalReais * 100,
+  modalidade: m,
+  taxaTotal: TAXAS_PADRAO.taxaTotal[m],
+  custoLytex: TAXAS_PADRAO.custoLytex[m],
+  custoSplit: TAXAS_PADRAO.custoSplit,
+  comissaoPercentual: ind === "nenhum" ? 0 : pct,
+  indicador: ind,
+});
+const soma = (r: ReturnType<typeof calcularSplit>) => r.produtorCentavos + r.indicadorCentavos + r.staypseCentavos + r.custoLytexCentavos;
+
+// [taxa total, custo Lytex, margem Staypse] em centavos, por modalidade e ticket (30, 80, 150, 300, 800)
+const TABELA: Record<Modalidade, [number, number, number][]> = {
+  pix: [[245, 224, 21], [320, 272, 48], [425, 340, 85], [650, 385, 265], [1400, 396, 1004]],
+  boleto: [[275, 224, 51], [350, 272, 78], [455, 340, 115], [680, 385, 295], [1430, 396, 1034]],
+  cartao_1x: [[197, 142, 55], [442, 358, 84], [785, 662, 123], [1520, 1217, 303], [3970, 2923, 1047]],
+  cartao_2a6: [[215, 156, 59], [490, 398, 92], [875, 736, 139], [1700, 1367, 333], [4450, 3324, 1126]],
+  cartao_7a12: [[233, 168, 65], [538, 429, 109], [965, 795, 170], [1880, 1487, 393], [4930, 3645, 1285]],
 };
 
-const soma = (r: ReturnType<typeof calcularSplit>) => r.produtorCentavos + r.indicadorCentavos + r.staypseCentavos + r.taxaMeioCentavos;
-
-test("Pix com afiliado: a soma bate exatamente com o total", () => {
-  const r = calcularSplit(base);
-  assert.equal(r.taxaMeioCentavos, 317); // 0,99% de 31990 = 316,7 → 317
-  assert.equal(r.staypseCentavos, 1600); // 5% de 29990 = 1499,5 → 1500 + 100
-  assert.equal(r.indicadorCentavos, 4498); // 15% de 29990 = 4498,5 → 4498 (para baixo)
-  assert.equal(r.produtorCentavos, 31990 - 317 - 1600 - 4498);
-  assert.equal(soma(r), base.totalCentavos);
+test("tabela de margem: taxa total, custo Lytex e margem em centavos exatos", () => {
+  for (const m of MODALIDADES) {
+    [30, 80, 150, 300, 800].forEach((t, i) => {
+      const r = calcularSplit(entrada(m, t));
+      assert.deepEqual([r.taxaTotalCentavos, r.custoLytexCentavos, r.staypseCentavos], TABELA[m][i], `${m} R$ ${t}`);
+    });
+  }
 });
 
-test("cartão à vista: taxa percentual + fixa, produtor paga", () => {
-  const r = calcularSplit({ ...base, taxaMeio: { percentual: 3.49, fixoCentavos: 39 } });
-  assert.equal(r.taxaMeioCentavos, Math.round(31990 * 0.0349) + 39);
-  assert.equal(soma(r), base.totalCentavos);
-  assert.equal(r.indicadorCentavos, 4498, "afiliado não paga a taxa quando o produtor paga");
-});
-
-test("cartão parcelado (taxa maior) com taxa proporcional entre as partes", () => {
-  const r = calcularSplit({ ...base, taxaMeio: { percentual: 6.99, fixoCentavos: 39 }, quemPagaTaxaMeio: "proporcional" });
-  assert.ok(r.indicadorCentavos < 4498, "afiliado paga parte da taxa");
-  assert.equal(r.comissaoDevidaCentavos, 4498);
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("comissão 0%: indicador não recebe nada", () => {
-  const r = calcularSplit({ ...base, comissaoPercentual: 0 });
-  assert.equal(r.indicadorCentavos, 0);
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("comissão máxima (70%)", () => {
-  const r = calcularSplit({ ...base, comissaoPercentual: 70 });
-  assert.equal(r.indicadorCentavos, Math.floor(29990 * 0.7));
-  assert.ok(r.produtorCentavos > 0);
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("venda sem afiliado: tudo menos taxas fica com o produtor", () => {
-  const r = calcularSplit({ ...base, comissaoPercentual: 0, indicador: "nenhum" });
-  assert.equal(r.indicadorCentavos, 0);
-  assert.equal(r.produtorCentavos, 31990 - 317 - 1600);
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("vendedor 'na folha': a parte dele fica com a loja (sem recebedor)", () => {
-  const r = calcularSplit({ ...base, comissaoPercentual: 10, indicador: "vendedor_folha" });
-  assert.equal(r.indicadorCentavos, 0);
-  assert.equal(r.comissaoDevidaCentavos, 2999, "a loja sabe quanto pagar na folha");
-  assert.equal(r.produtorCentavos, 31990 - 317 - 1600);
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("vendedor 'split direto' recebe a comissão no split", () => {
-  const r = calcularSplit({ ...base, comissaoPercentual: 12.5, indicador: "vendedor_split" });
-  assert.equal(r.indicadorCentavos, Math.floor(29990 * 0.125));
-  assert.equal(soma(r), base.totalCentavos);
-});
-
-test("arredondamento: a diferença vai para o produtor (somas sempre exatas)", () => {
-  for (let total = 101; total < 5000; total += 37) {
-    for (const pct of [0, 7.5, 13.33, 33.33]) {
-      const r = calcularSplit({
-        ...base,
-        totalCentavos: total,
-        subtotalCentavos: total,
-        comissaoPercentual: pct,
-        taxaStaypse: { percentual: 4.99, fixoCentavos: 0 },
-      });
-      assert.equal(soma(r), total);
-      assert.ok(Object.values(r).every((v) => Number.isInteger(v) && v >= 0));
+test("margem da Staypse positiva em todos os cenários, com e sem afiliado; soma fecha com o total", () => {
+  for (const m of MODALIDADES) {
+    for (const t of [30, 80, 150, 300, 800]) {
+      for (const ind of ["afiliado", "nenhum", "vendedor_split", "vendedor_folha"] as const) {
+        const e = entrada(m, t, ind);
+        const r = calcularSplit(e);
+        assert.ok(r.staypseCentavos > 0, `${m} R$ ${t} ${ind}`);
+        assert.equal(soma(r), e.totalCentavos);
+      }
     }
   }
 });
 
+test("a loja paga a taxa total; o afiliado recebe a comissão cheia (para baixo)", () => {
+  const r = calcularSplit(entrada("pix", 150));
+  assert.equal(r.indicadorCentavos, 4500);
+  assert.equal(r.taxaTotalCentavos, 425); // 1,5% de 15000 = 225 + 200
+  assert.equal(r.produtorCentavos, 15000 - 425 - 4500);
+  const frac = calcularSplit({ ...entrada("pix", 150), subtotalCentavos: 14999, totalCentavos: 14999, comissaoPercentual: 15 });
+  assert.equal(frac.indicadorCentavos, Math.floor((14999 * 15) / 100)); // 2249,85 vira 2249
+});
+
+test("frete entra na base da taxa (a Lytex cobra sobre o total), não na da comissão", () => {
+  const r = calcularSplit(entrada("cartao_1x", 100, "afiliado", 20, 2000));
+  assert.equal(r.indicadorCentavos, 2000); // 20% dos produtos (R$ 100), sem o frete
+  assert.equal(r.taxaTotalCentavos, Math.floor((12000 * 490) / 10000) + 50);
+});
+
+test("arredondamento: taxa para baixo, custo estimado para cima (sem erro de ponto flutuante)", () => {
+  // 4,9% de 10,10 = 49,49 centavos: taxa 49 (baixo); custo 3,39% = 34,239 centavos: 35 (cima)
+  const e: EntradaSplit = { ...entrada("cartao_1x", 0, "nenhum"), totalCentavos: 1010, subtotalCentavos: 1010 };
+  const x = calcularSplit(e);
+  assert.equal(x.taxaTotalCentavos, 49 + 50);
+  assert.equal(x.custoLytexCentavos, 35 + 10 + 10); // meio + repasse da loja + repasse da Staypse (mínimos)
+  assert.equal(soma(x), 1010);
+});
+
+test("venda pequena demais para cobrir o custo não é cobrada no prejuízo", () => {
+  assert.throws(() => calcularSplit({ ...entrada("pix", 0, "nenhum"), totalCentavos: 300, subtotalCentavos: 300 }), /taxa_menor_que_o_custo/);
+  assert.doesNotThrow(() => calcularSplit({ ...entrada("pix", 0, "nenhum"), totalCentavos: 1000, subtotalCentavos: 1000 }));
+});
+
+test("vendedor na folha não entra no split; comissão devida segue calculada", () => {
+  const r = calcularSplit(entrada("pix", 80, "vendedor_folha", 20));
+  assert.equal(r.indicadorCentavos, 0);
+  assert.equal(r.comissaoDevidaCentavos, 1600);
+});
+
 test("entradas inválidas são recusadas", () => {
-  assert.throws(() => calcularSplit({ ...base, totalCentavos: 10.5 }), /valores_invalidos/);
-  assert.throws(() => calcularSplit({ ...base, subtotalCentavos: base.totalCentavos + 1 }), /valores_invalidos/);
-  assert.throws(() => calcularSplit({ ...base, comissaoPercentual: 100 }), /comissao_invalida/);
-  assert.throws(() => calcularSplit({ ...base, indicador: "nenhum" }), /comissao_sem_indicador/);
-  assert.throws(
-    () => calcularSplit({ ...base, totalCentavos: 100, subtotalCentavos: 100, taxaStaypse: { percentual: 0, fixoCentavos: 200 } }),
-    /taxas_maiores/,
-  );
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30), totalCentavos: 1.5 }), /valores_invalidos/);
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30), subtotalCentavos: 99999 }), /valores_invalidos/);
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30), taxaTotal: { percentual: 100, fixoCentavos: 0 } }), /taxa_invalida/);
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30), taxaTotal: { percentual: 1.555, fixoCentavos: 0 } }), /taxa_invalida/);
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30, "nenhum"), comissaoPercentual: 10 }), /comissao_sem_indicador/);
+  assert.throws(() => calcularSplit({ ...entrada("pix", 30), comissaoPercentual: 100 }), /comissao_invalida/);
+});
+
+test("modalidade pelo meio e pelas parcelas", () => {
+  assert.equal(modalidadeDoPagamento("pix"), "pix");
+  assert.equal(modalidadeDoPagamento("boleto", 3), "boleto");
+  assert.equal(modalidadeDoPagamento("cartao", 1), "cartao_1x");
+  assert.equal(modalidadeDoPagamento("cartao", 2), "cartao_2a6");
+  assert.equal(modalidadeDoPagamento("cartao", 6), "cartao_2a6");
+  assert.equal(modalidadeDoPagamento("cartao", 7), "cartao_7a12");
+  assert.equal(modalidadeDoPagamento("cartao", 12), "cartao_7a12");
+  assert.throws(() => modalidadeDoPagamento("cartao", 13), /parcelas_invalidas/);
 });

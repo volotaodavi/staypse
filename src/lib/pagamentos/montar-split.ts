@@ -3,7 +3,8 @@
 // traduz "quem recebe quanto" para a lista de partes que o provedor espera e para o
 // snapshot guardado no pedido (auditoria).
 // A Staypse NÃO recebe nem repassa: sua parte é um recebedor como os outros, na conta dela no provedor.
-import { calcularSplit, type EntradaSplit, type ResultadoSplit, type Taxa } from "./split";
+import { calcularSplit, type EntradaSplit, type ResultadoSplit } from "./split";
+import { lerTaxasPlataforma, type Modalidade } from "./taxas";
 import type { ParteSplit } from "./tipos";
 
 // Vem do banco (dados_split_pedido): ids dos recebedores NO PROVEDOR e valores-base do pedido
@@ -15,20 +16,18 @@ export type DadosSplitPedido = {
   indicador: EntradaSplit["indicador"];
   produtor_provedor_id: string;
   indicador_provedor_id: string | null;
-  taxa_staypse_percentual: number;
+  // configurações de taxa (tabela configuracoes), chaves taxa_total_*, custo_lytex_* e custo_lytex_split
+  taxas: Record<string, unknown>;
 };
-
-// TODO(lytex): as taxas por meio de pagamento dependem do contrato (docs/lytex/PERGUNTAS.md, 12-13).
-// Enquanto não forem conhecidas NÃO se inventa percentual: o cálculo usa zero e o snapshot
-// registra que a taxa do meio ainda não foi informada (a instituição a retém dentro da parte do produtor).
-export const TAXA_MEIO_DESCONHECIDA: Taxa = { percentual: 0, fixoCentavos: 0 };
 
 export type PapelDaParte = "produtor" | "indicador" | "staypse";
 
 export type SnapshotSplit = {
-  versao: 1;
+  versao: 2;
   entrada: EntradaSplit;
   resultado: ResultadoSplit;
+  // INTERNO (só admin; orders.split_snapshot não é legível por usuário logado)
+  taxas: { modalidade: Modalidade; taxa_total_centavos: number; custo_lytex_centavos: number; receita_staypse_centavos: number };
   taxaMeioInformada: boolean;
   partes: (ParteSplit & { papel: PapelDaParte; indicador?: EntradaSplit["indicador"] })[];
 };
@@ -36,16 +35,18 @@ export type SnapshotSplit = {
 export function montarSplit(
   dados: DadosSplitPedido,
   staypseRecebedorId: string,
-  taxaMeio: Taxa = TAXA_MEIO_DESCONHECIDA,
+  modalidade: Modalidade,
 ): { partes: ParteSplit[]; snapshot: SnapshotSplit } {
+  const t = lerTaxasPlataforma(dados.taxas);
   const entrada: EntradaSplit = {
     totalCentavos: dados.total_centavos,
     subtotalCentavos: dados.subtotal_centavos,
-    taxaMeio,
-    taxaStaypse: { percentual: Number(dados.taxa_staypse_percentual), fixoCentavos: 0 },
+    modalidade,
+    taxaTotal: t.taxaTotal[modalidade],
+    custoLytex: t.custoLytex[modalidade],
+    custoSplit: t.custoSplit,
     comissaoPercentual: dados.indicador === "nenhum" ? 0 : Number(dados.comissao_percentual),
     indicador: dados.indicador,
-    quemPagaTaxaMeio: "produtor",
   };
   const resultado = calcularSplit(entrada);
 
@@ -67,12 +68,24 @@ export function montarSplit(
   }
   const comPapel = lista.filter((p) => p.valorCentavos > 0);
   const partes = comPapel;
-  // a soma das partes + a taxa do meio é EXATAMENTE o total (nunca sobra nem falta um centavo)
+  // a soma das partes + o custo da Lytex é EXATAMENTE o total (nunca sobra nem falta um centavo)
   const soma = partes.reduce((s, p) => s + p.valorCentavos, 0);
-  if (soma + resultado.taxaMeioCentavos !== dados.total_centavos) throw new Error("split_nao_fecha_com_o_total");
+  if (soma + resultado.custoLytexCentavos !== dados.total_centavos) throw new Error("split_nao_fecha_com_o_total");
 
   return {
     partes: partes.map(({ recebedorProvedorId, valorCentavos }) => ({ recebedorProvedorId, valorCentavos })),
-    snapshot: { versao: 1, entrada, resultado, taxaMeioInformada: taxaMeio !== TAXA_MEIO_DESCONHECIDA, partes: comPapel },
+    snapshot: {
+      versao: 2,
+      entrada,
+      resultado,
+      taxas: {
+        modalidade,
+        taxa_total_centavos: resultado.taxaTotalCentavos,
+        custo_lytex_centavos: resultado.custoLytexCentavos,
+        receita_staypse_centavos: resultado.staypseCentavos,
+      },
+      taxaMeioInformada: true,
+      partes: comPapel,
+    },
   };
 }

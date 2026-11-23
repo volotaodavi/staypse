@@ -1417,12 +1417,36 @@ select teste.bloqueia(format('select public.admin_decidir_denuncia(%L, %L, %L)',
 select teste.ok((select count(*) from public.configuracoes) = 0, 'usuário comum não lê as configurações');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"prazo_nf_dias": 3}')$$, 'não-admin não altera configuração');
 select teste.bloqueia($$update public.configuracoes set valor = '1'$$, 'não-admin não altera a tabela de configurações');
+select teste.ok((select count(*) from public.configuracoes where chave like 'taxa\_total\_%' or chave like 'custo\_lytex\_%') = 0,
+                'usuário comum não lê taxa total nem custo Lytex');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 9, "fixo_centavos": 500}}')$$, 'não-admin não altera taxa total');
+select teste.bloqueia($$select * from public.admin_fin_por_modalidade('2020-03-01', '2020-04-01')$$, 'custo Lytex e receita Staypse por modalidade: não-admin não lê');
+select teste.bloqueia($$select public.configuracoes_taxas_coerentes()$$, 'checagem interna de taxas não é chamável por usuário');
 :comoAnon
+select teste.ok(not (public.configuracoes_publicas() ? 'taxa_total_pix') and not (public.configuracoes_publicas() ? 'custo_lytex_pix')
+                and not (public.configuracoes_publicas() ? 'custo_lytex_split'),
+                'leitura pública não traz taxa total nem custo Lytex');
 select teste.ok(public.configuracoes_publicas() ? 'meios_pagamento' and not (public.configuracoes_publicas() ? 'taxa_staypse_percentual')
                 and not (public.configuracoes_publicas() ? 'palavras_proibidas'),
                 'leitura pública traz só chaves não sensíveis (sem taxa nem palavras proibidas)');
 :comoC
-select teste.ok((select count(*) from public.configuracoes) = 7, 'admin lê as 7 configurações (6 de regras + admin_email)');
+select teste.ok((select count(*) from public.configuracoes) = 18, 'admin lê as 18 configurações (6 de regras + admin_email + 5 taxas totais + 5 custos Lytex + custo de repasse)');
+select teste.ok((select valor = '{"percentual": 1.5, "fixo_centavos": 200}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
+                and (select valor = '{"percentual": 4.29, "fixo_centavos": 0}'::jsonb from public.configuracoes where chave = 'custo_lytex_cartao_7a12'),
+                'taxas por modalidade nascem com os valores recomendados');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 31, "fixo_centavos": 200}}')$$, 'taxa total acima de 30% é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.555, "fixo_centavos": 200}}')$$, 'percentual com mais de 2 casas é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5, "fixo_centavos": 2001}}')$$, 'fixo acima de R$ 20 é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5}}')$$, 'taxa sem o fixo é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5, "fixo_centavos": 180}}')$$, 'taxa total com fixo abaixo do custo Lytex é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_cartao_1x": {"percentual": 3, "fixo_centavos": 50}}')$$, 'taxa total com percentual abaixo do custo Lytex é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"custo_lytex_pix": {"percentual": 0, "fixo_centavos": 250}}')$$, 'custo Lytex acima da taxa total é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"custo_lytex_split": {"percentual": 1, "minimo_centavos": 200, "maximo_centavos": 100}}')$$, 'repasse com máximo menor que o mínimo é recusado');
+select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.8, "fixo_centavos": 210}, "custo_lytex_pix": {"percentual": 0, "fixo_centavos": 190}}');
+select teste.ok((select valor = '{"percentual": 1.8, "fixo_centavos": 210}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
+                and (select valor = '{"percentual": 0, "fixo_centavos": 190}'::jsonb from public.configuracoes where chave = 'custo_lytex_pix'),
+                'taxa total e custo Lytex válidos são salvos (admin)');
+select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5, "fixo_centavos": 200}, "custo_lytex_pix": {"percentual": 0, "fixo_centavos": 185}}');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 80}')$$, 'mínimo maior que o máximo salvo é recusado');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 40, "comissao_max_percentual": 30}')$$, 'faixa incoerente (min > max) é recusada');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": 101}')$$, 'taxa acima de 100 é recusada');
@@ -1445,9 +1469,9 @@ select teste.ok((select valor = '7.5' from public.configuracoes where chave = 't
 select teste.ok((select detalhes -> 'antes' = '5' and detalhes -> 'depois' = '7.5'
                  from public.audit_log where entidade = 'configuracao' and detalhes ->> 'chave' = 'taxa_staypse_percentual'),
                 'alterar configuração grava o log com antes e depois');
-select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 6, 'uma entrada no log por chave alterada');
+select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 10, 'uma entrada no log por chave alterada');
 select public.admin_salvar_configuracoes('{"prazo_nf_dias": 3}');
-select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 6, 'salvar sem mudança não polui o log');
+select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 10, 'salvar sem mudança não polui o log');
 select teste.ok((select array_agg(termo order by termo) from public.palavras_proibidas) = array['outra coisa', 'palavra nova'],
                 'a lista de palavras proibidas da configuração vira a lista usada na análise de itens');
 reset role;
@@ -1972,8 +1996,9 @@ select id as cb5 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 
 select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador') = 'vendedor_split'
                 and (public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador_provedor_id') = 'rec_b_vend'
                 and (public.dados_split_pedido(:'cb1', 'mock') ->> 'produtor_provedor_id') is not null
-                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'taxa_staypse_percentual')::numeric
-                  = (select (valor #>> '{}')::numeric from public.configuracoes where chave = 'taxa_staypse_percentual'),
+                and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas' -> 'taxa_total_pix' ->> 'fixo_centavos')::int = 200
+                and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas') ? 'custo_lytex_cartao_7a12'
+                and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas') ? 'custo_lytex_split',
                 'split: loja, indicação (vendedor split_direto da loja) e taxa da Staypse (configuração) montados pelo banco');
 select teste.ok((public.dados_split_pedido(:'cb2', 'mock') ->> 'indicador') = 'nenhum', 'split: pedido sem indicação não tem indicador');
 select teste.bloqueia(format('select public.dados_split_pedido(%L, %L)', :'cb1', 'lytex'),
@@ -2356,6 +2381,9 @@ select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:0
 select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'reembolsos_centavos')::int = 5000
                 and (public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'reembolsos_qtd')::int = 1, 'financeiro: reembolsos do período');
 select teste.ok((public.admin_fin_resumo('2020-03-11T00:00-03', '2020-03-12T00:00-03') ->> 'pedidos')::int = 1, 'financeiro: o período filtra por dia de Brasília');
+select teste.ok((select pedidos = 2 and receita_staypse_centavos = 1500 and modalidade = 'sem_modalidade'
+                 from public.admin_fin_por_modalidade('2020-03-01T00:00-03', '2020-04-01T00:00-03')),
+                'financeiro: admin vê taxa total, custo Lytex e receita por modalidade (pedido antigo sem modalidade)');
 select teste.ok((select count(*) = 2 and sum(staypse_centavos) = 1500 from public.admin_fin_por_dia('2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: série por dia');
 select teste.ok((select pedidos = 2 and vendido_centavos = 30000 and valor_centavos = 27500 and total_linhas = 1
                  from public.admin_fin_ranking('loja', '2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: ranking por loja');

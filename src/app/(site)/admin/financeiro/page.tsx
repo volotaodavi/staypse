@@ -9,11 +9,12 @@ import { Numeros, inteiro } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { exigirPapel } from "@/lib/papeis";
 import { lerPeriodo, parametrosPeriodo } from "@/lib/periodo";
+import { MODALIDADES, ROTULO_MODALIDADE, type Modalidade } from "@/lib/pagamentos/taxas";
 import { formatarPreco } from "@/lib/produtor";
 import { um } from "../comuns";
 import { POR_PAGINA, Paginacao, lerPagina } from "../paginacao";
 import { sacarAcao } from "./acoes";
-import { contaStaypse, painelLytexUrl, ranking, resumoFinanceiro, serieDiaria, type TipoRanking } from "./dados";
+import { contaStaypse, painelLytexUrl, porModalidade, ranking, resumoFinanceiro, serieDiaria, type TipoRanking } from "./dados";
 import { reaisParaCentavos, validarSaque } from "./saque";
 
 export const metadata = { title: "Financeiro da Staypse" };
@@ -36,11 +37,12 @@ export default async function AdminFinanceiro({ searchParams }: PageProps<"/admi
   const busca = (um(sp.q) ?? "").trim().slice(0, 80);
   const pagina = lerPagina(sp.pagina);
 
-  const [r, serie, linhas, conta] = await Promise.all([
+  const [r, serie, linhas, conta, modalidades] = await Promise.all([
     resumoFinanceiro(periodo),
     serieDiaria(periodo),
     ranking(aba.tipo, periodo, busca, POR_PAGINA, (pagina - 1) * POR_PAGINA),
     contaStaypse(),
+    porModalidade(periodo),
   ]);
   const total = linhas[0]?.total_linhas ?? 0;
   const semMovimento = r.pedidos === 0 && r.reembolsos_qtd === 0 && r.chargebacks_qtd === 0;
@@ -86,11 +88,12 @@ export default async function AdminFinanceiro({ searchParams }: PageProps<"/admi
       <Numeros
         itens={[
           { rotulo: "Total vendido (GMV)", valor: formatarPreco(r.gmv_centavos), nota: `${inteiro(r.pedidos)} ${r.pedidos === 1 ? "pedido pago" : "pedidos pagos"}`, destaque: true },
-          { rotulo: "Receita da Staypse", valor: formatarPreco(r.staypse_centavos), nota: "Taxa da plataforma nos pedidos pagos" },
+          { rotulo: "Taxa total cobrada das lojas", valor: formatarPreco(r.taxa_total_centavos), nota: "Única taxa que as lojas veem" },
+          { rotulo: "Receita da Staypse", valor: formatarPreco(r.staypse_centavos), nota: "Taxa total menos custo Lytex" },
           {
-            rotulo: "Taxas da Lytex",
-            valor: r.taxa_meio_informada_pedidos > 0 ? formatarPreco(r.taxa_meio_centavos) : "A confirmar com a Lytex",
-            nota: r.taxa_meio_informada_pedidos > 0 ? "Retidas pela Lytex em cada pagamento" : "A taxa por meio de pagamento ainda não foi informada",
+            rotulo: "Custo Lytex (estimado)",
+            valor: r.taxa_meio_informada_pedidos > 0 ? formatarPreco(r.taxa_meio_centavos) : "Sem pedidos com taxa",
+            nota: "Meio de pagamento e repasses, retidos pela Lytex",
           },
           { rotulo: "Comissões de afiliados", valor: formatarPreco(r.comissao_afiliados_centavos), nota: "Pagas direto pelo split" },
           { rotulo: "Comissões de vendedores", valor: formatarPreco(r.comissao_vendedores_centavos), nota: "Split ou folha da loja" },
@@ -105,6 +108,38 @@ export default async function AdminFinanceiro({ searchParams }: PageProps<"/admi
           receita, das taxas e das comissões.
         </p>
       )}
+
+      <section aria-labelledby="titulo-modalidades" className="flex flex-col gap-3">
+        <h2 id="titulo-modalidades" className="text-xl">
+          Taxas por modalidade (interno)
+        </h2>
+        <p className="max-w-prose text-sm text-petroleo/80">Só o admin vê esta separação. Lojas, afiliados e vendedores veem apenas a taxa total; o comprador não vê taxa.</p>
+        <TabelaDados
+          legenda="Taxa total, custo Lytex e receita da Staypse por modalidade de pagamento"
+          colunas={[
+            { titulo: "Modalidade", principal: true },
+            { titulo: "Pedidos", numero: true },
+            { titulo: "Vendido", numero: true },
+            { titulo: "Taxa total", numero: true },
+            { titulo: "Custo Lytex", numero: true },
+            { titulo: "Receita Staypse", numero: true },
+          ]}
+          linhas={[...modalidades]
+            .sort((a, b) => MODALIDADES.indexOf(a.modalidade as Modalidade) - MODALIDADES.indexOf(b.modalidade as Modalidade))
+            .map((m) => ({
+              chave: m.modalidade,
+              celulas: [
+                ROTULO_MODALIDADE[m.modalidade as Modalidade] ?? "Sem modalidade (pedido antigo)",
+                inteiro(m.pedidos),
+                formatarPreco(m.gmv_centavos),
+                formatarPreco(m.taxa_total_centavos),
+                formatarPreco(m.custo_lytex_centavos),
+                formatarPreco(m.receita_staypse_centavos),
+              ],
+            }))}
+          vazio={{ texto: "Nenhum pedido pago neste período." }}
+        />
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <GraficoBarras

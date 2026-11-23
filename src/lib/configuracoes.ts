@@ -2,8 +2,18 @@
 // em português, normalização e validação. O banco valida de novo (função
 // configuracao_valida): aqui o objetivo é dar mensagens claras.
 
+import { MODALIDADES, type Modalidade } from "@/lib/pagamentos/taxas";
+
+// campos de taxa em texto: percentual e fixo em reais ("1,5" e "2,00")
+export type TaxaTexto = { pct: string; fixo: string };
+export type TaxasTexto = {
+  taxaTotal: Record<Modalidade, TaxaTexto>;
+  custoLytex: Record<Modalidade, TaxaTexto>;
+  split: { pct: string; min: string; max: string };
+};
+
 export type ConfiguracoesTexto = {
-  taxa: string;
+  taxas: TaxasTexto;
   comissaoMin: string;
   comissaoMax: string;
   prazoNf: string;
@@ -13,8 +23,11 @@ export type ConfiguracoesTexto = {
   boleto: boolean;
 };
 
+export type ParTaxa = { percentual: number; fixo_centavos: number };
+
 export type ValoresConfiguracao = {
-  taxa_staypse_percentual: number;
+  // chaves taxa_total_<modalidade>, custo_lytex_<modalidade> e custo_lytex_split, prontas para o banco
+  taxas: Record<string, ParTaxa | { percentual: number; minimo_centavos: number; maximo_centavos: number }>;
   comissao_min_percentual: number;
   comissao_max_percentual: number;
   prazo_nf_dias: number;
@@ -28,6 +41,43 @@ export function numeroBr(texto: string): number {
   return /^\d+(\.\d+)?$/.test(t) ? Number(t) : NaN;
 }
 
+// "2,50" (reais) vira 250 centavos; qualquer outra coisa vira NaN
+export function reaisParaCentavos(texto: string): number {
+  const n = numeroBr(texto);
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+}
+
+const duasCasas = (n: number) => Math.abs(n * 100 - Math.round(n * 100)) < 1e-6;
+
+function validarTaxas(t: TaxasTexto): { erro: string } | { taxas: ValoresConfiguracao["taxas"] } {
+  const taxas: ValoresConfiguracao["taxas"] = {};
+  const lerPar = (rotulo: string, x: TaxaTexto): { erro: string } | ParTaxa => {
+    const percentual = numeroBr(x.pct);
+    const fixo = reaisParaCentavos(x.fixo);
+    if (!(percentual >= 0 && percentual <= 30) || !duasCasas(percentual)) return { erro: `${rotulo}: o percentual precisa estar entre 0 e 30, com até 2 casas.` };
+    if (!(fixo >= 0 && fixo <= 2000)) return { erro: `${rotulo}: o valor fixo precisa estar entre R$ 0,00 e R$ 20,00.` };
+    return { percentual, fixo_centavos: fixo };
+  };
+  for (const m of MODALIDADES) {
+    const total = lerPar(`Taxa total (${m})`, t.taxaTotal[m]);
+    if ("erro" in total) return total;
+    const custo = lerPar(`Custo Lytex (${m})`, t.custoLytex[m]);
+    if ("erro" in custo) return custo;
+    if (total.percentual < custo.percentual || total.fixo_centavos < custo.fixo_centavos) {
+      return { erro: `A taxa total de ${m} não pode ficar abaixo do custo da Lytex (percentual e fixo).` };
+    }
+    taxas[`taxa_total_${m}`] = total;
+    taxas[`custo_lytex_${m}`] = custo;
+  }
+  const pct = numeroBr(t.split.pct);
+  const min = reaisParaCentavos(t.split.min);
+  const max = reaisParaCentavos(t.split.max);
+  if (!(pct >= 0 && pct <= 10) || !duasCasas(pct)) return { erro: "Custo de repasse (split): o percentual precisa estar entre 0 e 10." };
+  if (!(min >= 0 && min <= 1000) || !(max >= min && max <= 5000)) return { erro: "Custo de repasse (split): mínimo até R$ 10,00 e máximo entre o mínimo e R$ 50,00." };
+  taxas.custo_lytex_split = { percentual: pct, minimo_centavos: min, maximo_centavos: max };
+  return { taxas };
+}
+
 // uma palavra por linha (ou separadas por vírgula): minúsculas, sem repetição
 export function lerPalavras(texto: string): string[] {
   const todas = texto
@@ -38,13 +88,13 @@ export function lerPalavras(texto: string): string[] {
 }
 
 export function validarConfiguracoes(t: ConfiguracoesTexto): { erro: string } | { valores: ValoresConfiguracao } {
-  const taxa = numeroBr(t.taxa);
   const min = numeroBr(t.comissaoMin);
   const max = numeroBr(t.comissaoMax);
   const prazo = numeroBr(t.prazoNf);
   const faixa = (n: number) => Number.isFinite(n) && n >= 0 && n <= 100;
 
-  if (!faixa(taxa)) return { erro: "A taxa da Staypse precisa ser um número entre 0 e 100." };
+  const taxas = validarTaxas(t.taxas);
+  if ("erro" in taxas) return taxas;
   if (!faixa(min)) return { erro: "A comissão mínima precisa ser um número entre 0 e 100." };
   if (!faixa(max)) return { erro: "A comissão máxima precisa ser um número entre 0 e 100." };
   if (min > max) return { erro: "A comissão mínima não pode ser maior que a máxima." };
@@ -59,7 +109,7 @@ export function validarConfiguracoes(t: ConfiguracoesTexto): { erro: string } | 
 
   return {
     valores: {
-      taxa_staypse_percentual: taxa,
+      taxas: taxas.taxas,
       comissao_min_percentual: min,
       comissao_max_percentual: max,
       prazo_nf_dias: prazo,

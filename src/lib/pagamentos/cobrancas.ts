@@ -9,6 +9,7 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { nomeDoProvedor, provedorPagamentos } from ".";
 import { montarSplit, type DadosSplitPedido } from "./montar-split";
 import { efeitoDoStatus, statusCobrancaValido } from "./status";
+import type { Modalidade } from "./taxas";
 import { IntegracaoPendente, type StatusCobranca } from "./tipos";
 
 // Conta da Staypse no provedor (recebedor da taxa da plataforma). Só em variável de ambiente.
@@ -20,7 +21,11 @@ export function staypseRecebedorId(): string {
 }
 
 // Cria a cobrança do pedido (uma vez só) e devolve a página de pagamento do provedor.
-export async function iniciarCobranca(pedidoId: string, urlRetorno: string): Promise<{ url: string | null }> {
+// `modalidade` define a taxa total da loja. Enquanto o comprador escolhe o meio na página do
+// provedor (o checkout ainda não pergunta), vale a modalidade padrão (docs/precificacao.md, seção 7).
+export const MODALIDADE_PADRAO: Modalidade = "cartao_2a6";
+
+export async function iniciarCobranca(pedidoId: string, urlRetorno: string, modalidade: Modalidade = MODALIDADE_PADRAO): Promise<{ url: string | null }> {
   const admin = criarClienteAdmin();
   const provedor = provedorPagamentos();
 
@@ -30,7 +35,7 @@ export async function iniciarCobranca(pedidoId: string, urlRetorno: string): Pro
 
   const { data: dados, error } = await admin.rpc("dados_split_pedido", { p_order: pedidoId, p_provedor: provedor.nome });
   if (error || !dados) throw new Error(error?.message ?? "falha_ao_montar_split");
-  const { partes, snapshot } = montarSplit(dados as unknown as DadosSplitPedido, staypseRecebedorId());
+  const { partes, snapshot } = montarSplit(dados as unknown as DadosSplitPedido, staypseRecebedorId(), modalidade);
 
   const cobranca = await provedor.criarCobranca({
     pedidoId,

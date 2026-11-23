@@ -166,7 +166,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
                   <p className="rounded-xl bg-petroleo px-3 py-2 text-sm text-gelo" data-comissao-reais>
                     Você recebe <strong className="text-ciano">{formatarPreco(estimativaComissao(item.preco_centavos, pct))}</strong>{" "}
                     por venda ({pct}%)
-                    <span className="block text-xs text-gelo/75">Estimativa antes das taxas, recebida no split automático.</span>
+                    <span className="block text-xs text-gelo/75">Estimativa por venda, recebida no split automático.</span>
                   </p>
                   <p className="rounded-xl bg-gelo px-3 py-2 text-xs" data-aprovacao={item.aprovacao_afiliacao}>
                     {item.aprovacao_afiliacao === "manual" ? (

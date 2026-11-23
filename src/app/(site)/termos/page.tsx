@@ -56,8 +56,8 @@ export default function Termos() {
               <p>
                 A Staypse <strong className={forte}>não é a vendedora</strong> dos produtos: quem vende, emite a nota fiscal e entrega é o produtor
                 identificado na página do produto. A Staypse também <strong className={forte}>não recebe, não guarda e não repassa</strong> dinheiro
-                de terceiros: o pagamento é processado por instituição de pagamento parceira, que divide o valor (split) entre produtor, revendedor e
-                a taxa da Staypse no momento do pagamento.
+                de terceiros: o pagamento é processado por instituição de pagamento parceira, que divide o valor (split) entre as partes da venda
+                no momento do pagamento.
               </p>
             </>
           ),
@@ -134,7 +134,7 @@ export default function Termos() {
                 Você ganha <strong className={forte}>somente sobre as vendas feitas pelos seus links</strong>. Não há ganho por indicar outros
                 revendedores nem por recrutamento de qualquer tipo (Lei 1.521/1951, art. 2º, IX).
               </li>
-              <li>A comissão de cada produto é definida pelo produtor e aparece no catálogo. O valor mostrado é uma estimativa antes das taxas, não uma garantia de renda.</li>
+              <li>A comissão de cada produto é definida pelo produtor e aparece no catálogo. O valor mostrado é uma estimativa por venda, não uma garantia de renda. A taxa da plataforma é paga pelo produtor, não por você.</li>
               <li>Você recebe sua parte diretamente no split automático, pela instituição de pagamento parceira, depois que ela aprovar o seu cadastro de recebimento. Os tributos sobre o que você recebe são de sua responsabilidade.</li>
               <li>
                 Ao divulgar, deixe claro, logo no início do post, vídeo ou mensagem, que é <strong className={forte}>publicidade</strong> e que você
@@ -209,7 +209,7 @@ export default function Termos() {
           titulo: "Pagamentos e split",
           conteudo: (
             <Itens>
-              <li>Os pagamentos são processados por instituição de pagamento parceira, que divide automaticamente o valor de cada venda entre produtor, revendedor (ou vendedor da loja) e a taxa da Staypse.</li>
+              <li>Os pagamentos são processados por instituição de pagamento parceira, que divide automaticamente o valor de cada venda entre as partes da venda (produtor, revendedor ou vendedor da loja e plataforma).</li>
               <li>A Staypse não tem conta para receber o dinheiro das vendas, não guarda saldos e não faz repasses.</li>
               <li>Prazos de liberação, meios de pagamento e eventuais tarifas da instituição de pagamento são informados antes do pagamento ou no painel de cada participante.</li>
               <li>Em caso de cancelamento, estorno ou contestação do pagamento, cada participante devolve a parte que recebeu, na mesma proporção do split.</li>

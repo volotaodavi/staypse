@@ -68,7 +68,7 @@ export default async function ConviteAfiliacao({ params }: PageProps<"/afiliar/[
                 </div>
               </dl>
               <p className="text-xs text-petroleo/70">
-                Estimativa por venda, antes das taxas. A comissão é paga no split automático, só nas vendas feitas pelo seu link.
+                Estimativa por venda. A comissão é paga no split automático, só nas vendas feitas pelo seu link.
               </p>
               {!usuario ? (
                 <div className="flex flex-col gap-2">

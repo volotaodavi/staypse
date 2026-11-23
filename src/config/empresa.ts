@@ -48,10 +48,12 @@ export const contatoEmLinha = () =>
 // (versão "2026-12-03.1": revisão jurídica, política de reembolso, avaliações, direitos
 // de imagem e aviso de infração, registros de acesso, BrasilAPI, idade mínima na compra)
 // (versão "2026-12-07.1": nome do comprador e valor pago mostrados ao afiliado ou vendedor que indicou a venda)
-export const TERMOS_VERSAO = "2026-12-07.1";
+// (versão "2026-12-10.1": taxa da plataforma paga só pelo produtor; texto ao comprador sem menção a taxa)
+export const TERMOS_VERSAO = "2026-12-10.1";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.
 // (versão "2026-11-18.2": texto completo com vendedores da loja, taxa e LGPD)
 // (versão "2026-12-03.1": idade do responsável da loja, direitos de imagem e avaliações)
-export const CONTRATO_PRODUTOR_VERSAO = "2026-12-03.1";
+// (versão "2026-12-10.1": taxa da plataforma única por modalidade, já com o processamento do pagamento)
+export const CONTRATO_PRODUTOR_VERSAO = "2026-12-10.1";

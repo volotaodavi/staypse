@@ -9,7 +9,8 @@ export type ResumoFinanceiro = {
   pedidos: number;
   gmv_centavos: number;
   staypse_centavos: number;
-  taxa_meio_centavos: number;
+  taxa_total_centavos: number;
+  taxa_meio_centavos: number; // custo Lytex estimado
   taxa_meio_informada_pedidos: number;
   comissao_afiliados_centavos: number;
   comissao_vendedores_centavos: number;
@@ -22,6 +23,14 @@ export type ResumoFinanceiro = {
 };
 
 export type DiaFinanceiro = { dia: string; pedidos: number; gmv_centavos: number; staypse_centavos: number };
+export type LinhaModalidade = {
+  modalidade: string;
+  pedidos: number;
+  gmv_centavos: number;
+  taxa_total_centavos: number;
+  custo_lytex_centavos: number;
+  receita_staypse_centavos: number;
+};
 export type LinhaRanking = { nome: string; pedidos: number; vendido_centavos: number; valor_centavos: number; total_linhas: number };
 export type TipoRanking = "loja" | "afiliado" | "vendedor";
 
@@ -45,6 +54,14 @@ export async function serieDiaria(p: Periodo): Promise<(DiaFinanceiro & { rotulo
     saida.push({ ...x, rotulo: diaCurto(dia), texto: formatarDia(dia) });
   }
   return saida;
+}
+
+// separação INTERNA (só admin): taxa total, custo Lytex estimado e receita Staypse por modalidade
+export async function porModalidade(p: Periodo): Promise<LinhaModalidade[]> {
+  const supabase = await criarClienteServidor();
+  const { data, error } = await supabase.rpc("admin_fin_por_modalidade", { p_inicio: p.inicio, p_fim: p.fim });
+  if (error) throw new Error(`Taxas por modalidade indisponíveis: ${error.message}`);
+  return (data ?? []) as unknown as LinhaModalidade[];
 }
 
 export async function ranking(tipo: TipoRanking, p: Periodo, busca: string, limite: number, offset: number): Promise<LinhaRanking[]> {

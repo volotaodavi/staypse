@@ -1,9 +1,11 @@
 "use client";
 import { BotaoEnviar, Campo, FormAcao } from "@/components/formulario";
+import type { TaxasTexto } from "@/lib/configuracoes";
+import { MODALIDADES, ROTULO_MODALIDADE } from "@/lib/pagamentos/taxas";
 import { salvarConfiguracoes } from "./acoes";
 
 export type ValoresIniciais = {
-  taxa: string;
+  taxas: TaxasTexto;
   comissaoMin: string;
   comissaoMax: string;
   prazoNf: string;
@@ -18,11 +20,27 @@ const caixa = "flex min-h-11 items-center gap-3 rounded-xl border border-petrole
 export function FormConfiguracoes({ inicial }: { inicial: ValoresIniciais }) {
   return (
     <FormAcao acao={salvarConfiguracoes}>
-      <fieldset className="grid gap-4 rounded-2xl bg-branco p-4 sm:grid-cols-3 sm:p-5">
-        <legend className="px-1 text-lg font-medium">Taxas e comissão</legend>
-        <Campo rotulo="Taxa da Staypse (%)" name="taxa" inputMode="decimal" required defaultValue={inicial.taxa} dica="De 0 a 100." />
+      <fieldset className="grid gap-4 rounded-2xl bg-branco p-4 sm:grid-cols-2 sm:p-5">
+        <legend className="px-1 text-lg font-medium">Comissão dos indicadores</legend>
         <Campo rotulo="Comissão mínima (%)" name="comissao_min" inputMode="decimal" required defaultValue={inicial.comissaoMin} dica="Menor comissão que a loja pode definir." />
         <Campo rotulo="Comissão máxima (%)" name="comissao_max" inputMode="decimal" required defaultValue={inicial.comissaoMax} dica="Tem de ser maior ou igual à mínima." />
+      </fieldset>
+
+      {MODALIDADES.map((m) => (
+        <fieldset key={m} className="grid gap-4 rounded-2xl bg-branco p-4 sm:grid-cols-4 sm:p-5">
+          <legend className="px-1 text-lg font-medium">Taxas: {ROTULO_MODALIDADE[m]}</legend>
+          <Campo rotulo="Taxa total (%)" name={`taxa_total_${m}_pct`} inputMode="decimal" required defaultValue={inicial.taxas.taxaTotal[m].pct} dica="Cobrada da loja. Única taxa que ela vê." />
+          <Campo rotulo="Taxa total, fixo (R$)" name={`taxa_total_${m}_fixo`} inputMode="decimal" required defaultValue={inicial.taxas.taxaTotal[m].fixo} dica="Por venda." />
+          <Campo rotulo="Custo Lytex (%)" name={`custo_lytex_${m}_pct`} inputMode="decimal" required defaultValue={inicial.taxas.custoLytex[m].pct} dica="Interno: nunca aparece para a loja." />
+          <Campo rotulo="Custo Lytex, fixo (R$)" name={`custo_lytex_${m}_fixo`} inputMode="decimal" required defaultValue={inicial.taxas.custoLytex[m].fixo} dica="A taxa total não pode ficar abaixo." />
+        </fieldset>
+      ))}
+
+      <fieldset className="grid gap-4 rounded-2xl bg-branco p-4 sm:grid-cols-3 sm:p-5">
+        <legend className="px-1 text-lg font-medium">Custo Lytex por repasse (split)</legend>
+        <Campo rotulo="Percentual do valor repassado (%)" name="split_pct" inputMode="decimal" required defaultValue={inicial.taxas.split.pct} dica="Interno. Por recebedor." />
+        <Campo rotulo="Mínimo (R$)" name="split_min" inputMode="decimal" required defaultValue={inicial.taxas.split.min} />
+        <Campo rotulo="Máximo (R$)" name="split_max" inputMode="decimal" required defaultValue={inicial.taxas.split.max} />
       </fieldset>
 
       <fieldset className="grid gap-4 rounded-2xl bg-branco p-4 sm:p-5">

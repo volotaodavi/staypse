@@ -68,8 +68,8 @@ export function problemaNoSlug(slug: string): string | null {
   return null;
 }
 
-// Estimativa do que o revendedor recebe por venda, ANTES das taxas
-// (taxa da instituição de pagamento e da Staypse são descontadas no split).
+// Estimativa do que o revendedor recebe por venda: a comissão cheia (a taxa da plataforma
+// é paga pela loja, não por quem indica).
 export function estimativaComissao(precoCentavos: number, percentual: number): number {
   return Math.floor((precoCentavos * percentual) / 100);
 }
