@@ -59,8 +59,8 @@ export function TabelaVendas({
         vazio={vazio}
       />
       <p className="text-sm text-petroleo/75">
-        &quot;A receber&quot;: venda paga, ainda no prazo de 7 dias em que o comprador pode desistir. Depois disso, a comissão é
-        repassada pelo split. Se o comprador desistir, a comissão é estornada.
+        &quot;Pendente&quot;: venda paga, ainda no prazo de 7 dias em que o comprador pode desistir. Depois disso, a comissão é
+        liberada e repassada pelo split. Se o comprador desistir, pedir reembolso ou contestar o pagamento (chargeback), a comissão é estornada.
       </p>
     </section>
   );
