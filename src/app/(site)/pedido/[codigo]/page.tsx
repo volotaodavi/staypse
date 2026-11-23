@@ -232,6 +232,9 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             <Link href={`/atendimento?pedido=${p.codigo}`} className="mt-1 inline-block py-2 font-medium underline">
               Precisa de ajuda? Abrir atendimento
             </Link>
+            <Link href="/reembolso" className="inline-block py-2 font-medium underline">
+              Reembolso, arrependimento e garantia
+            </Link>
           </section>
 
           {p.pode_desistir && (
@@ -240,7 +243,11 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
               <p className="text-petroleo/80">
                 {p.status === "aguardando_pagamento"
                   ? "O pedido ainda não foi pago: cancelar não tem custo."
-                  : "Você tem 7 dias a partir do recebimento para desistir, sem precisar explicar. Você recebe de volta tudo o que pagou, inclusive o frete (CDC, art. 49). Se o produto já chegou, a loja combina com você a devolução, sem custo para você."}
+                  : "Você tem 7 dias a partir do recebimento para desistir, sem precisar explicar. Você recebe de volta tudo o que pagou, inclusive o frete (CDC, art. 49). Se o produto já chegou, a loja combina com você a devolução, sem custo para você."}{" "}
+                <Link href="/reembolso" className="underline">
+                  Ler a política de reembolso
+                </Link>
+                .
               </p>
               <details className="rounded-2xl bg-gelo p-4">
                 <summary className="cursor-pointer py-1 font-medium">

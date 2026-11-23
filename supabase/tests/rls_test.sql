@@ -1163,12 +1163,24 @@ insert into public.erros_app (mensagem, caminho) values ('teste de erro', '/x');
 select teste.ok((select count(*) from public.erros_app) = 0, 'só admin lê os erros');
 :comoC
 select teste.ok((select count(*) from public.erros_app) = 1, 'admin lê os erros');
+-- registros de acesso (Marco Civil, art. 15): só o servidor grava, só admin lê, 6 meses
+:comoAnon
+select teste.bloqueia($$insert into public.registros_acesso (evento, ip) values ('login', '203.0.113.9')$$, 'visitante não grava registro de acesso');
+:comoServidor
+insert into public.registros_acesso (evento, ip) values ('login', '203.0.113.9');
+insert into public.registros_acesso (evento, ip, criado_em) values ('login', '203.0.113.10', now() - interval '7 months');
+:comoB
+select teste.ok((select count(*) from public.registros_acesso) = 0, 'só admin lê os registros de acesso');
+:comoC
+select teste.ok((select count(*) from public.registros_acesso) = 2, 'admin lê os registros de acesso');
 reset role;
+select teste.bloqueia($$insert into public.registros_acesso (evento, ip) values ('xpto', '1.1.1.1')$$, 'evento de acesso desconhecido é recusado');
 update public.orders set criado_em = now() - interval '4 days' where codigo = :'ped3';
 select codigo as ped4 from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Fê', 'fe@teste.com', '52998224725', null, null, '2026-11-18') \gset
 update public.orders set criado_em = now() - interval '4 days' where codigo = :'ped4';
 select public.apagar_dados_vencidos();
 select teste.ok((select status = 'cancelado' from public.orders where codigo = :'ped4'), 'pedido não pago em 3 dias é cancelado sozinho');
+select teste.ok((select count(*) from public.registros_acesso) = 1, 'registro de acesso com mais de 6 meses é apagado; o recente fica');
 
 -- =========================================================================
 -- 17. Painéis (Etapa 5): relatórios por período e bloqueio de afiliado

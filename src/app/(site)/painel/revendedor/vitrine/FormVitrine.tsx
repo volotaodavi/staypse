@@ -152,6 +152,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
             aceita="image/jpeg,image/png,image/webp"
             caminhoInicial={inicial?.foto_path || null}
             tamanhoMaximoMb={5}
+            dica="Use uma imagem sua ou que você tenha licença para usar. Ela fica pública na sua vitrine."
           />
         </div>
 

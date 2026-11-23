@@ -144,16 +144,26 @@ export function FormCompra({
             <Bloco titulo="Seu direito de desistir">
               Você pode desistir em até 7 dias depois de receber
               {r.tipo === "digital" ? " o acesso" : " o produto"} e recebe de volta tudo o que pagou, inclusive o frete
-              (Código de Defesa do Consumidor, art. 49). É só usar o botão &quot;Desistir da compra&quot; na página do pedido.
+              (Código de Defesa do Consumidor, art. 49). É só usar o botão &quot;Desistir da compra&quot; na página do pedido. Veja a{" "}
+              <Link href="/reembolso" target="_blank" className="font-semibold underline">
+                política de reembolso
+                <span className="sr-only"> (abre em nova aba)</span>
+              </Link>
+              .
             </Bloco>
           </dl>
 
           <label className="flex gap-3 rounded-md border border-neutral-400 p-4 text-sm text-neutral-800">
             <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--loja-principal)]" />
             <span>
-              Li o resumo do pedido e concordo com os{" "}
+              Li o resumo do pedido, tenho 18 anos ou mais (ou compro com autorização do meu responsável legal) e concordo com os{" "}
               <Link href="/termos" target="_blank" className="font-semibold underline">
                 Termos de Uso
+                <span className="sr-only"> (abre em nova aba)</span>
+              </Link>
+              , a{" "}
+              <Link href="/reembolso" target="_blank" className="font-semibold underline">
+                Política de Reembolso
                 <span className="sr-only"> (abre em nova aba)</span>
               </Link>{" "}
               e a{" "}
@@ -259,6 +269,9 @@ export function FormCompra({
           <p id="aviso-cep" role="status" className="text-sm text-neutral-700">
             {buscandoCep ? "Buscando endereço..." : avisoCep}
           </p>
+          <p className="text-xs text-neutral-700">
+            Ao sair do campo CEP, o número é enviado ao serviço gratuito BrasilAPI para preencher o endereço. Se preferir, preencha à mão.
+          </p>
           <label className={rotulo}>
             Rua
             <input name="logradouro" autoComplete="address-line1" required maxLength={200} defaultValue={v.logradouro} className={campo} />
@@ -307,7 +320,7 @@ export function FormCompra({
           CPF
           <input name="cpf" inputMode="numeric" required maxLength={14} placeholder="000.000.000-00" defaultValue={v.cpf} className={campo} aria-describedby="dica-cpf" />
           <span id="dica-cpf" className="text-xs font-normal text-neutral-700">
-            Usado só para a nota fiscal da loja.
+            Usado só para a nota fiscal da loja e para o pagamento.
           </span>
         </label>
         <label className={rotulo}>
@@ -318,7 +331,14 @@ export function FormCompra({
 
       <Mensagem texto={estado?.erro} />
       <Enviar intencao="revisar">Revisar pedido</Enviar>
-      <p className="text-xs text-neutral-700">Você vê o resumo completo, com frete e total, antes de confirmar.</p>
+      <p className="text-xs text-neutral-700">
+        Você vê o resumo completo, com frete e total, antes de confirmar. Usamos seus dados só para este pedido, conforme a{" "}
+        <Link href="/privacidade" target="_blank" className="font-semibold underline">
+          Política de Privacidade
+          <span className="sr-only"> (abre em nova aba)</span>
+        </Link>
+        .
+      </p>
     </form>
   );
 }

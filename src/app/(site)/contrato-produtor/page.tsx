@@ -48,6 +48,7 @@ export default function ContratoProdutor() {
               <li>A verificação de identidade da empresa e de quem a representa é feita pela instituição de pagamento parceira (Lytex), no cadastro de recebimento. A Staypse não pede nem guarda documentos de identidade ou dados bancários.</li>
               <li>A loja só publica produtos e recebe pedidos com o cadastro de recebimento aprovado pela instituição de pagamento, com o mesmo CNPJ informado na Staypse. Se ele for recusado ou suspenso, as vendas novas param e a Staypse mostra o motivo informado pela instituição.</li>
               <li>A Staypse aprova a loja e cada produto por conteúdo (curadoria e produtos proibidos) e pode recusar ou suspender, sempre informando o motivo.</li>
+              <li>O responsável que cadastra a loja representa uma empresa (pessoa jurídica) e declara ter 18 anos ou mais, ou ser emancipado, e poderes para aceitar este contrato.</li>
               <li>O Produtor mantém os dados do cadastro corretos e atualizados.</li>
             </Itens>
           ),
@@ -175,12 +176,22 @@ export default function ContratoProdutor() {
         },
         {
           id: "propriedade",
-          titulo: "Marcas, fotos e textos",
+          titulo: "Marcas, fotos, textos e avaliações",
           conteudo: (
-            <p>
-              O Produtor declara ter direito de usar as marcas, fotos e textos que publica e autoriza a Staypse e os revendedores a exibi-los para
-              divulgar os produtos enquanto estiverem publicados.
-            </p>
+            <Itens>
+              <li>
+                O Produtor declara ter direito de usar as marcas, fotos, vídeos e textos que publica (Lei 9.610/1998 e Lei 9.279/1996), inclusive a
+                autorização de quem aparece nas imagens (Código Civil, art. 20). Não pode usar foto de outra loja, imagem de banco de imagens sem licença,
+                nem marca de terceiros sem autorização.
+              </li>
+              <li>O Produtor autoriza a Staypse e os revendedores a exibir esse conteúdo para divulgar os produtos enquanto estiverem publicados, e responde por qualquer reclamação de terceiros sobre ele.</li>
+              <li>
+                Quem se sentir lesado pode avisar pelo botão &quot;Denunciar&quot; ou pelo atendimento. A Staypse pode retirar ou ocultar o conteúdo
+                enquanto apura, avisa o Produtor, que pode se manifestar, e cumpre ordens judiciais (Marco Civil da Internet, arts. 19 e 21). As regras estão nos{" "}
+                <Link href="/termos#direitos-imagem" className="underline">Termos de uso</Link>.
+              </li>
+              <li>É proibido criar, comprar ou pedir avaliações, notas ou depoimentos falsos, inventar clientes, números de vendas ou resultados, ou esconder avaliações verdadeiras para enganar (CDC, arts. 36 e 37).</li>
+            </Itens>
           ),
         },
         {

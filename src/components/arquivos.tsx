@@ -180,7 +180,8 @@ export function Fotos({ uid, iniciais, supabaseUrl }: { uid: string; iniciais: s
         </span>
       )}
       <span className="text-xs font-normal text-petroleo/70">
-        A primeira é a capa. As fotos são reduzidas automaticamente antes do envio.
+        A primeira é a capa. As fotos são reduzidas automaticamente antes do envio. Envie só fotos que você tem direito de usar; se
+        aparecer uma pessoa, ela precisa ter autorizado.
       </span>
     </div>
   );

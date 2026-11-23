@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/termos` },
     { url: `${base}/privacidade` },
     { url: `${base}/cookies` },
+    { url: `${base}/reembolso` },
     { url: `${base}/produtos-proibidos` },
     { url: `${base}/atendimento` },
   ];

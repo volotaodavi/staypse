@@ -2,6 +2,7 @@
 // Ações do formulário de login (rodam no servidor).
 import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
+import { registrarAcesso } from "@/lib/acesso";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { urlDoSite } from "@/lib/supabase/env";
 import { proximoSeguro } from "@/lib/redirecionamento";
@@ -21,7 +22,7 @@ export async function entrarComSenha(
   if (!email || !senha) return { erro: "Preencha e-mail e senha.", valores };
 
   const supabase = await criarClienteServidor();
-  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+  const { data: sessao, error } = await supabase.auth.signInWithPassword({ email, password: senha });
 
   if (error) {
     if (error.code === "email_not_confirmed") {
@@ -36,6 +37,7 @@ export async function entrarComSenha(
     return { erro: "Não foi possível entrar agora. Tente novamente.", valores };
   }
 
+  await registrarAcesso("login", sessao.user?.id);
   redirect(proximoSeguro(formData.get("proximo")));
 }
 

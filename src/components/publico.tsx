@@ -92,7 +92,7 @@ export function CartaoLink({ link, vitrine }: { link: LinkExterno; vitrine: stri
         <span className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{link.titulo}</span>
         {link.preco_centavos != null && <span className="text-sm font-extrabold">{formatarPreco(link.preco_centavos)}</span>}
         <span className="text-[11px] leading-tight text-petroleo/70">
-          Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"})
+          Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"}). Confira o preço lá: ele pode ter mudado.
         </span>
       </span>
     </LinkRastreado>

@@ -16,7 +16,9 @@ export function emailDaLista({ nome, link, reenvio }: { nome?: string; link: str
   const corpo =
     "No link abaixo você vê a sua posição na fila e o seu link de indicação. " +
     "Quem indica mais pessoas entra antes no acesso antecipado. Não há sorteio nem prêmio em dinheiro.";
-  const final = "Se não foi você, é só ignorar este e-mail.";
+  // o endereço do atendimento sai do mesmo site do link (nunca fixo no código)
+  const atendimento = `${new URL(link).origin}/atendimento?assunto=lgpd_exclusao`;
+  const final = `Se não foi você, é só ignorar este e-mail. Para sair da lista e parar de receber avisos, peça a exclusão dos seus dados em ${atendimento}`;
 
   return {
     assunto: reenvio ? "Seu link da lista de espera da Staypse" : "Você está na lista de espera da Staypse",

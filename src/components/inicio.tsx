@@ -40,7 +40,7 @@ export const IconeCheck = ({ className = "h-5 w-5 shrink-0" }: IconeProps) => (
 // "host": endereço do site sem https:// (vem de urlDoSite — nunca fixo no código)
 export function VitrineSplit({ host }: { host: string }) {
   return (
-    <figure role="img" className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
+    <div role="img" className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
       {/* celular */}
       <div className="rounded-[2.2rem] bg-[#0B3A3F] p-2.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
         <div className="overflow-hidden rounded-[1.75rem] bg-branco text-petroleo">
@@ -103,7 +103,7 @@ export function VitrineSplit({ host }: { host: string }) {
         </ul>
         <p className="mt-2 text-[11px] text-petroleo/75">Ilustrativo. A comissão de cada produto é definida pelo produtor.</p>
       </figcaption>
-    </figure>
+    </div>
   );
 }
 

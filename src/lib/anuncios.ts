@@ -16,4 +16,4 @@ export const ANUNCIO_PROIBIDO = [
 export const ANUNCIO_REGRA_DA_LOJA =
   "Cada loja pode ter regras mais restritas para um produto. Elas aparecem em “Regras de divulgação da loja”, no card do produto, e valem mais do que o resumo acima.";
 
-export const ANUNCIO_IDENTIFICAR = "Deixe claro que o anúncio é uma indicação com comissão (por exemplo, “link de afiliado” ou “#publi”).";
+export const ANUNCIO_IDENTIFICAR = "Deixe claro, logo no início, que o anúncio é publicidade e uma indicação com comissão (por exemplo, “Publicidade · link de afiliado” ou “#publi”). Não prometa ganhos nem resultados.";

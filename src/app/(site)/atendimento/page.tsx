@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Cabecalho } from "@/components/Cabecalho";
-import { EMPRESA } from "@/config/empresa";
+import { EMPRESA, contatoEmLinha } from "@/config/empresa";
 import { ASSUNTOS_ATENDIMENTO } from "@/lib/pedidos";
 import { usuarioAtual } from "@/lib/papeis";
 import { FormAtendimento } from "./FormAtendimento";
@@ -33,6 +33,13 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
             <p className="text-petroleo/80">
               Respondemos em até 5 dias. Você recebe um número de protocolo para acompanhar.
             </p>
+            <p className="text-sm text-petroleo/75">
+              Usamos o que você escrever só para responder ao seu pedido (veja a{" "}
+              <Link href="/privacidade" className="underline">
+                Política de Privacidade
+              </Link>
+              ). Não coloque senha nem dados de cartão.
+            </p>
             <FormAtendimento inicial={{ nome: usuario?.nome ?? "", email: usuario?.email ?? "", pedido, assunto }} />
           </section>
           <aside className="flex flex-col gap-4 text-sm">
@@ -44,6 +51,10 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
               </p>
               <Link href="/pedido" className="mt-2 inline-block py-1 font-medium underline">
                 Encontrar meu pedido
+              </Link>
+              <br />
+              <Link href="/reembolso" className="inline-block py-1 font-medium underline">
+                Ler a política de reembolso
               </Link>
             </div>
             <div className="rounded-3xl bg-branco p-5">
@@ -61,7 +72,7 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
               <p className="mt-1 text-petroleo/80">
                 {EMPRESA.nomeEmpresarial}
                 <br />
-                {EMPRESA.email} · {EMPRESA.whatsapp}
+                {contatoEmLinha() || "Use o formulário ao lado: você recebe um protocolo."}
               </p>
             </div>
           </aside>

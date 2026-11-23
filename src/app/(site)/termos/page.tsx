@@ -4,7 +4,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DocumentoLegal, Itens } from "@/components/DocumentoLegal";
-import { EMPRESA, TERMOS_VERSAO } from "@/config/empresa";
+import { CONTATO, EMPRESA, TERMOS_VERSAO } from "@/config/empresa";
 import {
   ANUNCIO_IDENTIFICAR,
   ANUNCIO_PERMITIDO,
@@ -31,7 +31,8 @@ export default function Termos() {
             automaticamente por uma instituição de pagamento parceira — a Staypse não recebe nem guarda o dinheiro de ninguém.
           </p>
           <p>
-            Quem compra tem 7 dias para desistir e recebe de volta tudo o que pagou. Quem indica ganha só sobre as próprias vendas: não há
+            Quem compra tem 7 dias para desistir e recebe de volta tudo o que pagou (veja a{" "}
+            <Link href="/reembolso" className="underline">política de reembolso</Link>). Quem indica ganha só sobre as próprias vendas: não há
             taxa de adesão nem ganho por trazer outras pessoas.
           </p>
         </>
@@ -82,7 +83,14 @@ export default function Termos() {
           titulo: "Sua conta",
           conteudo: (
             <Itens>
-              <li>Para criar conta é preciso ter 18 anos ou mais e informar dados verdadeiros e atualizados.</li>
+              <li>
+                <strong className={forte}>Idade mínima.</strong> Para criar conta como revendedor ou vendedor da loja é preciso ter 16 anos ou mais.
+                Quem tem 16 ou 17 anos é relativamente incapaz (Código Civil, art. 4º, I) e declara, no cadastro, que tem autorização dos pais ou
+                responsáveis, que respondem pelos atos da conta, ou que é emancipado. O responsável de uma loja (produtor) representa uma empresa e
+                precisa ter 18 anos ou mais, ou ser emancipado. A Staypse não é destinada a menores de 16 anos. Receber comissão depende da aprovação
+                do cadastro de recebimento pela instituição de pagamento parceira, que pode ter regras de idade próprias.
+              </li>
+              <li>Informe dados verdadeiros e atualizados.</li>
               <li>A conta é pessoal. Guarde sua senha; você responde pelo que for feito com ela. Se suspeitar de uso indevido, avise a Staypse.</li>
               <li>Podemos pedir documentos para confirmar sua identidade ou a da sua empresa, principalmente antes de liberar vendas ou pagamentos.</li>
             </Itens>
@@ -96,8 +104,12 @@ export default function Termos() {
               <li>Antes de pagar, você vê o preço total (com frete, quando houver), as condições de pagamento e de entrega e um resumo das principais regras da compra.</li>
               <li>A página de cada produto mostra quem vende: razão social, CNPJ, endereço e contato da loja.</li>
               <li>O produtor emite a nota fiscal de toda venda e é responsável pela entrega, pela qualidade do produto e pela garantia.</li>
-              <li>Você tem todas as garantias do Código de Defesa do Consumidor, inclusive a garantia legal contra defeitos (art. 26) e o direito de arrependimento (item 11).</li>
-              <li>Se houver problema com o pedido, fale com a loja ou com a Staypse (item 17). A Staypse ajuda a resolver e acompanha a resposta da loja.</li>
+              <li>Compradores menores de 18 anos só compram com a autorização e o acompanhamento do responsável legal; menores de 16 anos, só por meio do responsável.</li>
+              <li>
+                Você tem todas as garantias do Código de Defesa do Consumidor, inclusive a garantia legal contra defeitos (art. 26) e o direito de
+                arrependimento. Tudo isso está explicado na <Link href="/reembolso" className="underline">política de reembolso</Link>.
+              </li>
+              <li>Se houver problema com o pedido, fale com a loja ou com o <Link href="/atendimento" className="underline">atendimento da Staypse</Link>. A Staypse ajuda a resolver e acompanha a resposta da loja.</li>
             </Itens>
           ),
         },
@@ -123,13 +135,16 @@ export default function Termos() {
                 revendedores nem por recrutamento de qualquer tipo (Lei 1.521/1951, art. 2º, IX).
               </li>
               <li>A comissão de cada produto é definida pelo produtor e aparece no catálogo. O valor mostrado é uma estimativa antes das taxas, não uma garantia de renda.</li>
-              <li>Você recebe sua parte diretamente no split automático, pela instituição de pagamento parceira. Os tributos sobre o que você recebe são de sua responsabilidade.</li>
+              <li>Você recebe sua parte diretamente no split automático, pela instituição de pagamento parceira, depois que ela aprovar o seu cadastro de recebimento. Os tributos sobre o que você recebe são de sua responsabilidade.</li>
               <li>
-                Ao divulgar, deixe claro que você recebe comissão (por exemplo: &quot;link de afiliado&quot; ou &quot;#publi&quot;), como exigem o
-                Código de Defesa do Consumidor (art. 36) e as normas de autorregulamentação publicitária (CONAR).
+                Ao divulgar, deixe claro, logo no início do post, vídeo ou mensagem, que é <strong className={forte}>publicidade</strong> e que você
+                recebe comissão (por exemplo: &quot;Publicidade · link de afiliado&quot; ou &quot;#publi&quot;). Evite termos vagos, como só
+                &quot;parceria&quot; ou &quot;#collab&quot;. É o que exigem o Código de Defesa do Consumidor (art. 36) e o Guia de Publicidade por
+                Influenciadores do CONAR.
               </li>
-              <li>Fale só o que é verdade sobre o produto. É proibido prometer o que o produtor não oferece, inventar descontos, enviar mensagens em massa sem consentimento (spam) ou usar marcas de terceiros para enganar.</li>
-              <li>Os links de outros sites (Shopee, Mercado Livre, TikTok Shop) em &quot;Minhas indicações&quot; são de sua responsabilidade. A Staypse mostra esses links como publicidade, não os altera e não ganha com eles.</li>
+              <li>Fale só o que é verdade sobre o produto. É proibido prometer o que o produtor não oferece, inventar descontos, prometer ganhos ou resultados, enviar mensagens em massa sem consentimento (spam) ou usar marcas de terceiros para enganar.</li>
+              <li>Só publique fotos, textos e vídeos que você pode usar (seus ou licenciados) e só mostre pessoas que autorizaram o uso da imagem.</li>
+              <li>Os links de outros sites (Shopee, Mercado Livre, TikTok Shop) em &quot;Minhas indicações&quot; são de sua responsabilidade. A Staypse mostra esses links como publicidade, não os altera, não carrega imagens desses sites na vitrine e não ganha com eles. O preço mostrado é o do dia em que o link foi cadastrado e pode mudar: confira no site de destino.</li>
             </Itens>
           ),
         },
@@ -215,20 +230,55 @@ export default function Termos() {
                 meio de pagamento. Entre as partes da venda, a devolução é feita na proporção do split — o produtor, o revendedor e a Staypse
                 devolvem cada um a parte que receberam —, o que nunca reduz o seu reembolso.
               </p>
-              <p>O arrependimento pode ser pedido pelo mesmo canal usado na compra ou pelos contatos do item 17. Trocas por defeito seguem a garantia legal do CDC.</p>
+              <p>
+                O arrependimento é pedido pelo botão &quot;Desistir da compra&quot; na página do pedido ou pelo{" "}
+                <Link href="/atendimento?assunto=arrependimento" className="underline">atendimento</Link>. Trocas por defeito seguem a garantia legal
+                do CDC. Prazos, produtos digitais, devolução e estorno estão na{" "}
+                <Link href="/reembolso" className="underline">Política de reembolso</Link>, que faz parte destes Termos.
+              </p>
             </>
           ),
         },
         {
-          id: "conteudo",
-          titulo: "Conteúdo e propriedade intelectual",
+          id: "direitos-imagem",
+          titulo: "Conteúdo, imagens e propriedade intelectual",
           conteudo: (
             <>
               <p>
-                Quem publica fotos, textos, nomes e marcas (produtos, lojas e vitrines) declara ter o direito de usá-los e autoriza a Staypse a
-                exibi-los na plataforma e nas prévias de compartilhamento enquanto estiverem publicados.
+                Quem publica fotos, vídeos, textos, nomes, logotipos e marcas (em produtos, lojas e vitrines) declara que <strong className={forte}>tem o
+                direito de usá-los</strong>: que são seus ou que tem licença ou autorização, inclusive de quem aparece nas imagens (Lei 9.610/1998,
+                direitos autorais; Lei 9.279/1996, marcas; Código Civil, art. 20, direito de imagem). Não vale copiar imagem de outro site, banco de
+                imagens sem licença, foto de outra loja ou de &quot;cliente&quot; que não é cliente. Quem publica autoriza a Staypse a exibir o
+                conteúdo na plataforma e nas prévias de compartilhamento enquanto estiver publicado, e responde por qualquer reclamação de terceiros.
+              </p>
+              <p><strong className={forte}>Como avisar sobre uma violação.</strong> Se você é titular de um direito ou aparece numa imagem sem ter autorizado:</p>
+              <Itens>
+                <li>use o botão &quot;Denunciar&quot; da página (motivo &quot;Direito autoral&quot;) ou o <Link href="/atendimento?assunto=denuncia" className="underline">atendimento</Link>;</li>
+                <li>informe o endereço da página, qual é a obra, a imagem ou a marca, por que você é o titular (ou representante) e como falar com você;</li>
+                <li>declare que as informações são verdadeiras. Avisos falsos ou de má-fé podem ter consequências legais para quem os envia.</li>
+              </Itens>
+              <p>
+                A Staypse analisa o aviso e pode retirar ou ocultar o conteúdo enquanto apura, avisando o responsável, que pode se manifestar pelo
+                atendimento. Em caso de ordem judicial, a Staypse cumpre (Marco Civil da Internet, art. 19). Conteúdo íntimo com nudez ou atos
+                sexuais divulgado sem autorização é removido assim que a pessoa avisar (art. 21). Quem repete violações pode ter a conta suspensa.
               </p>
               <p>A marca, o logotipo e o software da Staypse pertencem à Staypse e não podem ser copiados ou usados sem autorização.</p>
+            </>
+          ),
+        },
+        {
+          id: "avaliacoes",
+          titulo: "Avaliações, depoimentos e provas sociais",
+          conteudo: (
+            <>
+              <p>Hoje a Staypse não tem área de avaliações. Quando houver, e em qualquer texto de loja ou vitrine, valem estas regras (CDC, arts. 36 e 37):</p>
+              <Itens>
+                <li>É proibido criar, escrever, comprar, vender ou trocar avaliações, notas, estrelas, depoimentos ou comentários falsos, ou pedir a alguém que os faça sem ter comprado ou usado o produto;</li>
+                <li>É proibido inventar &quot;clientes&quot;, usar foto ou nome de outra pessoa como se fosse cliente, ou números de vendas, de seguidores ou de resultados que não sejam verdadeiros;</li>
+                <li>Só publique depoimento real, com autorização de quem o deu, e diga quando houve brinde, desconto ou pagamento em troca da avaliação;</li>
+                <li>Não apague nem esconda avaliações negativas verdadeiras para enganar quem compra.</li>
+              </Itens>
+              <p>Quem descumprir pode ter o conteúdo retirado, as comissões anuladas e a conta suspensa, e responde pela publicidade enganosa.</p>
             </>
           ),
         },
@@ -283,7 +333,13 @@ export default function Termos() {
         {
           id: "contato",
           titulo: "Atendimento",
-          conteudo: <p>Fale com a Staypse pelo e-mail {EMPRESA.email} ou pelo WhatsApp {EMPRESA.whatsapp}. Respondemos em até 5 dias úteis.</p>,
+          conteudo: (
+            <p>
+              Fale com a Staypse pelo <Link href="/atendimento" className="underline">atendimento</Link> (você recebe um protocolo)
+              {CONTATO.email && <>, pelo e-mail {CONTATO.email}</>}
+              {CONTATO.whatsapp && <> ou pelo WhatsApp {CONTATO.whatsapp}</>}. Respondemos em até 5 dias úteis.
+            </p>
+          ),
         },
         {
           id: "foro",

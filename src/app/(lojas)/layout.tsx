@@ -3,7 +3,7 @@
 // claro quem processa o pagamento.
 import Link from "next/link";
 import { AvisoCookies } from "@/components/AvisoCookies";
-import { EMPRESA } from "@/config/empresa";
+import { EMPRESA, contatoEmLinha } from "@/config/empresa";
 
 export default function LayoutLojas({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +15,7 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
           {/* regra de copy: quem processa o pagamento é a Lytex; a Staypse não recebe o dinheiro */}
           <p className="font-medium text-neutral-800">Pagamentos processados pela Lytex · loja na Staypse</p>
           <p>
-            {EMPRESA.nomeEmpresarial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.endereco} · {EMPRESA.email} · {EMPRESA.whatsapp}
+            {EMPRESA.nomeEmpresarial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.endereco} · {contatoEmLinha() || "contato pelo atendimento"}
           </p>
           <nav className="flex flex-wrap gap-x-4 gap-y-1" aria-label="Informações legais">
             <Link href="/termos" className="inline-block py-1 underline">
@@ -29,6 +29,9 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
             </Link>
             <Link href="/cookies" className="inline-block py-1 underline">
               Cookies
+            </Link>
+            <Link href="/reembolso" className="inline-block py-1 underline">
+              Reembolso e arrependimento
             </Link>
             <Link href="/pedido" className="inline-block py-1 underline">
               Meu pedido

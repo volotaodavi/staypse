@@ -31,6 +31,17 @@ export default async function Denunciar({ searchParams }: PageProps<"/denunciar"
                 Você está denunciando {tipo === "loja" ? "uma" : "um"} {ALVOS_DENUNCIA[tipo as keyof typeof ALVOS_DENUNCIA]}. A equipe analisa cada denúncia.
               </p>
               <FormDenuncia tipo={tipo} id={id} />
+              <p className="text-sm text-petroleo/75">
+                Usamos estas informações só para analisar a denúncia e, se você informar o e-mail, responder a você (veja a{" "}
+                <Link href="/privacidade" className="underline">
+                  Política de Privacidade
+                </Link>
+                ). Para direito autoral, diga qual é a obra, que você é o titular ou o representante e como falar com você; a{" "}
+                <Link href="/termos#direitos-imagem" className="underline">
+                  regra de remoção
+                </Link>{" "}
+                está nos Termos.
+              </p>
             </>
           ) : (
             <p>Não encontramos o que você quer denunciar. Volte à página e toque em &quot;Denunciar&quot; de novo.</p>

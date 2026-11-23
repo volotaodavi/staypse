@@ -46,6 +46,18 @@ export default async function Convite({ params }: PageProps<"/convite/[token]">)
                 Você foi convidado(a) para ser vendedor(a) da loja, com link próprio para cada produto. A comissão segue o
                 seu contrato com a loja.
               </p>
+              <p className="text-sm text-petroleo/75">
+                Você precisa ter 16 anos ou mais (de 16 a 17, com autorização dos responsáveis). Ao aceitar, a loja passa a ver seus links, cliques e
+                vendas, conforme os{" "}
+                <Link href="/termos" className="underline">
+                  Termos
+                </Link>{" "}
+                e a{" "}
+                <Link href="/privacidade" className="underline">
+                  Política de Privacidade
+                </Link>
+                .
+              </p>
               <p className="text-sm">
                 Convite para: <strong className="font-medium">{convite.email_mascarado}</strong>
               </p>

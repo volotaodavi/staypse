@@ -49,7 +49,11 @@ export default function ProdutosProibidos() {
           ))}
         </ul>
         <p className="mt-8 text-sm text-petroleo/80">
-          Viu um produto proibido na Staypse? Avise pelos contatos no rodapé. Veja também os{" "}
+          Viu um produto proibido na Staypse? Avise pelo{" "}
+          <Link href="/atendimento?assunto=denuncia" className="underline">
+            atendimento
+          </Link>{" "}
+          ou pelo botão &quot;Denunciar&quot; na página. Veja também os{" "}
           <Link href="/termos" className="underline">
             Termos de uso
           </Link>{" "}

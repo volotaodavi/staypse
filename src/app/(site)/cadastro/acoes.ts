@@ -5,6 +5,7 @@
 import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
 import { TERMOS_VERSAO } from "@/config/empresa";
+import { registrarAcesso } from "@/lib/acesso";
 import { proximoSeguro } from "@/lib/redirecionamento";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { urlDoSite } from "@/lib/supabase/env";
@@ -68,6 +69,8 @@ export async function cadastrar(
     }
     return { valores, erro: "Não foi possível criar a conta agora. Tente novamente." };
   }
+
+  await registrarAcesso("cadastro", data.user?.id);
 
   // Se a confirmação de e-mail estiver desligada, já entra direto.
   if (data.session) redirect(proximo);

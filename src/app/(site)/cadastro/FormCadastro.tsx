@@ -93,11 +93,11 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
           ser maior de 18 anos ou emancipado. O servidor confere de novo. */}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium">Sua idade</legend>
-        <label className="flex gap-3 text-sm">
+        <label className="flex gap-3 py-1 text-sm">
           <input type="radio" name="idade" value="maior" required defaultChecked={v.idade === "maior"} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>Tenho 18 anos ou mais (ou sou emancipado).</span>
         </label>
-        <label className="flex gap-3 text-sm">
+        <label className="flex gap-3 py-1 text-sm">
           <input type="radio" name="idade" value="16_17" required defaultChecked={v.idade === "16_17"} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
           <span>
             Tenho 16 ou 17 anos e tenho autorização dos meus pais ou responsáveis. (Não vale para quem vai cadastrar uma loja.)

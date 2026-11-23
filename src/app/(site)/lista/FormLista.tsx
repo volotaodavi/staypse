@@ -110,6 +110,13 @@ export function FormLista() {
         </label>
       </div>
 
+      {/* Resumo anunciado por leitores de tela quando a validação falha (WCAG 3.3.1 / 4.1.3) */}
+      <p role="alert" className="sr-only">
+        {Object.keys(erros).length > 0
+          ? `Há ${Object.keys(erros).length} ${Object.keys(erros).length === 1 ? "campo" : "campos"} para corrigir.`
+          : ""}
+      </p>
+
       <fieldset aria-describedby={erros.perfil ? "erro-perfil" : undefined}>
         <legend className="mb-2 text-sm font-medium">Eu sou</legend>
         <div className="grid grid-cols-2 gap-2">
@@ -249,12 +256,13 @@ export function FormLista() {
                 className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo"
               />
               <span>
-                Concordo que a Staypse use meus dados para me avisar sobre o lançamento, conforme a{" "}
+                Tenho 16 anos ou mais (se tiver menos de 18, com autorização dos meus pais ou responsáveis) e concordo que a Staypse use meus
+                dados para me avisar sobre o lançamento, conforme a{" "}
                 <Link href="/privacidade" target="_blank" className="font-medium underline">
                   Política de Privacidade
                   <span className="sr-only"> (abre em nova aba)</span>
                 </Link>
-                .
+                . Posso retirar o consentimento quando quiser, pelo atendimento.
               </span>
             </label>
             <MensagemErro id="erro-consentimento" texto={erros.consentimento} />

@@ -2,7 +2,7 @@
 // Mostra nome empresarial, CNPJ, endereço e contatos lidos de
 // src/config/empresa.ts (para trocar os dados, edite só aquele arquivo).
 import Link from "next/link";
-import { EMPRESA } from "@/config/empresa";
+import { EMPRESA, contatoEmLinha } from "@/config/empresa";
 import { Logo } from "./Logo";
 
 export function Rodape() {
@@ -18,7 +18,11 @@ export function Rodape() {
             <br />
             {EMPRESA.endereco}
             <br />
-            {EMPRESA.email} · {EMPRESA.whatsapp}
+            {contatoEmLinha() || (
+              <Link href="/atendimento" className="underline hover:text-ciano">
+                Fale conosco pelo atendimento
+              </Link>
+            )}
           </address>
         </div>
 
@@ -28,6 +32,9 @@ export function Rodape() {
           </Link>
           <Link href="/pedido" className="inline-block py-1 hover:text-ciano">
             Meu pedido
+          </Link>
+          <Link href="/reembolso" className="inline-block py-1 hover:text-ciano">
+            Reembolso e arrependimento
           </Link>
           <Link href="/termos" className="inline-block py-1 hover:text-ciano">
             Termos de uso

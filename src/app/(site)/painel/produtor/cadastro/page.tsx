@@ -140,7 +140,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
               <li>Você define a comissão do revendedor, entre 10% e 70%.</li>
               <li>O pagamento é dividido automaticamente no split; a Staypse não recebe nem guarda o dinheiro.</li>
               <li>O comprador pode desistir em 7 dias e recebe tudo de volta; entre as partes, a devolução segue a proporção do split.</li>
-              <li>Produtos proibidos não são aceitos.</li>
+              <li>Produtos proibidos não são aceitos, e fotos, textos e marcas precisam ser seus ou licenciados.</li>
             </ul>
             <Link href="/contrato-produtor" target="_blank" className="text-sm font-medium underline">
               Ler o contrato completo (versão {CONTRATO_PRODUTOR_VERSAO})
@@ -151,7 +151,9 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             ) : (
               <label className="flex gap-3 text-sm">
                 <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
-                <span>Li e aceito o Contrato do Produtor.</span>
+                <span>
+                  Li e aceito o Contrato do Produtor, tenho 18 anos ou mais (ou sou emancipado) e posso representar esta empresa.
+                </span>
               </label>
             )}
             {contratoAceito ? (

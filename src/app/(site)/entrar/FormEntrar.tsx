@@ -14,7 +14,7 @@ export function FormEntrar({ proximo }: { proximo: string }) {
       type="button"
       onClick={() => setModo(valor)}
       aria-pressed={modo === valor}
-      className={`flex-1 rounded-full px-4 py-2 text-sm font-medium ${
+      className={`min-h-11 flex-1 rounded-full px-4 py-2 text-sm font-medium ${
         modo === valor ? "bg-petroleo text-branco" : "text-petroleo"
       }`}
     >

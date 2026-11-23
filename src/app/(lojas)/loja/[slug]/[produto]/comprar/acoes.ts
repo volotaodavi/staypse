@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { TERMOS_VERSAO } from "@/config/empresa";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
 import { comprasAbertas, cpfValido, mensagemDeErro, type ModoEntrega } from "@/lib/pedidos";
+import { registrarAcesso } from "@/lib/acesso";
 import { usuarioAtual } from "@/lib/papeis";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -111,5 +112,6 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     .maybeSingle<{ id: string; codigo: string; token: string }>();
   if (error || !pedido) return resumo(mensagemDeErro(error, "Não foi possível criar o pedido. Tente de novo."));
 
+  await registrarAcesso("pedido", usuario?.id);
   redirect(`/pedido/${pedido.codigo}?t=${pedido.token}&novo=1`);
 }

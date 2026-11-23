@@ -63,7 +63,7 @@ export function CopiarLink({
         type="button"
         className={
           className ??
-          "rounded-full border border-petroleo/30 px-4 py-2 text-sm font-medium text-petroleo hover:bg-gelo"
+          "min-h-11 rounded-full border border-petroleo/30 px-4 py-2 text-sm font-medium text-petroleo hover:bg-gelo"
         }
         onClick={async () => {
           try {

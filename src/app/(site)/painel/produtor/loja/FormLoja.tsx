@@ -312,7 +312,7 @@ export function FormLoja({
             aceita="image/jpeg,image/png,image/webp"
             caminhoInicial={inicial.loja_foto_path}
             tamanhoMaximoMb={5}
-            dica="JPG, PNG ou WebP, até 5 MB. Serve qualquer formato: quadrada, larga ou alta."
+            dica="JPG, PNG ou WebP, até 5 MB. Serve qualquer formato: quadrada, larga ou alta. Só envie imagem que a loja tem direito de usar."
             aoMudar={setLogo}
           />
           <div className="grid grid-cols-2 gap-3">
@@ -343,7 +343,7 @@ export function FormLoja({
             aceita="image/jpeg,image/png,image/webp"
             caminhoInicial={tema.banner.imagem}
             tamanhoMaximoMb={5}
-            dica="JPG, PNG ou WebP, até 5 MB. Imagem horizontal, com o assunto no centro, funciona melhor."
+            dica="JPG, PNG ou WebP, até 5 MB. Imagem horizontal, com o assunto no centro, funciona melhor. Só envie imagem que a loja tem direito de usar."
             aoMudar={(c) => mudarBanner({ imagem: c })}
           />
           {tema.banner.imagem && (
@@ -406,8 +406,7 @@ export function FormLoja({
                   type="button"
                   className={classeBotaoPequeno}
                   onClick={() => alternar(i)}
-                  aria-pressed={s.visivel}
-                  aria-label={`${SECOES_LOJA[s.tipo].rotulo}: ${s.visivel ? "visível" : "oculta"}`}
+                  aria-label={`${s.visivel ? "Ocultar" : "Mostrar"} seção ${SECOES_LOJA[s.tipo].rotulo}`}
                 >
                   {s.visivel ? "Ocultar" : "Mostrar"}
                 </button>

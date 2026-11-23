@@ -112,7 +112,7 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
           {vitrine.bio && <p className="max-w-2xl text-base text-neutral-700">{vitrine.bio}</p>}
           {/* CDC art. 36 / CONAR: publicidade identificada */}
           <p className="max-w-2xl text-sm text-neutral-600">
-            Esta vitrine reúne indicações: @{slug} recebe comissão pelas vendas feitas por aqui, sem custo extra para você.
+            Publicidade: esta vitrine reúne indicações e @{slug} recebe comissão pelas vendas feitas por aqui, sem custo extra para você.
           </p>
           <div className="flex flex-wrap gap-2">
             <a
@@ -205,7 +205,7 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
                       <span className="line-clamp-2 text-sm group-hover:underline">{link.titulo}</span>
                       {link.preco_centavos != null && <span className="text-base font-semibold">{formatarPreco(link.preco_centavos)}</span>}
                       <span className="text-sm text-neutral-600">
-                        Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"})
+                        Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"}). Confira o preço lá: ele pode ter mudado.
                       </span>
                     </span>
                   </LinkRastreado>

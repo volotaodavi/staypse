@@ -7,6 +7,7 @@
 //                                    mesmo se o link for aberto em outro navegador)
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { registrarAcesso } from "@/lib/acesso";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { proximoSeguro } from "@/lib/redirecionamento";
 
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
     erro = Boolean(error);
   }
 
+  if (!erro) {
+    const { data } = await supabase.auth.getUser();
+    await registrarAcesso("link_email", data.user?.id);
+  }
   const destino = erro ? "/entrar?erro=link" : proximo;
   return NextResponse.redirect(new URL(destino, request.nextUrl.origin));
 }
