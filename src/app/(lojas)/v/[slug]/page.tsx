@@ -5,10 +5,12 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CartaoProdutoLoja, classeGrade } from "@/components/loja";
 import { linkWhatsapp } from "@/components/publico";
 import { CopiarLink, LinkRastreado } from "@/components/rastreio";
+import { linkDenuncia } from "@/lib/denuncias";
 import { classesFontesLoja } from "@/lib/fontes-loja";
 import { formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarVitrine } from "@/lib/publico";
@@ -92,6 +94,9 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
               <span className="sr-only"> (abre em nova aba)</span>
             </a>
             <CopiarLink url={url} className={`${botao} border border-neutral-300 text-neutral-900`} />
+            <Link href={linkDenuncia("vitrine", vitrine.id)} rel="nofollow" className={`${botao} min-h-11 border border-neutral-300 text-neutral-900`}>
+              Denunciar
+            </Link>
           </div>
         </div>
       </header>

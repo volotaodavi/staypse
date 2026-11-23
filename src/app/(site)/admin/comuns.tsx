@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
-const ACOES: Record<string, string> = {
+export const ACOES: Record<string, string> = {
   enviado_para_analise: "Enviado para análise",
   produtor_aprovado: "Produtor aprovado",
   produtor_recusado: "Produtor recusado",
@@ -13,6 +13,10 @@ const ACOES: Record<string, string> = {
   recebedor_status: "Status do recebedor atualizado",
   item_aprovado: "Item aprovado",
   item_recusado: "Item recusado",
+  usuario_suspenso: "Usuário suspenso",
+  usuario_reativado: "Usuário reativado",
+  configuracao_alterada: "Configuração alterada",
+  denuncia_decidida: "Denúncia decidida",
 };
 
 type Registro = {

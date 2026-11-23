@@ -12,6 +12,7 @@ import { GaleriaFotos } from "@/components/GaleriaFotos";
 import { classeBotaoLoja } from "@/components/loja";
 import { linkWhatsapp } from "@/components/publico";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
+import { linkDenuncia } from "@/lib/denuncias";
 import { comprasAbertas } from "@/lib/pedidos";
 import { formatarCnpj, formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarLoja, buscarProduto } from "@/lib/publico";
@@ -135,6 +136,12 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           </address>
           <Link href={`/loja/${slug}`} className="inline-block py-2 text-sm font-semibold text-[var(--loja-link)] underline">
             Ver todos os produtos da loja
+          </Link>
+          <Link href={linkDenuncia("item", item.id)} rel="nofollow" className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-[var(--loja-link)] underline">
+            Denunciar este produto
+          </Link>
+          <Link href={linkDenuncia("loja", loja.id)} rel="nofollow" className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-[var(--loja-link)] underline">
+            Denunciar esta loja
           </Link>
         </section>
       </div>

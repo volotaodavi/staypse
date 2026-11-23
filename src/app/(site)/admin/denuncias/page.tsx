@@ -2,6 +2,7 @@
 // e fica no log de auditoria. Marcar como procedente NÃO tira nada do ar sozinho:
 // o admin age na curadoria (recusar item ou loja) e a nota registra o motivo.
 import Link from "next/link";
+import { MOTIVOS_DENUNCIA as MOTIVOS } from "@/lib/denuncias";
 import { exigirPapel } from "@/lib/papeis";
 import { dataHora } from "@/lib/pedidos";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -13,14 +14,6 @@ export const metadata = { title: "Denúncias" };
 export const instant = false;
 
 const FILTROS: Record<string, string> = { aberta: "Abertas", procedente: "Procedentes", improcedente: "Improcedentes" };
-const MOTIVOS: Record<string, string> = {
-  produto_proibido: "Produto proibido",
-  golpe_ou_fraude: "Golpe ou fraude",
-  conteudo_enganoso: "Conteúdo enganoso",
-  direito_autoral: "Direito autoral",
-  conteudo_ofensivo: "Conteúdo ofensivo",
-  outro: "Outro motivo",
-};
 const ALVO: Record<string, string> = { item: "Produto", loja: "Loja", vitrine: "Vitrine" };
 const estiloCampo = "w-full rounded-xl border border-petroleo/60 bg-branco px-3 py-2 text-base";
 
