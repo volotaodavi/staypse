@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
       { source: "/:caminho*", headers: seguranca },
       // o link do convite tem um código secreto: nunca é enviado a outros sites
       { source: "/convite/:token", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      // o convite de afiliação por produto também leva um código secreto
+      { source: "/afiliar/:token", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
       // o link do pedido e do atendimento também levam um código secreto (?t=...)
       { source: "/pedido/:codigo", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
       { source: "/atendimento/:protocolo", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },

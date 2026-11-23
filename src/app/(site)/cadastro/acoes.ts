@@ -36,6 +36,8 @@ export async function cadastrar(
   // depois de confirmar o e-mail, volta para cá (só caminhos internos)
   const proximo = proximoSeguro(formData.get("proximo"));
   const convite = proximo.startsWith("/convite/");
+  // convite de afiliação por produto: a conta nasce como revendedor (afiliado)
+  if (proximo.startsWith("/afiliar/") && !papeis.includes("revendedor")) papeis.push("revendedor");
   if (papeis.length === 0 && !convite) return { valores, erro: "Escolha se quer ser produtor, revendedor ou os dois." };
   if (!aceitou) return { valores, erro: "Para criar a conta é preciso ter 18 anos ou mais e aceitar os Termos e a Política de Privacidade." };
 

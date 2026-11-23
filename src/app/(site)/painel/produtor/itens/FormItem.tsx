@@ -16,6 +16,8 @@ export type ItemInicial = {
   preco_centavos: number;
   comissao_percentual: number;
   aprovacao_afiliacao: string;
+  texto_divulgacao: string | null;
+  regras_divulgacao: string | null;
   categoria: string | null;
   tipo: string;
   estoque: number | null;
@@ -117,15 +119,20 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
 
       {/* quem pode se afiliar a este item */}
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Afiliação de revendedores</legend>
+        <legend className="mb-1 text-sm font-medium">Como o afiliado entra neste produto</legend>
+        <p className="mb-2 text-xs text-petroleo/70">
+          Afiliados com cadastro de recebimento aprovado podem pedir afiliação no catálogo. Você escolhe se a entrada é na
+          hora ou depende da sua análise. Você também pode mandar um link de convite a uma pessoa específica (aba Afiliados);
+          quem entra por convite já fica aprovado.
+        </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           {[
-            ["automatica", "Aprovação automática", "O item entra na vitrine do revendedor na hora."],
-            ["manual", "Aprovo manualmente", "Você aprova ou recusa cada revendedor."],
+            ["automatica", "Aprovação imediata", "Quem pede entra na hora e já pode divulgar o produto."],
+            ["manual", "Aprovo cada afiliado", "O pedido fica aguardando até você aprovar ou recusar na aba Afiliados. Vendas antes da aprovação não geram comissão."],
           ].map(([v, rotulo, dica]) => (
             <label
               key={v}
-              className="flex flex-1 cursor-pointer flex-col rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
+              className="flex min-h-11 flex-1 cursor-pointer flex-col rounded-2xl border border-petroleo/40 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-petroleo px-4 py-3 text-sm has-[:checked]:border-petroleo has-[:checked]:bg-gelo"
             >
               <span className="flex items-center gap-2 font-medium">
                 <input
@@ -137,10 +144,40 @@ export function FormItem({ item, uid, supabaseUrl }: { item?: ItemInicial; uid: 
                 />
                 {rotulo}
               </span>
-              <span className="pl-6 text-xs text-petroleo/70">{dica}</span>
+              <span className="pl-7 text-xs text-petroleo/70">{dica}</span>
             </label>
           ))}
         </div>
+      </fieldset>
+
+      {/* materiais e regras: só os afiliados do catálogo veem; mudar não pede nova análise */}
+      <fieldset className="flex flex-col gap-4 rounded-2xl bg-gelo p-4">
+        <legend className="sr-only">Divulgação pelos afiliados</legend>
+        <p className="text-sm font-medium">Divulgação pelos afiliados</p>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Texto pronto para o afiliado copiar
+          <textarea
+            name="texto_divulgacao"
+            rows={4}
+            maxLength={1000}
+            placeholder="Ex.: Conheça o Sérum Facial: pele mais uniforme em 30 dias. Peça pelo meu link."
+            defaultValue={item?.texto_divulgacao ?? ""}
+            className={estiloCampo}
+          />
+          <span className="text-xs font-normal text-petroleo/70">Até 1000 letras. Aparece no catálogo com o botão &quot;Copiar texto&quot;.</span>
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Regras de divulgação
+          <textarea
+            name="regras_divulgacao"
+            rows={3}
+            maxLength={1000}
+            placeholder="Ex.: Não use o nome da loja como palavra-chave no Google Ads. Não prometa desconto que a loja não oferece."
+            defaultValue={item?.regras_divulgacao ?? ""}
+            className={estiloCampo}
+          />
+          <span className="text-xs font-normal text-petroleo/70">Até 1000 letras. O afiliado lê antes de se afiliar.</span>
+        </label>
       </fieldset>
 
       <label className="flex flex-col gap-1 text-sm font-medium">

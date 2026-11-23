@@ -80,6 +80,9 @@ export async function salvarItem(_a: EstadoFormulario, f: FormData): Promise<Est
     categoria: NICHOS.some((n) => n.valor === categoria) ? categoria : null,
     // afiliação: automática (entra na vitrine na hora) ou aprovada pelo produtor
     aprovacao_afiliacao: texto(f, "aprovacao_afiliacao") === "manual" ? "manual" : "automatica",
+    // materiais e regras de divulgação (o afiliado vê no catálogo; mudar não pede nova análise)
+    texto_divulgacao: texto(f, "texto_divulgacao").slice(0, 1000) || null,
+    regras_divulgacao: texto(f, "regras_divulgacao").slice(0, 1000) || null,
     tipo,
     declaracao_nf: f.get("declaracao_nf") === "sim",
     // físico (digital: tudo vazio; estoque vazio = ilimitado)

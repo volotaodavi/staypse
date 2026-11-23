@@ -12,12 +12,14 @@ import { formatarPreco } from "@/lib/produtor";
 import { decidirAfiliacaoAcao } from "../../produtor/loja/acoes";
 import { AbasLoja } from "../AbasLoja";
 import { minhaLoja } from "../dados";
-import { bloquearAfiliadoAcao } from "./acoes";
+import { bloquearAfiliadoAcao, revogarConviteAfiliacao } from "./acoes";
+import { FormConviteAfiliacao } from "./FormConviteAfiliacao";
 import { lerAfiliadosDaLoja } from "./consulta";
 
 export const metadata = { title: "Afiliados" };
 export const instant = false;
 
+type Convite = { id: string; item_nome: string; criado_em: string; expira_em: string; situacao: string };
 type Pendente = { id: string; criado_em: string; items: { nome: string } | null; storefronts: { nome_exibicao: string | null; slug: string } | null };
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
@@ -27,8 +29,12 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
   const sp = await searchParams;
   const periodo = lerPeriodo(sp);
   const { supabase, loja } = await minhaLoja();
-  const [afiliados, { data: pendentesBrutos }] = await Promise.all([
+  const [afiliados, { data: convitesBrutos }, { data: itensAprovados }, { data: pendentesBrutos }] = await Promise.all([
     lerAfiliadosDaLoja(periodo),
+    supabase.rpc("meus_convites_afiliacao"),
+    loja
+      ? supabase.from("items").select("id, nome").eq("producer_id", loja.id).eq("status_aprovacao", "aprovado").order("nome")
+      : Promise.resolve({ data: [] }),
     loja
       ? supabase
           .from("afiliacoes")
@@ -39,6 +45,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
       : Promise.resolve({ data: [] }),
   ]);
   const pendentes = (pendentesBrutos ?? []) as unknown as Pendente[];
+  const convites = ((convitesBrutos ?? []) as Convite[]).filter((c) => c.situacao === "ativo");
 
   return (
     <div className="flex flex-col gap-5">
@@ -56,7 +63,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
         </h2>
         {pendentes.length === 0 ? (
           <p className="rounded-2xl bg-branco p-4 text-sm text-petroleo/80">
-            Nenhum pedido aguardando. Itens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.
+            Nenhum pedido aguardando. Produtos com Itens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.quot;Aprovo cada afiliadoItens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.quot; aparecem aqui quando alguém quiser indicá-los.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -84,6 +91,35 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
                   <button name="decisao" value="recusar" className="min-h-11 rounded-full border border-petroleo px-4 font-medium">
                     Recusar
                   </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-labelledby="t-convite" className="flex flex-col gap-2">
+        <h2 id="t-convite" className="text-base font-medium">
+          Convite por produto
+        </h2>
+        <p className="text-sm text-petroleo/80">
+          Gere um link para um produto e mande a um afiliado específico. Quem abre o link, com cadastro de recebimento
+          aprovado, entra já aprovado, mesmo em produtos com aprovação manual.
+        </p>
+        <FormConviteAfiliacao itens={(itensAprovados ?? []) as { id: string; nome: string }[]} loja={loja?.loja_nome || loja?.razao_social || "da Staypse"} />
+        {convites.length > 0 && (
+          <ul className="flex flex-col gap-2" aria-label="Convites ativos">
+            {convites.map((c) => (
+              <li key={c.id} className="flex flex-col gap-2 rounded-2xl bg-branco p-4 text-sm sm:flex-row sm:items-center" data-convite-ativo>
+                <p className="min-w-0 flex-1">
+                  <span className="font-medium">{c.item_nome}</span>
+                  <span className="block text-petroleo/75">
+                    Criado em {data(c.criado_em)} · vale até {data(c.expira_em)}
+                  </span>
+                </p>
+                <form action={revogarConviteAfiliacao}>
+                  <input type="hidden" name="convite_id" value={c.id} />
+                  <button className="min-h-11 rounded-full px-4 text-sm font-medium text-red-800 underline">Revogar convite</button>
                 </form>
               </li>
             ))}

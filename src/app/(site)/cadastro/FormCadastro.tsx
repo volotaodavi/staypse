@@ -38,6 +38,8 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
   const [estado, acao] = useActionState(cadastrar, undefined);
   // quem vem de um convite de loja não precisa escolher papel agora
   const convite = proximo?.startsWith("/convite/") ?? false;
+  // convite de afiliação por produto: a conta é de afiliado (revendedor)
+  const conviteAfiliacao = proximo?.startsWith("/afiliar/") ?? false;
 
   // Depois de enviar com sucesso, mostra só o aviso de confirmação.
   if (estado?.sucesso) return <Aviso estado={estado} />;
@@ -69,7 +71,7 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
         dica="Pelo menos 8 caracteres."
       />
 
-      <fieldset className="flex flex-col gap-2" hidden={convite}>
+      <fieldset className="flex flex-col gap-2" hidden={convite || conviteAfiliacao}>
         <legend className="mb-1 text-sm font-medium">Como você quer usar a Staypse?</legend>
         <OpcaoPapel
           valor="revendedor"

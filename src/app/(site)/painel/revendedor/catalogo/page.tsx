@@ -1,6 +1,7 @@
 // Catálogo de itens aprovados para o revendedor se afiliar.
-// Filtros (no endereço, ex.: ?nicho=beleza&tipo=digital&comissao=20):
-// nicho (categoria do item), tipo e comissão mínima.
+// Filtros (no endereço, ex.: ?nicho=beleza&tipo=digital&comissao=20&ordem=vendidos):
+// nicho (categoria do item), tipo, comissão mínima e ordem (recentes ou mais
+// vendidos nos últimos 7 dias; o banco só ordena, nenhum número de venda sai).
 import Link from "next/link";
 import { FotoItem } from "@/components/publico";
 import { NICHOS, ROTULO_NICHO } from "@/lib/lista";
@@ -9,6 +10,7 @@ import { formatarPreco } from "@/lib/produtor";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { estimativaComissao } from "@/lib/vitrine";
 import { BotaoAfiliar } from "./BotaoAfiliar";
+import { CopiarTexto } from "./CopiarTexto";
 
 export const metadata = { title: "Catálogo para afiliados" };
 export const instant = false;
@@ -26,6 +28,8 @@ type ItemCatalogo = {
   produtor_nome: string;
   loja_slug: string;
   minha_afiliacao_status: string | null;
+  texto_divulgacao: string | null;
+  regras_divulgacao: string | null;
 };
 
 const STATUS: Record<string, string> = {
@@ -40,10 +44,11 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
   const nicho = String(filtros.nicho ?? "");
   const tipo = String(filtros.tipo ?? "");
   const comissao = Number(filtros.comissao ?? 0) || 0;
+  const ordem = filtros.ordem === "vendidos" ? "vendidos" : "recentes";
 
   const supabase = await criarClienteServidor();
   const [{ data }, { data: vitrine }] = await Promise.all([
-    supabase.rpc("catalogo_afiliados"),
+    supabase.rpc("catalogo_afiliados", { p_ordem: ordem }),
     supabase.from("storefronts").select("id").eq("revendedor_id", usuario.id).maybeSingle(),
   ]);
   const itens = ((data ?? []) as ItemCatalogo[]).filter(
@@ -51,7 +56,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
       (!nicho || i.categoria === nicho) && (!tipo || i.tipo === tipo) && Number(i.comissao_percentual) >= comissao,
   );
 
-  const seletor = "rounded-xl border border-petroleo/60 bg-branco px-3 py-2.5 text-base";
+  const seletor = "min-h-11 rounded-xl border border-petroleo/60 bg-branco px-3 py-2.5 text-base";
 
   return (
     <div className="flex flex-col gap-5">
@@ -74,7 +79,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
       )}
 
       {/* filtros: formulário GET (funciona sem JavaScript) */}
-      <form className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Filtros">
+      <form className="grid grid-cols-2 gap-2 sm:grid-cols-5" aria-label="Filtros">
         <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
           Nicho
           <select name="nicho" defaultValue={nicho} className={seletor}>
@@ -105,7 +110,14 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
             ))}
           </select>
         </label>
-        <button className="self-end rounded-full bg-petroleo px-5 py-2.5 font-medium text-branco">Filtrar</button>
+        <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
+          Ordenar por
+          <select name="ordem" defaultValue={ordem} className={seletor}>
+            <option value="recentes">Mais recentes</option>
+            <option value="vendidos">Mais vendidos (7 dias)</option>
+          </select>
+        </label>
+        <button className="min-h-11 self-end rounded-full bg-petroleo px-5 py-2.5 font-medium text-branco">Filtrar</button>
       </form>
 
       {itens.length === 0 ? (
@@ -129,14 +141,44 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
                     <span className="text-lg font-extrabold">{formatarPreco(item.preco_centavos)}</span>
                     <span className="rounded-full bg-gelo px-2.5 py-1 text-sm font-medium">{pct}% de comissão</span>
                   </div>
-                  <p className="rounded-xl bg-petroleo px-3 py-2 text-sm text-gelo">
+                  <p className="rounded-xl bg-petroleo px-3 py-2 text-sm text-gelo" data-comissao-reais>
                     Você recebe <strong className="text-ciano">{formatarPreco(estimativaComissao(item.preco_centavos, pct))}</strong>{" "}
-                    por venda
+                    por venda ({pct}%)
                     <span className="block text-xs text-gelo/75">Estimativa antes das taxas, recebida no split automático.</span>
                   </p>
-                  <p className="text-xs text-petroleo/70">
-                    {item.aprovacao_afiliacao === "manual" ? "O produtor aprova cada afiliação." : "Aprovação automática."}
+                  <p className="rounded-xl bg-gelo px-3 py-2 text-xs" data-aprovacao={item.aprovacao_afiliacao}>
+                    {item.aprovacao_afiliacao === "manual" ? (
+                      <>
+                        <strong className="font-medium">Com análise:</strong> a loja aprova cada afiliado. Vendas antes da
+                        aprovação não geram comissão.
+                      </>
+                    ) : (
+                      <>
+                        <strong className="font-medium">Aprovação imediata:</strong> você entra na hora e já pode divulgar.
+                      </>
+                    )}
                   </p>
+                  {(item.texto_divulgacao || item.regras_divulgacao) && (
+                    <div className="flex flex-col gap-2" data-material>
+                      {item.texto_divulgacao && (
+                        <details className="rounded-xl border border-petroleo/20 px-3 py-1 text-sm">
+                          <summary className="flex min-h-11 cursor-pointer items-center font-medium">Texto de divulgação</summary>
+                          <p className="pb-2 break-words whitespace-pre-line" data-texto-divulgacao>
+                            {item.texto_divulgacao}
+                          </p>
+                        </details>
+                      )}
+                      {item.texto_divulgacao && <CopiarTexto texto={item.texto_divulgacao} />}
+                      {item.regras_divulgacao && (
+                        <details className="rounded-xl border border-petroleo/20 px-3 py-1 text-sm">
+                          <summary className="flex min-h-11 cursor-pointer items-center font-medium">Regras de divulgação da loja</summary>
+                          <p className="pb-2 break-words whitespace-pre-line" data-regras-divulgacao>
+                            {item.regras_divulgacao}
+                          </p>
+                        </details>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-auto pt-1">
                     {item.minha_afiliacao_status ? (
                       <p className="rounded-full bg-gelo px-4 py-2.5 text-center text-sm font-medium">{STATUS[item.minha_afiliacao_status]}</p>
