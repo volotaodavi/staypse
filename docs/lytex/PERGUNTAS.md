@@ -47,3 +47,22 @@ Nenhum endpoint, campo ou formato foi inventado.
 
 ## Fiscal
 27. A Lytex emite algum documento fiscal sobre a taxa dela? A nota do produto continua sendo do produtor (regra da Staypse)?
+
+## Cobrança, split e checkout (dúvidas novas da integração da cobrança com split)
+O código já cria a cobrança contra a interface `PaymentProvider`, guarda no pedido o id da cobrança e o
+retrato do split, aplica o status por webhook e por conciliação diária. Para trocar o simulador pela Lytex
+sem inventar nada, falta responder:
+
+28. A **Staypse** precisa de uma conta/recebedor próprio na Lytex para receber a taxa no split? Como obtemos o id dela (hoje é a variável `STAYPSE_RECEBEDOR_ID`)?
+29. Na cobrança, o comprador é levado à **página de pagamento da Lytex**: qual campo recebe a **URL de retorno**? Podemos receber o comprador de volta numa URL **sem dado sensível** (hoje o simulador devolve para o link secreto do pedido, que não deveria ir para terceiros)?
+30. Dá para enviar uma **referência nossa** (id do pedido) na cobrança e recebê-la de volta no webhook e na consulta? Se não, só o id da Lytex identifica a cobrança.
+31. **Meio de pagamento e parcelas**: escolhidos na página da Lytex ou enviados por nós na criação? O parcelamento com juros muda o **total cobrado** (o pedido guarda o total fixo)?
+32. A **soma das partes do split** precisa fechar o total, ou a taxa do meio sai da parte de um recebedor (hoje, a do produtor) e a soma fica menor que o total? Como a taxa efetiva volta (para conferir com o snapshot)?
+33. **Lista exata de status de cobrança** (criada, aguardando, em análise antifraude, paga, recusada, expirada, cancelada, estornada, chargeback) e como cada um chega por webhook e por consulta. Hoje mapeamos para: pendente, paga, recusada, expirada, estornada, estorno pendente, chargeback.
+34. **Cartão recusado**: o comprador pode tentar outro cartão na mesma cobrança? (hoje, "recusada" cancela o pedido). Quando **Pix e boleto expiram** e isso é configurável por cobrança?
+35. **Pagamento depois da expiração**: o que acontece com Pix/boleto pago depois de a cobrança expirar ou de o pedido ser cancelado? Chega evento? A Lytex devolve sozinha?
+36. **Estorno** é assíncrono? Há status/evento intermediário ("estorno solicitado") e outro de confirmação? (hoje só marcamos "reembolsado" quando o provedor confirma). Prazo de devolução por meio.
+37. **Estorno com saldo insuficiente**: se o afiliado ou a loja já sacou a parte dele, quem cobre? A Lytex pode **reter o repasse durante os 7 dias de arrependimento** (para a comissão ficar "pendente" até ser "liberada")? Ou repassa na liquidação normal e o estorno desfaz depois? Isso define o que o painel do afiliado pode prometer.
+38. **Chargeback**: existe evento de **abertura da contestação** (disputa em andamento) separado do **resultado** (perdido/ganho)? Dá para **contestar com evidências** via API e em que prazo? Quem é debitado no split (loja, afiliado, Staypse) e há taxa de chargeback? (hoje há só o status "chargeback" = perdido; "em disputa" não foi criado de propósito.)
+39. **Conciliação**: existe consulta **em lote** por período/status ou só por id? Limite de requisições? Há **reenvio de webhooks** perdidos (janela, endpoint)? Os webhooks podem chegar **fora de ordem** (ex.: estorno antes de pago)?
+40. **Liquidação do split**: em quantos dias cada recebedor recebe (Pix, cartão, boleto)? A Lytex informa a data prevista de liquidação por cobrança (para exibir "previsão" ao afiliado)?

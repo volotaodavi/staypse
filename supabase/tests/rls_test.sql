@@ -1959,7 +1959,7 @@ select id as cb_curso from public.items where nome = 'Curso de Maquiagem' \gset
 select id as cb_kit from public.items where nome = 'Kit Banho' \gset
 select estoque as cb_est0 from public.items where id = :'cb_kit' \gset
 :comoServidor
--- pedido do curso, indicado pela Bia (afiliada), comprado por uma conta logada (Fabi)
+-- pedido do curso, indicado pela Bia (vendedora split_direto da loja da Ana), comprado por uma conta logada (Fabi)
 select id as cb1, codigo as cb1_cod, token as cb1_tok from public.criar_pedido(:'cb_curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b',
   '00000000-0000-0000-0000-00000000000f', 'Cris', 'cris@teste.com', '52998224725', null, null, '2026-11-18') \gset
 select id as cb2 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Dani', 'dani@teste.com', '52998224725', null, null, '2026-11-18') \gset
@@ -1968,11 +1968,12 @@ select id as cb4 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 
 select id as cb5 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Gui', 'gui@teste.com', '52998224725', null, null, '2026-11-18') \gset
 
 -- dados do split: loja + indicação (afiliado) + taxa da Staypse vinda da configuração
-select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador') = 'afiliado'
-                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador_provedor_id') = 'rec_b'
+select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador') = 'vendedor_split'
+                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador_provedor_id') = 'rec_b_vend'
                 and (public.dados_split_pedido(:'cb1', 'mock') ->> 'produtor_provedor_id') is not null
-                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'taxa_staypse_percentual')::numeric = 5,
-                'split: loja, afiliado e taxa da Staypse (configuração) montados pelo banco');
+                and (public.dados_split_pedido(:'cb1', 'mock') ->> 'taxa_staypse_percentual')::numeric
+                  = (select (valor #>> '{}')::numeric from public.configuracoes where chave = 'taxa_staypse_percentual'),
+                'split: loja, indicação (vendedor split_direto da loja) e taxa da Staypse (configuração) montados pelo banco');
 select teste.ok((public.dados_split_pedido(:'cb2', 'mock') ->> 'indicador') = 'nenhum', 'split: pedido sem indicação não tem indicador');
 select teste.bloqueia(format('select public.dados_split_pedido(%L, %L)', :'cb1', 'lytex'),
                       'sem recebedor aprovado no provedor não se monta cobrança (nada de cobrar sem como repassar)');
@@ -1980,7 +1981,7 @@ select teste.bloqueia(format('select public.dados_split_pedido(%L, %L)', :'cb1',
 -- só o servidor registra a cobrança, uma vez só
 select public.registrar_cobranca(:'cb1', 'mock', 'mock_cob_t1', '/simulador-pagamentos/cobranca/mock_cob_t1',
                                  '{"versao":1,"partes":[{"papel":"produtor","valorCentavos":1}]}');
-select public.registrar_cobranca(id, 'mock', 'mock_cob_t' || n, null, '{"versao":1}')
+select public.registrar_cobranca(id::uuid, 'mock', 'mock_cob_t' || n, null, '{"versao":1}'::jsonb)
 from (values (:'cb2', 2), (:'cb3', 3), (:'cb4', 4), (:'cb5', 5)) v(id, n);
 select teste.bloqueia(format('select public.registrar_cobranca(%L, %L, %L, null, %L)', :'cb1', 'mock', 'mock_cob_outra', '{}'),
                       'o pedido guarda uma cobrança só');
@@ -2025,7 +2026,7 @@ select teste.bloqueia($$insert into public.eventos_pagamento (provedor, evento_i
 select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'paga', :'cb1') = 'confirmado', 'pedido indicado pago');
 select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') -> 'itens' -> 0 -> 'acesso') <> 'null'::jsonb, 'pago: conteúdo digital liberado');
 :comoB
-select teste.ok((select situacao from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'a_receber',
+select teste.ok((select situacao from public.minhas_comissoes('vendedor', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'a_receber',
                 'comissão pendente (pago, dentro do prazo de 7 dias)');
 :comoServidor
 select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t1', 'estorno_pendente', :'cb1') = 'sem_efeito', 'estorno pendente no provedor não muda o pedido');
@@ -2036,10 +2037,10 @@ select teste.ok((select status = 'chargeback' and chargeback_em is not null from
 select teste.ok((select count(*) = 1 from public.audit_log where acao = 'pedido_chargeback' and entidade_id = :'cb1'
                    and detalhes ->> 'cobranca_id' = 'mock_cob_t1'), 'chargeback registrado no audit_log (uma vez)');
 :comoB
-select teste.ok((select situacao from public.minhas_comissoes('afiliado', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'estornada',
-                'chargeback estorna a comissão do afiliado');
-select teste.ok((public.painel_indicador('afiliado', now() - interval '1 day', now() + interval '1 day') ->> 'estornada_centavos')::bigint > 0,
-                'painel do afiliado soma a comissão estornada');
+select teste.ok((select situacao from public.minhas_comissoes('vendedor', now() - interval '1 day', now() + interval '1 day') where pedido_id = :'cb1') = 'estornada',
+                'chargeback estorna a comissão de quem indicou');
+select teste.ok((public.painel_indicador('vendedor', now() - interval '1 day', now() + interval '1 day') ->> 'estornada_centavos')::bigint > 0,
+                'painel de quem indicou soma a comissão estornada');
 :comoServidor
 select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') ->> 'status') = 'chargeback', 'comprador vê o pedido em chargeback');
 select teste.ok((public.pedido_do_comprador(:'cb1_cod', :'cb1_tok') -> 'itens' -> 0 -> 'acesso') = 'null'::jsonb,
