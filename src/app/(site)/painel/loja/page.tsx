@@ -1,5 +1,6 @@
 // Painel da loja: resumo do período (cards), vendas por dia e atalhos.
 import Link from "next/link";
+import { connection } from "next/server";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";
 import { GraficoBarras } from "@/components/painel/GraficoBarras";
 import { NotaPagamentos, Numeros, inteiro, percentual } from "@/components/painel/Numeros";
@@ -24,6 +25,8 @@ type Resumo = {
 };
 
 export default async function PainelLoja({ searchParams }: PageProps<"/painel/loja">) {
+  // o período usa a data de hoje: espera a requisição antes de ler o relógio
+  await connection();
   const periodo = lerPeriodo(await searchParams);
   const { usuario, supabase, loja } = await minhaLoja();
 
