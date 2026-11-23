@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint --ignore-pattern \"legado/**\"",
     "test:db": "bash supabase/tests/rodar.sh",
+    "seed:demo": "node --env-file-if-exists=.env.local scripts/seed-demo.mjs",
     "test:unit": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {

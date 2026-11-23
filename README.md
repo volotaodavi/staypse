@@ -69,6 +69,24 @@ npm run test:db               # testes das regras do banco (RLS, permissões, co
 npm run build                  # checa tipos e compila
 ```
 
+### Dados de demonstração
+
+```bash
+npm run seed:demo
+```
+
+Cria (e recria, sem duplicar) 2 lojas aprovadas com 7 itens, 3 afiliados com
+vitrine, 2 vendedores próprios (um "folha", um "split direto"), 20 pedidos em
+estados variados e 200 cliques nos últimos 30 dias. Tudo passa pelas regras do
+banco (RPCs, RLS e gatilhos) e só mexe em usuários `@demo.staypse.invalid`.
+
+- Lê `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SECRET_KEY` do ambiente (ou do `.env.local`).
+- Senha dos usuários: `SEED_SENHA` (padrão local `SenhaDemo123`).
+- **Recusa rodar** se a URL não for `127.0.0.1`/`localhost`, a menos que
+  `SEED_PERMITIR_REMOTO=1` (só para ambiente de teste; nunca produção).
+- Logins: `admin@`, `loja.aurora@`, `loja.trilha@`, `afiliada.bia@`, `afiliado.leo@`,
+  `afiliada.duda@`, `vendedora.carla@` e `vendedor.marcos@` + `demo.staypse.invalid`.
+
 ---
 
 ## Subir no Supabase de verdade (projeto "staypse", São Paulo)
