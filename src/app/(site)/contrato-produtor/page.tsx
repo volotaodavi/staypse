@@ -137,6 +137,14 @@ export default function ContratoProdutor() {
               <li>Os pagamentos são processados por instituição de pagamento parceira. O Produtor mantém cadastro de recebedor válido nessa instituição para receber a sua parte diretamente no split.</li>
               <li>A Staypse <strong className={f}>não recebe, não guarda e não repassa</strong> o dinheiro das vendas.</li>
               <li>A taxa da plataforma (percentual mais valor fixo por venda, conforme o meio de pagamento e o número de parcelas) é a única taxa cobrada do Produtor, já inclui o processamento do pagamento, é informada antes da publicação de cada produto e é descontada automaticamente no split. O comprador não paga taxa.</li>
+              <li>
+                A taxa da plataforma é dividida entre a loja e o afiliado, na proporção da parte de cada um no valor do pedido; vendedores próprios da loja
+                não pagam taxa. A tabela vigente está em{" "}
+                <Link href="/taxas" className="font-medium underline">
+                  Taxas para lojas
+                </Link>
+                .
+              </li>
             </Itens>
           ),
         },

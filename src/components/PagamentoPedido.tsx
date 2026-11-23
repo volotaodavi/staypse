@@ -6,12 +6,12 @@ import QRCode from "qrcode";
 import type { CSSProperties } from "react";
 import { CopiarLink } from "@/components/rastreio";
 import { classesFontesLoja } from "@/lib/fontes-loja";
-import { ROTULO_MEIO, valorParcelaCentavos, type Meio } from "@/lib/pagamentos/parcelas";
+import { valorParcelaCentavos, type Meio } from "@/lib/pagamentos/parcelas";
 import type { DadosPagamento } from "@/lib/pagamentos/tipos";
 import { formatarPreco } from "@/lib/produtor";
 import { montarTema } from "@/lib/tema";
 
-export type TemaPedido = { cor_principal: string | null; cor_destaque: string | null; fonte: string | null; layout: string | null; loja_nome: string | null };
+export type TemaPedido = { loja_cor_principal: string | null; loja_cor_destaque: string | null; loja_fonte: string | null; loja_layout: string | null; loja_nome: string | null };
 
 const botaoLoja =
   "inline-flex min-h-12 items-center justify-center rounded-md bg-[var(--loja-principal)] px-6 py-3 text-base font-semibold text-[var(--loja-principal-texto)] hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-neutral-900";
@@ -31,7 +31,7 @@ export async function PagamentoPedido({
   urlPagamento,
   totalCentavos,
   simulado,
-  carregandoPagar,
+  semCobranca,
 }: {
   tema: TemaPedido;
   meio: Meio | null;
@@ -41,9 +41,9 @@ export async function PagamentoPedido({
   totalCentavos: number;
   simulado: boolean;
   // quando ainda não há cobrança: formulário "Pagar agora" (vem da página)
-  carregandoPagar?: React.ReactNode;
+  semCobranca?: React.ReactNode;
 }) {
-  const t = montarTema({ principal: tema.cor_principal, destaque: tema.cor_destaque, fonte: tema.fonte, layout: tema.layout });
+  const t = montarTema({ principal: tema.loja_cor_principal, destaque: tema.loja_cor_destaque, fonte: tema.loja_fonte, layout: tema.loja_layout });
   const qr = meio === "pix" && pagamento?.pixCopiaECola ? await QRCode.toString(pagamento.pixCopiaECola, { type: "svg", margin: 1, errorCorrectionLevel: "M" }) : null;
   const vence = dataBr(pagamento?.venceEm);
 
@@ -134,7 +134,7 @@ export async function PagamentoPedido({
             Pagar agora
           </a>
         )}
-        {!urlPagamento && !pagamento && carregandoPagar}
+        {!urlPagamento && !pagamento && semCobranca}
 
         {simulado && urlPagamento && meio && meio !== "cartao" && (
           <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">

@@ -77,6 +77,9 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
   const st = statusExibicao(p.status, p.order_items);
   const pago = p.status !== "aguardando_pagamento" && p.status !== "cancelado";
   const comissao = p.order_items.reduce((s, i) => s + Math.floor((i.quantidade * i.preco_unitario_centavos * Number(i.comissao_percentual)) / 100), 0);
+  const { data: valoresLoja } = await supabase.rpc("loja_valores_pedidos", { p_ids: [p.id] });
+  const taxa = valoresLoja?.[0] ? Number(valoresLoja[0].taxa_centavos) : null;
+  const recebe = valoresLoja?.[0] ? Number(valoresLoja[0].recebe_centavos) : null;
   const fisico = p.order_items.some((i) => i.tipo_item === "fisico");
 
   return (
@@ -186,6 +189,18 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
               <dt>Total</dt>
               <dd>{formatarPreco(p.total_centavos)}</dd>
             </div>
+            {taxa != null && recebe != null && (
+              <>
+                <div className="flex justify-between gap-3 border-t border-petroleo/10 pt-2 text-petroleo/75" data-taxa-plataforma>
+                  <dt>Taxa da plataforma (descontada do repasse)</dt>
+                  <dd>{formatarPreco(taxa)}</dd>
+                </div>
+                <div className="flex justify-between gap-3 font-medium" data-voce-recebe>
+                  <dt>Você recebe</dt>
+                  <dd>{formatarPreco(recebe)}</dd>
+                </div>
+              </>
+            )}
           </dl>
         </section>
 

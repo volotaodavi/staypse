@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const sp = Object.fromEntries(new URL(request.url).searchParams);
   const { periodo, pedidos } = await lerPedidosDaLoja(sp);
   const csv = montarCsv(
-    ["Pedido", "Data", "Itens", "Origem", "Situação", "Nota fiscal", "Total (R$)"],
+    ["Pedido", "Data", "Itens", "Origem", "Situação", "Nota fiscal", "Total (R$)", "Taxa da plataforma (R$)", "Você recebe (R$)"],
     pedidos.map((p) => [
       p.codigo,
       dataHora(p.criado_em),
@@ -20,6 +20,8 @@ export async function GET(request: Request) {
       STATUS_EXIBICAO[statusExibicao(p.status, p.order_items)],
       p.order_items.every((i) => i.nota_fiscal_numero) ? "Emitida" : "Pendente",
       reais(p.total_centavos),
+      p.taxa_centavos == null ? "" : reais(p.taxa_centavos),
+      p.recebe_centavos == null ? "" : reais(p.recebe_centavos),
     ]),
   );
   return new Response(csv, {

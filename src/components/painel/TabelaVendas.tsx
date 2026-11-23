@@ -39,6 +39,7 @@ export function TabelaVendas({
           { titulo: "Valor pago", numero: true },
           { titulo: "Venda", numero: true },
           { titulo: "Comissão", numero: true },
+          ...(papel === "afiliado" ? [{ titulo: "Taxa da plataforma", numero: true }, { titulo: "Você recebe", numero: true }] : []),
           { titulo: "Situação" },
         ]}
         linhas={vendas.map((v, i) => ({
@@ -54,6 +55,12 @@ export function TabelaVendas({
             v.valor_pago_centavos == null ? "Aguardando pagamento" : formatarPreco(Number(v.valor_pago_centavos)),
             formatarPreco(Number(v.valor_centavos)),
             formatarPreco(Number(v.comissao_centavos)),
+            ...(papel === "afiliado"
+              ? [
+                  v.taxa_centavos == null ? "Sem cobrança" : formatarPreco(v.taxa_centavos),
+                  v.recebe_centavos == null ? "Sem cobrança" : formatarPreco(v.recebe_centavos),
+                ]
+              : []),
             <span key="s" data-situacao={v.situacao}>
               {SITUACAO_COMISSAO[v.situacao] ?? v.situacao}
               {v.situacao === "a_receber" && v.previsao && <span className="block text-petroleo/75">previsão: após {data(v.previsao)}</span>}
@@ -64,7 +71,7 @@ export function TabelaVendas({
       />
       <p className="text-sm text-petroleo/75">
         &quot;Pendente&quot;: venda paga, ainda no prazo de 7 dias em que o comprador pode desistir. Depois disso, a comissão é
-        liberada e repassada pelo split. Se o comprador desistir, pedir reembolso ou contestar o pagamento (chargeback), a comissão é estornada.
+        liberada e repassada pelo split, já sem a taxa da plataforma sobre a sua comissão. Se o comprador desistir, pedir reembolso ou contestar o pagamento (chargeback), a comissão é estornada.
       </p>
     </section>
   );

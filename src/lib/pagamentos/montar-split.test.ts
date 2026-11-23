@@ -27,10 +27,14 @@ const soma = (p: { valorCentavos: number }[]) => p.reduce((s, x) => s + x.valorC
 test("loja, afiliado e Staypse recebem; soma das partes + custo Lytex fecha com o total", () => {
   const { partes, snapshot } = montarSplit(base, "rec_staypse", "pix");
   assert.deepEqual(partes.map((p) => p.recebedorProvedorId), ["rec_loja", "rec_afiliada", "rec_staypse"]);
-  assert.equal(partes[1].valorCentavos, 5998); // 20% de R$ 299,90 (sem o frete)
   const r = snapshot.resultado;
+  assert.equal(r.comissaoDevidaCentavos, 5998); // 20% de R$ 299,90 (sem o frete)
   assert.equal(r.taxaTotalCentavos, Math.floor((31980 * 150) / 10000) + 200); // 479 + 200
-  assert.equal(partes[0].valorCentavos, 31980 - r.taxaTotalCentavos - 5998);
+  // o afiliado paga a fração da taxa proporcional à comissão dele no total
+  assert.equal(r.taxaAfiliadoCentavos, Math.floor((r.taxaTotalCentavos * 5998) / 31980));
+  assert.equal(r.taxaLojaCentavos + r.taxaAfiliadoCentavos, r.taxaTotalCentavos);
+  assert.equal(partes[1].valorCentavos, 5998 - r.taxaAfiliadoCentavos);
+  assert.equal(partes[0].valorCentavos, 31980 - 5998 - r.taxaLojaCentavos);
   assert.equal(soma(partes) + r.custoLytexCentavos, base.total_centavos);
   assert.equal(snapshot.versao, 2);
   assert.equal(snapshot.partes.length, 3);
@@ -57,9 +61,20 @@ test("vendedor na folha não entra no split (a loja paga fora)", () => {
   assert.equal(snapshot.resultado.comissaoDevidaCentavos, 5998);
 });
 
-test("vendedor split_direto recebe a comissão como o afiliado", () => {
-  const { snapshot } = montarSplit({ ...base, indicador: "vendedor_split" }, "rec_staypse", "pix");
+test("vendedor split_direto recebe a comissão CHEIA e não paga taxa (a loja paga tudo)", () => {
+  const { snapshot, partes } = montarSplit({ ...base, indicador: "vendedor_split" }, "rec_staypse", "pix");
+  const r = snapshot.resultado;
   assert.equal(snapshot.partes[1].indicador, "vendedor_split");
+  assert.equal(partes[1].valorCentavos, 5998);
+  assert.equal(r.taxaAfiliadoCentavos, 0);
+  assert.equal(r.taxaLojaCentavos, r.taxaTotalCentavos);
+  assert.equal(soma(partes) + r.custoLytexCentavos, base.total_centavos);
+});
+
+test("só a loja (sem indicação): a loja paga a taxa total", () => {
+  const { snapshot } = montarSplit({ ...base, indicador: "nenhum", comissao_percentual: 0, indicador_provedor_id: null }, "rec_staypse", "pix");
+  assert.equal(snapshot.resultado.taxaLojaCentavos, snapshot.resultado.taxaTotalCentavos);
+  assert.equal(snapshot.resultado.taxaAfiliadoCentavos, 0);
 });
 
 test("comissão sem recebedor do indicador não monta a cobrança", () => {

@@ -8,6 +8,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { formatarCnpj, formatarPreco } from "@/lib/produtor";
 import { ROTULO_ENTREGA, type ModoEntrega } from "@/lib/pedidos";
+import { MEIOS, ROTULO_MEIO, maxParcelas, valorParcelaCentavos, type Meio } from "@/lib/pagamentos/parcelas";
 import { comprar, type EstadoCompra } from "./acoes";
 
 type Opcoes = {
@@ -67,7 +68,7 @@ function Mensagem({ texto, campo }: { texto?: string; campo?: string | null }) {
 
 // Os 3 passos da compra (a ordem é real: dados, revisão, pagamento)
 function Passos({ atual }: { atual: 0 | 1 }) {
-  const passos = ["Dados e entrega", "Revisão do pedido", "Pagamento"];
+  const passos = ["Dados e entrega", "Pagamento e revisão", "Pagar"];
   return (
     <nav aria-label="Etapas da compra">
       <ol className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
@@ -76,7 +77,7 @@ function Passos({ atual }: { atual: 0 | 1 }) {
             <span
               aria-hidden="true"
               className={`flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums ${
-                i === atual ? "bg-[var(--loja-principal)] text-[var(--loja-principal-texto)]" : i < atual ? "bg-neutral-900 text-white" : "border border-neutral-400"
+                i <= atual ? "bg-[var(--loja-principal)] text-[var(--loja-principal-texto)]" : "border border-neutral-500 bg-white"
               }`}
             >
               {i + 1}
@@ -113,6 +114,8 @@ export function FormCompra({
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [avisoCep, setAvisoCep] = useState("");
   const [quantidade, setQuantidade] = useState(v.quantidade || "1");
+  const [meioEscolhido, setMeioEscolhido] = useState<string>(v.meio ?? "");
+  const [parcelasEscolhidas, setParcelasEscolhidas] = useState<string>(v.parcelas || "1");
   const tituloResumo = useRef<HTMLHeadingElement>(null);
   const campoErro = estado?.etapa === "dados" ? campoDoErro(estado.erro) : null;
   // marca o campo com erro e liga à mensagem
@@ -141,7 +144,11 @@ export function FormCompra({
       <div className="flex flex-col gap-6">
         <Passos atual={r ? 1 : 0} />
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-          <aside aria-label="Seu pedido" className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1">
+          <aside
+            aria-label="Seu pedido"
+            className="flex flex-col gap-4 overflow-hidden rounded-xl border border-neutral-300 bg-white p-4 shadow-sm lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1"
+          >
+            <div className="-mx-4 -mt-4 h-1.5 bg-[var(--loja-principal)]" aria-hidden="true" />
             <div className="flex gap-3">
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-100">
                 {vitrine.foto && <Image src={vitrine.foto} alt="" fill sizes="64px" className="object-cover" />}
@@ -174,7 +181,13 @@ export function FormCompra({
               <li>
                 <span className="font-medium text-neutral-900">Loja oficial {vitrine.lojaNome}</span>
               </li>
-              <li>Pagamento processado pela Lytex. Você não digita dados de cartão nesta página.</li>
+              <li className="flex items-center gap-1.5" data-selo-lytex>
+                <svg aria-hidden="true" viewBox="0 0 16 16" className="h-4 w-4 shrink-0 fill-none stroke-current" strokeWidth="1.5">
+                  <rect x="3" y="7" width="10" height="7" rx="1.5" />
+                  <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+                </svg>
+                Pagamento processado pela Lytex
+              </li>
               <li>
                 Arrependimento em 7 dias.{" "}
                 <Link href="/reembolso" target="_blank" className="inline-flex min-h-11 items-center font-semibold text-neutral-900 underline">
@@ -207,12 +220,46 @@ export function FormCompra({
 
   if (estado?.etapa === "resumo" && estado.resumo) {
     const r = estado.resumo;
+    const meiosDisponiveis: Meio[] = estado.meios?.length ? estado.meios : [...MEIOS];
+    const meio = (meiosDisponiveis.includes(meioEscolhido as Meio) ? meioEscolhido : meiosDisponiveis[0]) as Meio;
+    const parcelas = String(Math.min(Number(parcelasEscolhidas) || 1, maxParcelas(r.total_centavos)));
     return moldura(
       <form action={acao} className="flex flex-col gap-6">
         {fixos}
         {Object.entries(estado.valores).map(([k, valor]) =>
-          ["item", "loja", "produto"].includes(k) ? null : <input key={k} type="hidden" name={k} value={valor} />,
+          ["item", "loja", "produto", "meio", "parcelas"].includes(k) ? null : <input key={k} type="hidden" name={k} value={valor} />,
         )}
+        <fieldset className="flex flex-col gap-3" data-escolha-pagamento>
+          <legend className="mb-2 text-xl font-semibold">Como você quer pagar</legend>
+          <div className="flex flex-col gap-2">
+            {meiosDisponiveis.map((m) => (
+              <label
+                key={m}
+                className="flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border border-neutral-400 bg-white px-4 py-3 text-sm has-[:checked]:border-[var(--loja-link)] has-[:checked]:bg-[color-mix(in_srgb,var(--loja-principal)_7%,white)] has-[:checked]:shadow-[inset_0_0_0_1px_var(--loja-link)] has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-neutral-900"
+              >
+                <input type="radio" name="meio" value={m} checked={meio === m} onChange={() => setMeioEscolhido(m)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--loja-link)]" />
+                <span className="min-w-0">
+                  <span className="block text-base font-semibold">{ROTULO_MEIO[m]}</span>
+                  <span className="block text-neutral-700">{DICA_MEIO[m](r.total_centavos)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {meio === "cartao" && (
+            <label className={rotulo}>
+              Parcelas
+              <select name="parcelas" value={parcelas} onChange={(e) => setParcelasEscolhidas(e.target.value)} className={`${campo} min-h-12`} data-parcelas>
+                {Array.from({ length: maxParcelas(r.total_centavos) }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {n === 1 ? `À vista, ${formatarPreco(r.total_centavos)}` : `${n}x de ${formatarPreco(valorParcelaCentavos(r.total_centavos, n))} sem juros`}
+                  </option>
+                ))}
+              </select>
+              <span className="text-xs font-normal text-neutral-700">Você digita os dados do cartão na página segura da Lytex.</span>
+            </label>
+          )}
+        </fieldset>
+
         <section aria-labelledby="titulo-resumo" className="flex flex-col gap-4">
           <h2 id="titulo-resumo" ref={tituloResumo} tabIndex={-1} className="text-xl font-semibold outline-none">
             Resumo do pedido
@@ -257,8 +304,8 @@ export function FormCompra({
               </Bloco>
             )}
             <Bloco titulo="Pagamento">
-              Processado pela instituição de pagamento parceira, que divide o valor automaticamente entre a loja, quem
-              indicou e a Staypse. A Staypse não recebe nem guarda o dinheiro.
+              Processado pela Lytex, instituição de pagamento parceira. A Staypse não recebe nem guarda o seu dinheiro, e dados de
+              cartão nunca passam por aqui.
             </Bloco>
             <Bloco titulo="Seu direito de desistir">
               Você pode desistir em até 7 dias depois de receber
@@ -294,7 +341,7 @@ export function FormCompra({
             </span>
           </label>
           <Mensagem texto={estado.erro} />
-          <Enviar intencao="confirmar">Confirmar pedido: {formatarPreco(r.total_centavos)}</Enviar>
+          <Enviar intencao="confirmar">{rotuloConfirmar(meio, r.total_centavos, Number(parcelas))}</Enviar>
           <button
             type="submit"
             name="intencao"
@@ -512,4 +559,17 @@ function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode
       <dd className="mt-0.5 leading-relaxed">{children}</dd>
     </div>
   );
+}
+
+const DICA_MEIO: Record<Meio, (total: number) => string> = {
+  pix: () => "Aprovação na hora, com QR Code ou copia e cola",
+  boleto: () => "Compensa em até 2 dias úteis",
+  cartao: (total) => (maxParcelas(total) > 1 ? `Em até ${maxParcelas(total)}x sem juros` : "À vista"),
+};
+
+function rotuloConfirmar(meio: Meio, total: number, parcelas: number) {
+  const preco = formatarPreco(total);
+  if (meio === "pix") return `Gerar Pix de ${preco}`;
+  if (meio === "boleto") return `Gerar boleto de ${preco}`;
+  return parcelas > 1 ? `Pagar em ${parcelas}x de ${formatarPreco(valorParcelaCentavos(total, parcelas))}` : `Pagar ${preco} no cartão`;
 }

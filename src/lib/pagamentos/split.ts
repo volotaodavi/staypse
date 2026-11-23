@@ -4,8 +4,12 @@
 //
 // Regras:
 //  * a soma das partes (+ o custo da Lytex retido por ela) é EXATAMENTE o total pago;
-//  * a loja paga UMA taxa ("taxa total" da modalidade, percentual + fixo, sobre o total da
-//    transação) que já embute o custo da Lytex; receita da Staypse = taxa total − custo Lytex;
+//  * a "taxa total" da modalidade (percentual + fixo, sobre o total da transação) já embute o custo da
+//    Lytex; receita da Staypse = taxa total − custo Lytex;
+//  * a taxa total é paga pela LOJA e pelo AFILIADO, proporcional à parte de cada um no valor do pedido
+//    (padrão Hotmart): taxa do afiliado = taxa total × comissão ÷ total (para baixo); a loja paga o resto
+//    (o centavo residual é dela). VENDEDOR próprio (split direto ou folha) NÃO paga taxa: recebe a comissão
+//    cheia e a loja paga a taxa inteira;
 //  * a comissão incide sobre o valor dos produtos (subtotal), nunca sobre o frete;
 //  * vendedor "na folha" não tem recebedor: a parte dele fica com a loja, que paga fora;
 //  * o comprador não paga taxa nenhuma; a loja absorve (desconto no repasse);
@@ -26,10 +30,12 @@ export type EntradaSplit = {
 };
 
 export type ResultadoSplit = {
-  produtorCentavos: number;
-  indicadorCentavos: number; // afiliado ou vendedor split_direto (0 se não houver ou se for "folha")
+  produtorCentavos: number; // o que a loja recebe (já sem a parte dela na taxa e sem a comissão)
+  indicadorCentavos: number; // o que o afiliado ou vendedor split_direto recebe (afiliado: comissão menos a parte dele na taxa; 0 se "folha")
   staypseCentavos: number; // receita da Staypse = taxa total − custo Lytex estimado
-  taxaTotalCentavos: number; // o que a loja paga (único número visível para ela)
+  taxaTotalCentavos: number; // taxa da plataforma da venda (loja + afiliado); a divisão com a Lytex é interna
+  taxaLojaCentavos: number; // parte da loja na taxa total
+  taxaAfiliadoCentavos: number; // parte do afiliado na taxa total (0 para vendedor próprio e sem indicação)
   custoLytexCentavos: number; // INTERNO: estimativa do que a Lytex cobra (meio + repasses)
   comissaoDevidaCentavos: number; // comissão calculada (no caso "folha", paga pela loja fora do split)
 };
@@ -49,9 +55,12 @@ export function calcularSplit(e: EntradaSplit): ResultadoSplit {
   const taxaTotal = taxaTotalCentavos(e.totalCentavos, e.taxaTotal);
   // comissão sempre para baixo (nunca paga um centavo a mais do que o combinado)
   const comissao = Math.floor((e.subtotalCentavos * e.comissaoPercentual) / 100);
-  const indicador = e.indicador === "afiliado" || e.indicador === "vendedor_split" ? comissao : 0;
-  // a loja absorve a taxa total e os arredondamentos
-  const produtor = e.totalCentavos - taxaTotal - indicador;
+  const comissaoNoSplit = e.indicador === "afiliado" || e.indicador === "vendedor_split" ? comissao : 0;
+  // só o AFILIADO paga a taxa, proporcional à comissão dele no total do pedido; o resíduo é da loja
+  const taxaAfiliado = e.indicador === "afiliado" && e.totalCentavos > 0 ? Math.floor((taxaTotal * comissao) / e.totalCentavos) : 0;
+  const taxaLoja = taxaTotal - taxaAfiliado;
+  const indicador = comissaoNoSplit - taxaAfiliado;
+  const produtor = e.totalCentavos - comissaoNoSplit - taxaLoja;
   if (produtor < 0) throw new Error("taxas_maiores_que_a_venda");
 
   // custo estimado da Lytex: meio de pagamento + repasse de cada recebedor (loja, indicador e Staypse)
@@ -67,6 +76,8 @@ export function calcularSplit(e: EntradaSplit): ResultadoSplit {
     indicadorCentavos: indicador,
     staypseCentavos: staypse,
     taxaTotalCentavos: taxaTotal,
+    taxaLojaCentavos: taxaLoja,
+    taxaAfiliadoCentavos: taxaAfiliado,
     custoLytexCentavos: custo,
     comissaoDevidaCentavos: comissao,
   };

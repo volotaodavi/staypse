@@ -7,9 +7,9 @@ teste de mercado) e de marketing-skills:pricing (preço entre a alternativa e o 
 ## 1. Quem paga e o que cada um vê
 
 - **A loja (vendedor) paga a taxa**, descontada no repasse: loja recebe total, menos comissão, menos taxa total.
-- **Afiliado e vendedor não pagam taxa**: recebem a comissão cheia (sobre os produtos, sem frete). Para eles a taxa não existe.
+- **A taxa é de lojas e afiliados, rateada pela parte de cada um** (padrão Hotmart): a taxa do afiliado = taxa total × comissão ÷ total do pedido (para baixo); a loja paga o resto (centavo residual é dela). **Vendedor próprio da loja (folha ou split direto) não paga taxa**: recebe a comissão cheia e a loja paga a taxa inteira. Sem indicação, a loja paga tudo. Cada um vê só "Taxa da plataforma" e "Você recebe"; a divisão Lytex/Staypse é interna (`split_snapshot`: `taxaLojaCentavos`, `taxaAfiliadoCentavos`).
 - **O comprador nunca vê taxa**: paga o preço do anúncio (+ frete). Sem "taxa de serviço" no checkout nem no pedido.
-- **A loja vê UM número**, "Taxa da plataforma" (percentual + fixo por modalidade). O custo Lytex e a receita Staypse
+- **Loja e afiliado veem UM número**, "Taxa da plataforma" (percentual + fixo por modalidade). O custo Lytex e a receita Staypse
   são internos (só admin; `orders.split_snapshot` e `configuracoes` não são legíveis por usuário comum).
 - A taxa incide sobre o total da transação (a Lytex cobra sobre o total, frete incluso). Arredondamento: taxa para baixo (a favor da loja), custo Lytex estimado para cima (a favor da Staypse na margem conservadora).
 
@@ -49,13 +49,13 @@ Célula: taxa total cobrada | custo Lytex estimado | **margem da Staypse** (calc
 
 | Modalidade | R$ 30 | R$ 80 | R$ 150 | R$ 300 | R$ 800 |
 |---|---|---|---|---|---|
-| Pix | 2,45 / 2,24 / **0,21** | 3,20 / 2,72 / **0,48** | 4,25 / 3,40 / **0,85** | 6,50 / 3,85 / **2,65** | 14,00 / 3,96 / **10,04** |
-| Boleto | 2,75 / 2,24 / **0,51** | 3,50 / 2,72 / **0,78** | 4,55 / 3,40 / **1,15** | 6,80 / 3,85 / **2,95** | 14,30 / 3,96 / **10,34** |
-| Cartão 1x | 1,97 / 1,42 / **0,55** | 4,42 / 3,58 / **0,84** | 7,85 / 6,62 / **1,23** | 15,20 / 12,17 / **3,03** | 39,70 / 29,23 / **10,47** |
-| Cartão 2x a 6x | 2,15 / 1,56 / **0,59** | 4,90 / 3,98 / **0,92** | 8,75 / 7,36 / **1,39** | 17,00 / 13,67 / **3,33** | 44,50 / 33,24 / **11,26** |
-| Cartão 7x a 12x | 2,33 / 1,68 / **0,65** | 5,38 / 4,29 / **1,09** | 9,65 / 7,95 / **1,70** | 18,80 / 14,87 / **3,93** | 49,30 / 36,45 / **12,85** |
+| Pix | 2,45 / 2,25 / **0,20** | 3,20 / 2,73 / **0,47** | 4,25 / 3,39 / **0,86** | 6,50 / 3,84 / **2,66** | 14,00 / 3,96 / **10,04** |
+| Boleto | 2,75 / 2,25 / **0,50** | 3,50 / 2,72 / **0,78** | 4,55 / 3,39 / **1,16** | 6,80 / 3,83 / **2,97** | 14,30 / 3,96 / **10,34** |
+| Cartão 1x | 1,97 / 1,42 / **0,55** | 4,42 / 3,58 / **0,84** | 7,85 / 6,62 / **1,23** | 15,20 / 12,13 / **3,07** | 39,70 / 29,23 / **10,47** |
+| Cartão 2x a 6x | 2,15 / 1,57 / **0,58** | 4,90 / 3,98 / **0,92** | 8,75 / 7,36 / **1,39** | 17,00 / 13,62 / **3,38** | 44,50 / 33,24 / **11,26** |
+| Cartão 7x a 12x | 2,33 / 1,69 / **0,64** | 5,38 / 4,30 / **1,08** | 9,65 / 7,96 / **1,69** | 18,80 / 14,82 / **3,98** | 49,30 / 36,45 / **12,85** |
 
-**Margem mínima: R$ 0,21 (Pix R$ 30 com afiliado)**; todas as 25 células ficam positivas. Sem afiliado, a margem é igual ou maior.
+**Margem mínima: R$ 0,20 (Pix R$ 30 com afiliado, com a taxa rateada entre loja e afiliado)**; todas as 25 células ficam positivas. Sem afiliado, a margem é igual ou maior.
 Peso real: o fixo carrega as vendas pequenas, o percentual carrega as grandes. Pedido abaixo de ~R$ 3 (sem afiliado) ou ~R$ 10 (com afiliado) não cobre o custo do Pix (o código recusa
 com `taxa_menor_que_o_custo`; recomendado pedido mínimo de R$ 10 no anúncio). Se a Lytex não cobrar o repasse da parte da Staypse, a margem sobe R$ 0,10.
 Validade do contrato: 17/04/2027. Depois, se voltar o padrão (Pix 0,99% mín. R$ 1,89; boleto R$ 1,89), o Pix de R$ 800 com afiliado ainda deixa ~R$ 4. Revisar em fev/2027 pelo admin (`custo_lytex_*`), sem deploy.

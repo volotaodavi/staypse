@@ -212,6 +212,13 @@ export default function Termos() {
               <li>Os pagamentos são processados por instituição de pagamento parceira, que divide automaticamente o valor de cada venda entre as partes da venda (produtor, revendedor ou vendedor da loja e plataforma).</li>
               <li>A Staypse não tem conta para receber o dinheiro das vendas, não guarda saldos e não faz repasses.</li>
               <li>Prazos de liberação, meios de pagamento e eventuais tarifas da instituição de pagamento são informados antes do pagamento ou no painel de cada participante.</li>
+              <li>
+                Lojas e afiliados pagam a taxa da plataforma, proporcional à parte de cada um na venda, descontada no split. O comprador não paga taxa. Veja{" "}
+                <Link href="/taxas" className="font-medium underline">
+                  Taxas para lojas
+                </Link>
+                .
+              </li>
               <li>Em caso de cancelamento, estorno ou contestação do pagamento, cada participante devolve a parte que recebeu, na mesma proporção do split.</li>
             </Itens>
           ),

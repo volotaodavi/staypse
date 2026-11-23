@@ -17,10 +17,20 @@ export type PedidoLista = {
   vendedor_id: string | null;
   atribuicao_origem: "link" | "codigo" | null;
   arrependimento_ate: string | null;
-  order_items: { nome_item: string; quantidade: number; status_entrega: string; nota_fiscal_numero: string | null }[];
+  order_items: {
+    nome_item: string;
+    quantidade: number;
+    status_entrega: string;
+    nota_fiscal_numero: string | null;
+  }[];
+  // "Taxa da plataforma" (a parte da loja) e "Você recebe", do split do pedido (null até haver cobrança)
+  taxa_centavos: number | null;
+  recebe_centavos: number | null;
 };
 
-export async function lerPedidosDaLoja(sp: Record<string, string | string[] | undefined>) {
+export async function lerPedidosDaLoja(
+  sp: Record<string, string | string[] | undefined>,
+) {
   const periodo = lerPeriodo(sp);
   const pedido = um(sp.status) ?? "";
   const filtro = Object.hasOwn(STATUS_EXIBICAO, pedido) ? pedido : "";
@@ -37,13 +47,52 @@ export async function lerPedidosDaLoja(sp: Record<string, string | string[] | un
     .order("criado_em", { ascending: false })
     .limit(500);
   if (error) throw new Error(`Pedidos indisponíveis: ${error.message}`);
-  const todos = (bruto ?? []) as unknown as PedidoLista[];
-  const pedidos = filtro ? todos.filter((p) => statusExibicao(p.status, p.order_items) === filtro) : todos;
+  const base = (bruto ?? []) as unknown as Omit<
+    PedidoLista,
+    "taxa_centavos" | "recebe_centavos"
+  >[];
+  // só os dois números da loja; a divisão interna do split nunca sai do banco
+  const { data: valores } = base.length
+    ? await supabase.rpc("loja_valores_pedidos", {
+        p_ids: base.map((p) => p.id),
+      })
+    : { data: [] };
+  const porPedido = new Map(
+    (
+      (valores ?? []) as unknown as {
+        order_id: string;
+        taxa_centavos: number;
+        recebe_centavos: number;
+      }[]
+    ).map((v) => [v.order_id, v]),
+  );
+  const todos: PedidoLista[] = base.map((p) => ({
+    ...p,
+    taxa_centavos: porPedido.has(p.id)
+      ? Number(porPedido.get(p.id)!.taxa_centavos)
+      : null,
+    recebe_centavos: porPedido.has(p.id)
+      ? Number(porPedido.get(p.id)!.recebe_centavos)
+      : null,
+  }));
+  const pedidos = filtro
+    ? todos.filter((p) => statusExibicao(p.status, p.order_items) === filtro)
+    : todos;
   return { periodo, filtro, pedidos };
 }
 
 // "Afiliado · código digitado": a origem (link ou código) vem de orders.atribuicao_origem
-export const origemDaVenda = (p: { revendedor_id: string | null; vendedor_id: string | null; atribuicao_origem?: "link" | "codigo" | null }) => {
-  const quem = p.vendedor_id ? "Vendedor próprio" : p.revendedor_id ? "Afiliado" : "Direto na loja";
-  return p.revendedor_id && p.atribuicao_origem ? `${quem} · ${ROTULO_ORIGEM_ATRIBUICAO[p.atribuicao_origem].toLowerCase()}` : quem;
+export const origemDaVenda = (p: {
+  revendedor_id: string | null;
+  vendedor_id: string | null;
+  atribuicao_origem?: "link" | "codigo" | null;
+}) => {
+  const quem = p.vendedor_id
+    ? "Vendedor próprio"
+    : p.revendedor_id
+      ? "Afiliado"
+      : "Direto na loja";
+  return p.revendedor_id && p.atribuicao_origem
+    ? `${quem} · ${ROTULO_ORIGEM_ATRIBUICAO[p.atribuicao_origem].toLowerCase()}`
+    : quem;
 };

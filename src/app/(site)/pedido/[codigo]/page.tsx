@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Cabecalho } from "@/components/Cabecalho";
-import { PagamentoPedido } from "@/components/PagamentoPedido";
+import { PagamentoPedido, type TemaPedido } from "@/components/PagamentoPedido";
 import { CopiarLink } from "@/components/rastreio";
 import type { Meio } from "@/lib/pagamentos/parcelas";
 import type { DadosPagamento } from "@/lib/pagamentos/tipos";
@@ -68,10 +68,13 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
     p.status === "aguardando_pagamento"
       ? await admin
           .from("orders")
-          .select("cobranca_url, cobranca_meio, cobranca_parcelas, cobranca_pagamento, producers(loja_nome, cor_principal, cor_destaque, fonte, layout)")
+          .select("cobranca_url, cobranca_meio, cobranca_parcelas, cobranca_pagamento, producer_id")
           .eq("id", p.id)
           .maybeSingle()
       : { data: null };
+  const { data: loja } = cobranca?.producer_id
+    ? await admin.from("producers").select("loja_nome, loja_cor_principal, loja_cor_destaque, loja_fonte, loja_layout").eq("id", cobranca.producer_id).maybeSingle()
+    : { data: null };
   const campos = (
     <>
       <input type="hidden" name="codigo" value={p.codigo} />
@@ -86,7 +89,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
         <div className="flex w-full max-w-2xl flex-col gap-5">
           {novo && (
             <section className="flex flex-col gap-3 rounded-2xl bg-petroleo p-6 text-branco">
-              <h2 className="text-2xl text-ciano">Pedido feito!</h2>
+              <h2 className="text-2xl text-ciano">Pedido feito</h2>
               <p className="text-gelo/90">
                 Guarde este link: é por ele que você acompanha o pedido, recebe o acesso e, se quiser, desiste da compra.
                 Se perder, use o código <strong className="font-medium text-branco">{p.codigo}</strong> e seu e-mail em
@@ -141,14 +144,14 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
 
           {p.status === "aguardando_pagamento" && cobranca && (
             <PagamentoPedido
-              tema={cobranca.producers ?? { cor_principal: null, cor_destaque: null, fonte: null, layout: null, loja_nome: null }}
+              tema={(loja as TemaPedido | null) ?? { loja_cor_principal: null, loja_cor_destaque: null, loja_fonte: null, loja_layout: null, loja_nome: null }}
               meio={(cobranca.cobranca_meio as Meio | null) ?? null}
               parcelas={cobranca.cobranca_parcelas}
               pagamento={(cobranca.cobranca_pagamento as DadosPagamento | null) ?? null}
               urlPagamento={cobranca.cobranca_url}
               totalCentavos={p.total_centavos}
               simulado={Boolean(cobranca.cobranca_url?.startsWith("/simulador-pagamentos/"))}
-              carregandoPagar={
+              semCobranca={
                 <form action={iniciarPagamento}>
                   {campos}
                   <button className={`${botaoPrincipal} w-full sm:w-fit`} data-pagar>

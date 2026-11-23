@@ -59,10 +59,10 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
   if (error) {
     if (error.code === "23505") return volta("Esse endereço já está em uso. Escolha outro.");
     if (error.message.includes("destaque_de_outra_loja")) return volta("Os produtos em destaque e o do banner precisam ser da sua loja.");
-    if (error.message.includes("banner_fora_da_pasta")) return volta("Envie a imagem do banner de novo.");
+    if (error.message.includes("banner_fora_da_pasta")) return volta("Envie as imagens de novo: uma delas não está na sua pasta.");
     if (error.code === "23514") {
       if (error.message.includes("loja_slug")) return volta("Esse endereço não é permitido. Escolha outro.");
-      if (error.message.includes("tema")) return volta("Confira o modelo, as seções, o banner e os destaques.");
+      if (error.message.includes("tema")) return volta("Confira o modelo, os blocos, os banners e os links.");
       return volta("Confira as cores e a fonte.");
     }
     if (error.message.includes("cadastro_inexistente")) return volta("Cadastre sua empresa antes de montar a loja.");

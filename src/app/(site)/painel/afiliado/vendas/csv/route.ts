@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const periodo = lerPeriodo(sp);
   const vendas = await lerComissoes(papel, periodo);
   const csv = montarCsv(
-    ["Data", "Produto", "Quantidade", "Loja", "Origem", "Comprador", "Valor pago (R$)", "Valor da venda (R$)", "Comissão (R$)", "Situação"],
+    ["Data", "Produto", "Quantidade", "Loja", "Origem", "Comprador", "Valor pago (R$)", "Valor da venda (R$)", "Comissão (R$)", ...(papel === "afiliado" ? ["Taxa da plataforma (R$)", "Você recebe (R$)"] : []), "Situação"],
     vendas.map((v) => [
       dataHora(v.data),
       v.produto,
@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       v.valor_pago_centavos == null ? "" : reais(v.valor_pago_centavos),
       reais(v.valor_centavos),
       reais(v.comissao_centavos),
+      ...(papel === "afiliado" ? [v.taxa_centavos == null ? "" : reais(v.taxa_centavos), v.recebe_centavos == null ? "" : reais(v.recebe_centavos)] : []),
       SITUACAO_COMISSAO[v.situacao] ?? v.situacao,
     ]),
   );

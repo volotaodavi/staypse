@@ -49,7 +49,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
     );
   }
 
-  const [{ data, error }, { count: semNota }, { data: recusados }, recebedor] = await Promise.all([
+  const [{ data, error }, { count: semNota }, { data: recusados }, recebedor, { data: taxasBruto }] = await Promise.all([
     supabase.rpc("painel_loja_resumo", { p_inicio: periodo.inicio, p_fim: periodo.fim }),
     // pedidos pagos com item ainda sem nota fiscal (regra 2)
     supabase
@@ -61,7 +61,10 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
     // itens recusados na análise, com o motivo (coluna privada: itens_privados)
     supabase.rpc("itens_privados").select("id, nome, motivo_rejeicao").eq("producer_id", loja.id).eq("status_aprovacao", "recusado"),
     meuRecebedor("produtor"),
+    // só "Taxa da plataforma" e "Você recebe" (nunca a divisão interna)
+    supabase.rpc("painel_loja_taxas", { p_inicio: periodo.inicio, p_fim: periodo.fim }),
   ]);
+  const valoresLoja = (taxasBruto ?? { taxa_centavos: 0, recebe_centavos: 0 }) as { taxa_centavos: number; recebe_centavos: number };
   const recebe = recebedorOk(recebedor);
   if (error) throw new Error(`Resumo indisponível: ${error.message}`);
   const itensRecusados = (recusados ?? []) as unknown as { id: string; nome: string; motivo_rejeicao: string | null }[];
@@ -142,12 +145,19 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           { rotulo: "Vendas", valor: inteiro(r.vendas), destaque: true },
           { rotulo: "Faturamento bruto", valor: formatarPreco(r.faturamento_centavos) },
           { rotulo: "Comissões a afiliados e vendedores", valor: formatarPreco(r.comissoes_centavos), nota: "Repassadas pelo split" },
+          { rotulo: "Taxa da plataforma", valor: formatarPreco(Number(valoresLoja.taxa_centavos)), nota: "Descontada do repasse" },
+          { rotulo: "Você recebe", valor: formatarPreco(Number(valoresLoja.recebe_centavos)), nota: "Depois da comissão e da taxa" },
           { rotulo: "Ticket médio", valor: r.vendas > 0 ? formatarPreco(ticket) : "Sem vendas" },
           { rotulo: "Cliques nos links", valor: inteiro(r.cliques) },
           { rotulo: "Conversão", valor: percentual(r.vendas, r.cliques), nota: "Vendas ÷ cliques" },
         ]}
       />
       <NotaPagamentos />
+      <p className="max-w-prose text-sm text-petroleo/75">
+        <Link href="/taxas" className="font-medium underline">
+          Ver taxas para lojas
+        </Link>
+      </p>
 
       <GraficoBarras
         titulo="Vendas por dia"

@@ -15,7 +15,9 @@ const iconeSeta = (dir: "esq" | "dir") => (
   </svg>
 );
 
-export function GaleriaFotos({ fotos, nome }: { fotos: string[]; nome: string }) {
+// disposicao: "padrao" (miniaturas embaixo), "lateral" (miniaturas à esquerda no computador)
+// ou "empilhada" (no computador, todas as fotos em grade grande; no celular, desliza).
+export function GaleriaFotos({ fotos, nome, disposicao = "padrao" }: { fotos: string[]; nome: string; disposicao?: "padrao" | "lateral" | "empilhada" }) {
   const [atual, setAtual] = useState(0);
   const [ampliada, setAmpliada] = useState(false);
   const trilho = useRef<HTMLDivElement>(null);
@@ -52,13 +54,15 @@ export function GaleriaFotos({ fotos, nome }: { fotos: string[]; nome: string })
   const seta = `${botao} absolute top-1/2 -translate-y-1/2`;
 
   return (
-    <div className="flex flex-col gap-3" role="group" aria-roledescription="galeria" aria-label={`Fotos de ${nome}`}>
-      <div className="relative">
+    <div className={`flex flex-col gap-3 ${disposicao === "lateral" ? "md:flex-row-reverse" : ""}`} role="group" aria-roledescription="galeria" aria-label={`Fotos de ${nome}`}>
+      <div className="relative min-w-0 md:flex-1">
         <div
           ref={trilho}
           tabIndex={0}
           aria-label={`Foto ${atual + 1} de ${total}. Use as setas para trocar.`}
-          className="flex snap-x snap-mandatory overflow-x-auto rounded-lg [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className={`flex snap-x snap-mandatory overflow-x-auto rounded-[var(--loja-raio,8px)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+            disposicao === "empilhada" ? "md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:rounded-none" : ""
+          }`}
           onScroll={(e) => {
             const el = e.currentTarget;
             setAtual(Math.round(el.scrollLeft / el.clientWidth));
@@ -70,25 +74,27 @@ export function GaleriaFotos({ fotos, nome }: { fotos: string[]; nome: string })
           }}
         >
           {fotos.map((url, i) => (
-            <div key={url} className="relative aspect-square w-full shrink-0 cursor-zoom-in snap-center bg-neutral-100" onClick={() => setAmpliada(true)}>
+            <div key={url} className={`relative aspect-square w-full shrink-0 cursor-zoom-in snap-center bg-neutral-100 ${
+                disposicao === "empilhada" ? `md:aspect-[4/5] md:rounded-[var(--loja-raio,8px)] md:overflow-hidden ${i === 0 && fotos.length % 2 === 1 ? "md:col-span-2 md:aspect-[4/3]" : ""}` : ""
+              }`} onClick={() => setAmpliada(true)}>
               <Image
                 src={url}
                 alt={i === 0 ? nome : `${nome}, foto ${i + 1}`}
                 fill
-                sizes="(min-width: 1152px) 560px, (min-width: 768px) 50vw, 100vw"
+                sizes={disposicao === "empilhada" ? "(min-width: 1152px) 360px, (min-width: 768px) 30vw, 100vw" : "(min-width: 1152px) 560px, (min-width: 768px) 50vw, 100vw"}
                 priority={i === 0}
                 className="object-cover"
               />
             </div>
           ))}
         </div>
-        <button type="button" onClick={() => setAmpliada(true)} aria-label="Ampliar foto" className={`${botao} absolute top-2 right-2`}>
+        <button type="button" onClick={() => setAmpliada(true)} aria-label="Ampliar foto" className={`${botao} absolute top-2 right-2 ${disposicao === "empilhada" ? "md:hidden" : ""}`}>
           <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
           </svg>
         </button>
         {total > 1 && (
-          <>
+          <div className={disposicao === "empilhada" ? "md:hidden" : ""}>
             <button type="button" onClick={() => irPara(atual - 1)} aria-label="Foto anterior" className={`${seta} left-2`}>
               {iconeSeta("esq")}
             </button>
@@ -98,12 +104,12 @@ export function GaleriaFotos({ fotos, nome }: { fotos: string[]; nome: string })
             <span className="absolute bottom-2 left-2 rounded bg-white/95 px-2 py-1 text-sm text-neutral-900 tabular-nums" aria-live="polite">
               {atual + 1} de {total}
             </span>
-          </>
+          </div>
         )}
       </div>
 
       {total > 1 && (
-        <ul className="flex gap-2 overflow-x-auto p-1 [scrollbar-width:thin]">
+        <ul className={`flex gap-2 overflow-x-auto p-1 [scrollbar-width:thin] ${disposicao === "empilhada" ? "md:hidden" : ""} ${disposicao === "lateral" ? "md:max-h-[34rem] md:flex-col md:overflow-x-visible md:overflow-y-auto" : ""}`}>
           {fotos.map((url, i) => (
             <li key={url} className="shrink-0">
               <button

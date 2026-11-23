@@ -9,7 +9,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { GaleriaFotos } from "@/components/GaleriaFotos";
-import { ProdutosDaLoja, classeBotaoLoja } from "@/components/loja";
+import { classeBotaoLoja } from "@/components/loja";
+import { ProdutosRelacionados } from "@/components/loja-secoes";
 import { linkWhatsapp } from "@/components/publico";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
 import { linkDenuncia } from "@/lib/denuncias";
@@ -17,6 +18,7 @@ import { comprasAbertas } from "@/lib/pedidos";
 import { formatarCnpj, formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarEntrega, buscarLoja, buscarProduto, type EntregaProduto } from "@/lib/publico";
 import { supabaseUrl, urlDoSite } from "@/lib/supabase/env";
+import { MODELOS_LOJA, lerTemaLoja } from "@/lib/tema-loja";
 import { ROTULO_TIPO } from "@/lib/vitrine";
 
 // Ícones de linha (24px, traço 1.5), todos da mesma família
@@ -97,6 +99,10 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
     .filter((i) => i.id !== item.id)
     .sort((a, b) => Number(b.categoria === item.categoria) - Number(a.categoria === item.categoria))
     .slice(0, 4);
+  // o modelo da loja decide o jeito da página: galeria lateral, empilhada, centrada ou densa
+  const modelo = lerTemaLoja(loja.loja_tema, loja.layout).modelo;
+  const disposicao = MODELOS_LOJA[modelo].produto;
+  const caixaCompra = disposicao === "denso" || disposicao === "centrada";
   const linhas = linhasEntrega(item.tipo, item.prazo_postagem_dias, item.retirada_local, entrega);
 
   const abertas = comprasAbertas();
@@ -127,16 +133,32 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
         </ol>
       </nav>
 
-      <div className="grid gap-8 md:grid-cols-2 md:gap-12">
-        <div className="min-w-0 md:sticky md:top-4 md:self-start">
-          <GaleriaFotos fotos={fotos} nome={item.nome} />
+      <div
+        className={
+          {
+            lateral: "grid gap-8 md:grid-cols-2 md:gap-12",
+            empilhada: "grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-12",
+            centrada: "mx-auto grid w-full max-w-2xl gap-8",
+            denso: "grid gap-6 md:grid-cols-2 md:gap-8",
+          }[disposicao]
+        }
+      >
+        <div className={`min-w-0 ${disposicao === "lateral" || disposicao === "denso" ? "md:sticky md:top-4 md:self-start" : ""}`}>
+          <GaleriaFotos fotos={fotos} nome={item.nome} disposicao={disposicao === "centrada" ? "padrao" : disposicao === "empilhada" ? "empilhada" : "lateral"} />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-6">
+        <div className={`flex min-w-0 flex-col gap-6 ${disposicao === "empilhada" ? "md:sticky md:top-4 md:self-start" : ""}`}>
+          <div className={`flex flex-col gap-6 ${caixaCompra ? "rounded-[var(--loja-raio)] border border-neutral-300 bg-white p-4" : ""}`}>
           <div className="flex flex-col gap-2">
             <p className="text-sm text-neutral-700">{ROTULO_TIPO[item.tipo] ?? item.tipo}</p>
-            <h1 className="text-2xl leading-tight font-semibold text-balance md:text-3xl">{item.nome}</h1>
-            <p className="text-3xl font-semibold tabular-nums">{formatarPreco(item.preco_centavos)}</p>
+            <h1
+              className={`leading-tight text-balance ${
+                disposicao === "empilhada" ? "text-3xl font-light tracking-tight md:text-4xl" : disposicao === "denso" ? "text-xl font-bold md:text-2xl" : "text-2xl font-semibold md:text-3xl"
+              }`}
+            >
+              {item.nome}
+            </h1>
+            <p className={`text-3xl tabular-nums ${disposicao === "denso" ? "font-bold" : "font-semibold"} ${disposicao === "centrada" ? "text-[var(--loja-link)]" : ""}`}>{formatarPreco(item.preco_centavos)}</p>
             {indicacao && (
               // CDC art. 36 / CONAR: a indicação é remunerada e isso fica claro
               <p className="text-sm text-neutral-700">
@@ -153,9 +175,10 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
             {!abertas && <p className="text-sm text-neutral-700">Compras abrem em breve.</p>}
             {botaoComprar}
           </div>
+          </div>
 
           {linhas.length > 0 && (
-            <section aria-labelledby="entrega" className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4">
+            <section aria-labelledby="entrega" className="flex flex-col gap-3 rounded-[var(--loja-raio)] border border-neutral-200 bg-white p-4">
               <h2 id="entrega" className="text-base font-semibold">
                 Entrega
               </h2>
@@ -174,7 +197,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
           )}
 
           {/* confiança: só o que a Staypse e a loja garantem de fato */}
-          <section aria-label="Compra segura" className="rounded-lg bg-neutral-50 p-4">
+          <section aria-label="Compra segura" className="rounded-[var(--loja-raio)] bg-white p-4 ring-1 ring-neutral-200">
             <ul className="flex flex-col gap-3 text-sm leading-5 text-neutral-800">
               <li className="flex gap-3">
                 <Icone d={ICONES.loja} />
@@ -254,7 +277,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
         </div>
       </div>
 
-      <ProdutosDaLoja slug={slug} itens={outros} />
+      <ProdutosRelacionados slug={slug} modelo={modelo} itens={outros} />
 
       {/* celular: barra de compra presa ao rodapé da tela. É "sticky" dentro do <main>
           (e não "fixed"): fica sempre visível ao rolar, ocupa o próprio espaço e nunca

@@ -184,7 +184,7 @@ describe("lytex: cobrança", () => {
       "POST /v2/invoices": () => ({ status: 201, json: { _id: "inv1", status: "waitingPayment", linkCheckout: "https://checkout.exemplo/x" } }),
     });
     const r = await criarLytex({ fetch: f, env: ENV, agora: () => Date.parse("2026-01-10T12:00:00Z") }).criarCobranca(dados);
-    assert.deepEqual(r, { provedorId: "inv1", status: "pendente", urlPagamento: "https://checkout.exemplo/x" });
+    assert.deepEqual(r, { provedorId: "inv1", status: "pendente", urlPagamento: "https://checkout.exemplo/x", pagamento: null });
     const c = chamadas.find((x) => x.url === "/v2/invoices")?.corpo as { split: unknown; referenceId: string; referenceIdUniqueExt: string; dueDate: string; items: unknown; client: unknown; paymentMethods: unknown; redirect: { urlRedirect: string } };
     assert.deepEqual(c.split, {
       type: "fixedValue",
@@ -249,7 +249,7 @@ describe("lytex: cobrança", () => {
       "GET /v2/invoices/referenceIdUniqueExt/ped-123": () => ({ json: { _id: "inv0", status: "paid", linkCheckout: "https://c/y" } }),
     });
     const r = await criarLytex({ fetch: f, env: ENV }).criarCobranca(dados);
-    assert.deepEqual(r, { provedorId: "inv0", status: "paga", urlPagamento: "https://c/y" });
+    assert.deepEqual(r, { provedorId: "inv0", status: "paga", urlPagamento: "https://c/y", pagamento: null });
   });
   it("consulta traduz status", async () => {
     const { f } = simular({

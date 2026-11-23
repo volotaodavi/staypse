@@ -123,7 +123,11 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             <h2 className="text-xl">Recebimento</h2>
             <p className="text-sm text-petroleo/80">
               A verificação de identidade da empresa e os dados bancários ficam na Lytex, a instituição que processa os
-              pagamentos e divide o valor entre as partes. A Staypse não pede nem guarda documentos.
+              pagamentos e divide o valor entre as partes. A Staypse não pede nem guarda documentos.{" "}
+              <Link href="/taxas" className="font-medium underline">
+                Ver taxas para lojas
+              </Link>
+              .
             </p>
             <Recebimento papel="produtor" />
             <Link href="/painel/produtor/cadastro?passo=4" className="rounded-full bg-ciano px-6 py-3 text-center font-medium text-petroleo">

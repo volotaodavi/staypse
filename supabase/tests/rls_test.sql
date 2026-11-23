@@ -2426,6 +2426,29 @@ insert into public.user_roles values ('00000000-0000-0000-0000-00000000000c', 'a
 select teste.ok(public.is_admin(), 'admin restaurado');
 
 -- =========================================================================
+-- 8b. Checkout com meio e parcelas; taxa da plataforma vista por loja e afiliado
+-- =========================================================================
+reset role;
+update public.orders set cobranca_meio = 'pix', cobranca_parcelas = null, cobranca_pagamento = '{"pixCopiaECola":"000201"}'::jsonb where id = :'cb2';
+select teste.ok((select cobranca_meio = 'pix' and cobranca_pagamento ->> 'pixCopiaECola' = '000201' from public.orders where id = :'cb2'),
+                'pedido guarda o meio e o Pix devolvido pela fatura');
+select teste.bloqueia($$update public.orders set cobranca_meio = 'dinheiro' where id = (select id from public.orders limit 1)$$, 'meio de pagamento inválido não grava');
+select teste.bloqueia($$update public.orders set cobranca_parcelas = 13 where id = (select id from public.orders limit 1)$$, 'mais de 12 parcelas não grava');
+update public.orders set split_snapshot = '{"resultado":{"taxaTotalCentavos":400,"taxaLojaCentavos":300,"taxaAfiliadoCentavos":100,"produtorCentavos":9000,"indicadorCentavos":2900}}'::jsonb
+where id = :'cb2';
+:comoA
+select teste.bloqueia($$select cobranca_pagamento from public.orders$$, 'dados de Pix e boleto não são legíveis por usuário logado');
+select teste.bloqueia($$select cobranca_meio from public.orders$$, 'meio da cobrança não é legível por usuário logado');
+select teste.ok((select taxa_centavos = 300 and recebe_centavos = 9000 from public.loja_valores_pedidos(array[:'cb2']::uuid[])),
+                'a loja vê só a taxa da plataforma (a parte dela) e o que recebe');
+select teste.ok((select (public.painel_loja_taxas('2000-01-01', '2100-01-01') ? 'taxa_centavos')), 'resumo da loja traz a taxa da plataforma');
+:comoD
+select teste.ok((select count(*) = 0 from public.loja_valores_pedidos(array[:'cb2']::uuid[])), 'outra pessoa não vê os valores do pedido da loja');
+:comoAnon
+select teste.bloqueia($$select * from public.loja_valores_pedidos(array[gen_random_uuid()])$$, 'visitante não chama os valores da loja');
+select teste.bloqueia($$select * from public.afiliado_valores_pedidos(array[gen_random_uuid()])$$, 'visitante não chama os valores do afiliado');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

@@ -84,6 +84,8 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
           { titulo: "Origem" },
           { titulo: "Situação" },
           { titulo: "Total", numero: true },
+          { titulo: "Taxa da plataforma", numero: true },
+          { titulo: "Você recebe", numero: true },
         ]}
         linhas={pedidos.map((p) => {
           const st = statusExibicao(p.status, p.order_items);
@@ -102,6 +104,8 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
                 {semNota && <span className="block text-red-800">Sem nota fiscal</span>}
               </span>,
               formatarPreco(p.total_centavos),
+              p.taxa_centavos == null ? "Sem cobrança" : formatarPreco(p.taxa_centavos),
+              p.recebe_centavos == null ? "Sem cobrança" : formatarPreco(p.recebe_centavos),
             ],
           };
         })}
@@ -111,6 +115,12 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
         }}
       />
       <NotaPagamentos />
+      <p className="max-w-prose text-sm text-petroleo/75">
+        A taxa da plataforma é descontada do seu repasse.{" "}
+        <Link href="/taxas" className="font-medium underline">
+          Ver taxas para lojas
+        </Link>
+      </p>
 
       {atendimentos.length > 0 && (
         <section aria-labelledby="t-atend" className="flex flex-col gap-3">

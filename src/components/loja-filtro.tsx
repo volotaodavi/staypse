@@ -2,7 +2,7 @@
 // Filtros da lista "Todos os produtos": categorias (quando há 2 ou mais) e busca
 // por nome (quando a loja tem muitos produtos). Os cartões chegam prontos do
 // servidor; aqui só se decide quais aparecem. Sem filtro ativo, mostra tudo.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type ItemFiltravel = { id: string; nome: string; categoria: string; rotuloCategoria: string; no: React.ReactNode };
 
@@ -21,6 +21,16 @@ export function ListaFiltravel({
 }) {
   const [categoria, setCategoria] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
+
+  // links do menu e da busca do cabeçalho chegam como ?cat=casa e ?q=vaso
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const c = p.get("cat");
+    const q = p.get("q");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- lê o endereço só depois de montar (a página é estática)
+    if (c && itens.some((i) => i.categoria === c)) setCategoria(c);
+    if (q) setBusca(q.slice(0, 60));
+  }, [itens]);
 
   const categorias = [...new Map(itens.map((i) => [i.categoria, i.rotuloCategoria])).entries()];
   const comCategorias = categorias.length > 1;
