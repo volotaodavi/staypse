@@ -1390,6 +1390,188 @@ select teste.ok((public.admin_contadores() ->> 'pedidos_sem_nf')::int >= 1
 reset role;
 
 -- =========================================================================
+-- 21. Afiliação (migração 14): automática ou manual, convite por produto,
+--     materiais de divulgação e catálogo por mais vendidos
+-- =========================================================================
+-- afiliada nova (Fabi): não é vendedora própria da loja da Ana, então a afiliação segue a regra de cada produto
+reset role;
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-00000000000f', 'fabi@teste.com',
+   '{"nome":"Fabi Afiliada","papeis":["revendedor"],"termos_versao":"2026-11-16"}');
+\set comoF 'reset role; select set_config(''request.jwt.claims'', ''{"sub":"00000000-0000-0000-0000-00000000000f"}'', false); set role authenticated;'
+insert into public.storefronts (revendedor_id, slug, nicho) values ('00000000-0000-0000-0000-00000000000f', 'loja-da-fabi', 'beleza');
+:comoServidor
+select public.registrar_recebedor('00000000-0000-0000-0000-00000000000f', 'afiliado', '111.444.777-35', 'mock', 'rec_f', 'em_analise', null);
+select public.aplicar_status_recebedor('mock', 'rec_f', 'aprovado', null, null);
+reset role;
+
+-- três itens digitais novos da Ana (um automático e dois manuais)
+:comoA
+insert into public.items (producer_id, nome, descricao, preco_centavos, tipo, comissao_percentual, categoria,
+                          fotos, tipo_digital, declaracao_nf, link_acesso, instrucoes_pos_compra, aprovacao_afiliacao, status_aprovacao)
+  select id, n.nome, 'Material completo em PDF.', 5000, 'digital', 30, 'cursos_digitais',
+         array['00000000-0000-0000-0000-00000000000a/aff.webp'], 'ebook', true, 'https://aff.exemplo.com/x',
+         'Acesso por e-mail em até 24h.', n.regra, 'em_analise'
+  from public.producers, (values ('Aff Auto', 'automatica'), ('Aff Manual', 'manual'), ('Aff Outro', 'manual')) as n (nome, regra)
+  where user_id = '00000000-0000-0000-0000-00000000000a';
+:comoC
+select public.admin_decidir_item(id, true) from public.items where nome in ('Aff Auto', 'Aff Manual', 'Aff Outro');
+reset role;
+select id as aff_auto from public.items where nome = 'Aff Auto' \gset
+select id as aff_manual from public.items where nome = 'Aff Manual' \gset
+select id as aff_outro from public.items where nome = 'Aff Outro' \gset
+
+-- afiliação automática ou manual por produto
+:comoF
+select teste.ok((select status from public.afiliar_se(:'aff_auto')) = 'aprovada', 'produto com afiliação automática aprova na hora');
+select teste.ok((select status from public.afiliar_se(:'aff_manual')) = 'pendente', 'produto com afiliação manual fica pendente');
+select teste.ok((select count(*) from public.afiliacoes where item_id = :'aff_auto' and status = 'aprovada' and decidido_em is not null) = 1,
+                'afiliação automática registra a data da decisão');
+delete from public.afiliacoes where item_id = :'aff_auto';
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_f', 'em_analise', null, null);
+:comoF
+select teste.bloqueia(format('select public.afiliar_se(%L)', :'aff_auto'), 'sem recebedor aprovado continua bloqueado mesmo com afiliação automática');
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_f', 'aprovado', null, null);
+
+-- convite por produto: quem pode gerar
+:comoD
+select teste.bloqueia(format('select public.criar_convite_afiliacao(%L)', :'aff_outro'), 'quem não é dono do item não gera convite');
+:comoF
+select teste.bloqueia(format('select public.criar_convite_afiliacao(%L)', :'aff_outro'), 'afiliado não gera convite');
+:comoAnon
+select teste.bloqueia(format('select public.criar_convite_afiliacao(%L)', :'aff_outro'), 'visitante não gera convite');
+select teste.bloqueia($$select * from public.convites_afiliacao$$, 'visitante não lê a tabela de convites');
+:comoA
+select teste.bloqueia($$select * from public.convites_afiliacao$$, 'nem a loja lê a tabela de convites direto (só pelas funções)');
+select teste.bloqueia(format('select public.criar_convite_afiliacao(%L, 0)', :'aff_outro'), 'validade do convite precisa ser de 1 a 90 dias');
+select public.criar_convite_afiliacao(:'aff_manual') as tok_manual \gset
+select public.criar_convite_afiliacao(:'aff_outro') as tok_outro \gset
+select public.criar_convite_afiliacao(:'aff_outro') as tok_expira \gset
+select public.criar_convite_afiliacao(:'aff_outro') as tok_revoga \gset
+select teste.ok(:'tok_manual' ~ '^[0-9a-f]{64}$', 'convite devolve um código aleatório de 64 caracteres');
+reset role;
+select teste.ok((select count(*) from public.convites_afiliacao where token_hash = :'tok_manual') = 0
+                and (select count(*) from public.convites_afiliacao where token_hash = encode(sha256(convert_to(:'tok_manual', 'UTF8')), 'hex')) = 1,
+                'no banco fica só o hash sha256 do código');
+select teste.ok((select expira_em between now() + interval '29 days' and now() + interval '31 days'
+                 from public.convites_afiliacao where token_hash = encode(sha256(convert_to(:'tok_manual', 'UTF8')), 'hex')),
+                'convite vale por 30 dias');
+update public.convites_afiliacao set expira_em = now() - interval '1 minute'
+  where token_hash = encode(sha256(convert_to(:'tok_expira', 'UTF8')), 'hex');
+:comoA
+select teste.ok((select count(*) from public.meus_convites_afiliacao() where situacao = 'ativo') = 3
+                and (select count(*) from public.meus_convites_afiliacao() where situacao = 'expirado') = 1,
+                'a loja lista os convites e a situação de cada um');
+reset role;
+select id as id_revoga from public.convites_afiliacao where token_hash = encode(sha256(convert_to(:'tok_revoga', 'UTF8')), 'hex') \gset
+:comoA
+select public.revogar_convite_afiliacao(:'id_revoga');
+select teste.ok((select count(*) from public.meus_convites_afiliacao() where situacao = 'revogado') = 1, 'a loja revoga um convite');
+:comoD
+select teste.ok((select count(*) from public.meus_convites_afiliacao()) = 0, 'outra loja não vê os convites da Ana');
+:comoAnon
+select teste.ok((select situacao = 'ativo' and item_nome = 'Aff Manual' from public.ver_convite_afiliacao(:'tok_manual')), 'o link mostra o produto antes de aceitar');
+select teste.ok((select count(*) from public.ver_convite_afiliacao('codigo-que-nao-existe')) = 0, 'código inexistente não mostra nada');
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_manual'), 'visitante sem login não aceita convite');
+
+-- convite inválido: expirado, inexistente, revogado
+:comoF
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_expira'), 'convite expirado não afilia');
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', 'codigo-que-nao-existe'), 'convite inexistente não afilia');
+:comoF
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_revoga'), 'convite revogado não afilia');
+select teste.ok((select count(*) from public.afiliacoes where item_id = :'aff_outro') = 0, 'convite recusado não deixa afiliação para trás');
+-- convite de um produto não vale para outro produto
+select status as st_outro from public.afiliar_por_convite(:'tok_outro') \gset
+select teste.ok(:'st_outro' = 'aprovada'
+                and (select count(*) from public.afiliacoes where item_id = :'aff_outro' and status = 'aprovada') = 1
+                and (select count(*) from public.afiliacoes where item_id = :'aff_manual' and status = 'aprovada') = 0
+                and (select count(*) from public.afiliacoes where item_id = :'aff_auto') = 0,
+                'convite aprova só o produto do convite (não vale para outro produto)');
+
+-- convite válido aprova, mesmo em produto manual (e quem estava pendente vira aprovado)
+select teste.ok((select status from public.afiliacoes where item_id = :'aff_manual' and afiliado_id = '00000000-0000-0000-0000-00000000000f') = 'pendente',
+                'antes do convite, a afiliação manual está pendente');
+select status as st_manual from public.afiliar_por_convite(:'tok_manual') \gset
+select teste.ok(:'st_manual' = 'aprovada'
+                and (select status from public.afiliacoes where item_id = :'aff_manual' and afiliado_id = '00000000-0000-0000-0000-00000000000f') = 'aprovada',
+                'convite válido aprova na hora, mesmo em produto de aprovação manual');
+select teste.ok((select status from public.afiliar_por_convite(:'tok_manual')) = 'aprovada', 'a mesma pessoa abrir o link de novo não dá erro');
+:comoD
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_manual'), 'convite de uso único: outra pessoa não reaproveita');
+:comoAnon
+select teste.ok((select situacao = 'usado' from public.ver_convite_afiliacao(:'tok_manual')), 'o link usado aparece como já usado');
+
+-- afiliado bloqueado pela loja não entra nem por convite; sem recebedor também não
+:comoA
+select public.criar_convite_afiliacao(:'aff_auto') as tok_bloq \gset
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000f', true);
+:comoF
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_bloq'), 'afiliado bloqueado pela loja não entra nem por convite');
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000f', false);
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_f', 'em_analise', null, null);
+:comoF
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_bloq'), 'sem recebedor aprovado o convite não afilia');
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_f', 'aprovado', null, null);
+:comoA
+select teste.bloqueia(format('select * from public.afiliar_por_convite(%L)', :'tok_bloq'), 'a dona da loja não se afilia ao próprio produto por convite');
+:comoF
+select teste.ok((select status from public.afiliar_por_convite(:'tok_bloq')) = 'aprovada', 'recebedor aprovado e sem bloqueio: o convite funciona');
+
+-- materiais de divulgação
+:comoA
+update public.items set texto_divulgacao = 'Conheça o Aff Auto! Link na bio.', regras_divulgacao = 'Não use a marca no Google Ads.'
+  where id = :'aff_auto';
+select teste.ok((select status_aprovacao from public.items where id = :'aff_auto') = 'aprovado', 'mudar texto e regras de divulgação não pede nova análise');
+select teste.bloqueia(format('update public.items set texto_divulgacao = repeat(%L, 1001) where id = %L', 'x', :'aff_auto'), 'texto de divulgação com mais de 1000 caracteres é recusado');
+select teste.bloqueia(format('update public.items set regras_divulgacao = repeat(%L, 1001) where id = %L', 'x', :'aff_auto'), 'regras de divulgação com mais de 1000 caracteres são recusadas');
+select teste.ok((select texto_divulgacao is not null from public.itens_privados() where id = :'aff_auto'), 'a loja lê o texto de divulgação do próprio item');
+:comoD
+select teste.ok(teste.linhas(format('update public.items set texto_divulgacao = %L where id = %L', 'invadido', :'aff_auto')) = 0,
+                'outra loja não altera o texto de divulgação');
+:comoAnon
+select teste.bloqueia($$select texto_divulgacao from public.items$$, 'visitante não lê o texto de divulgação (coluna privada)');
+select teste.bloqueia($$select * from public.catalogo_afiliados()$$, 'visitante não abre o catálogo de afiliados');
+:comoF
+select teste.ok((select texto_divulgacao = 'Conheça o Aff Auto! Link na bio.' and regras_divulgacao = 'Não use a marca no Google Ads.'
+                 from public.catalogo_afiliados() where id = :'aff_auto'), 'o afiliado lê o texto e as regras no catálogo');
+select teste.bloqueia($$select texto_divulgacao from public.items$$, 'o afiliado não lê a coluna direto na tabela');
+:comoA
+update public.items set texto_divulgacao = 'Uma Palavra Nova para divulgar!' where id = :'aff_auto';
+select teste.ok((select alerta_palavras @> array['palavra nova'] from public.itens_privados() where id = :'aff_auto'), 'texto de divulgação entra no alerta de palavras proibidas');
+update public.items set texto_divulgacao = 'Conheça o Aff Auto! Link na bio.' where id = :'aff_auto';
+
+-- catálogo: mais vendidos nos últimos 7 dias; só a ordem, sem números
+reset role;
+update public.orders set pago_em = now() - interval '30 days' where status = 'pago';
+update public.orders set status = 'pago', pago_em = now() - interval '1 day'
+  where id in (select order_id from public.order_items where item_id = :'kit');
+:comoF
+-- pedidos pagos, mas com os itens cancelados ou devolvidos: não contam no ranking
+select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1) <> 'Kit Banho', 'venda cancelada ou devolvida não conta no ranking');
+reset role;
+update public.order_items set status_entrega = 'entregue' where item_id = :'kit';
+:comoF
+select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1) = 'Kit Banho', 'mais vendidos (7 dias): o item com mais vendas recentes vem primeiro');
+select teste.ok((select nome from public.catalogo_afiliados() limit 1) <> 'Kit Banho', 'a ordem padrão continua a dos mais recentes');
+select teste.ok((select count(*) from public.catalogo_afiliados('vendidos')) = (select count(*) from public.catalogo_afiliados()),
+                'ordenar por vendidos não esconde nenhum produto');
+select teste.ok((select count(*) from information_schema.parameters p
+                 where p.specific_name like 'catalogo_afiliados%' and p.parameter_mode = 'OUT'
+                   and p.parameter_name ~ '(vend|qtd|quant|total|venda)') = 0,
+                'o catálogo não devolve nenhum número de venda');
+reset role;
+update public.orders set pago_em = now() - interval '8 days' where status = 'pago';
+:comoF
+select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1) = (select nome from public.catalogo_afiliados() limit 1),
+                'venda com mais de 7 dias não conta no ranking');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

@@ -99,3 +99,36 @@ O caminho continua o **convite da loja** (aba Vendedores → link de convite →
 - Apps de vendedores na Nuvemshop: https://www.nuvemshop.com.br/loja-aplicativos-nuvem/managemate · https://www.nuvemshop.com.br/loja-aplicativos-nuvem/portal-de-afiliados
 - Shopee (regras de divulgação): https://shopee.com.br/blog/?p=45141
 - Amazon Influencer: https://affiliate-program.amazon.com/help/node/topic/GRQNGNJP89KNPBAG
+
+## Modelos prontos: o que pode ser reaproveitado (pesquisa de 23/11/2026)
+
+**Podem ser usados (licença MIT, que permite uso comercial sem abrir o nosso código, desde que se mantenha o aviso de copyright):**
+- `vercel/shop`: Next 16, React 19, Tailwind 4 e shadcn. É a base mais compatível com a Staypse. Aproveitar a estrutura de início, coleção, produto e SEO (dados estruturados e sitemap). https://github.com/vercel/shop
+- Spree storefront: Next 16 e Tailwind 4. Aproveitar a página de produto com variantes e galeria, os filtros do catálogo e o checkout em uma página. Segundo o README, faz 88 no Lighthouse mobile e 100 em acessibilidade. https://github.com/spree/storefront
+- shadcn/ui, HyperUI e daisyUI, para componentes e temas por variáveis de cor.
+
+**Não podem ser usados:**
+- Shopify Dawn e Horizon: a licença só vale dentro da Shopify.
+- Saleor: a licença FSL não serve para plataforma.
+- Preline e Flowbite Pro: pagos ou com licença dupla.
+- Tailwind Plus e ThemeForest: pagos.
+- vercel/commerce, Vendure e o starter antigo do Medusa: projetos arquivados.
+
+Todo trecho copiado entra em `THIRD_PARTY_LICENSES.md`, com o aviso de copyright.
+
+## Regras de qualidade dos modelos (checklist adaptado da Shopify Theme Store e do WordPress)
+
+1. Lighthouse mobile com **performance ≥ 90 e acessibilidade ≥ 95** (meta da Staypse; o mínimo da Shopify é 60 e 90), medido no início da loja, no produto e no checkout.
+2. CLS ≤ 0,1: imagens com largura e altura definidas, e proporções diferentes não quebram a grade.
+3. Imagens responsivas (srcset) e carregamento tardio, exceto o banner principal.
+4. Logo em PNG ou SVG, em qualquer proporção (paisagem ou retrato).
+5. Seções reordenáveis e ocultáveis, com o mesmo conjunto de seções nos 4 modelos.
+6. Cores configuráveis com contraste AA garantido, corrigido automaticamente.
+7. Seletor de fonte com fontes pré-carregadas.
+8. Toda edição aparece na prévia, e cada opção tem um rótulo claro.
+9. Foco visível, link "Pular para o conteúdo", campos com rótulo, alt nas imagens e títulos em ordem.
+10. Alvos de toque ≥ 44 px (regra da Staypse).
+11. Nenhum rastreamento sem consentimento.
+12. Funciona sem app ou extensão externa.
+
+**Implementação:** um único motor de tema. Os 4 modelos são predefinições de seções e de estilo de card. A configuração da loja fica salva em JSON (logo, cores, fonte, banner, lista ordenada de seções com `visivel` e destaques). As cores e a fonte viram variáveis CSS, sem CSS por loja.
