@@ -23,6 +23,7 @@ export const STATUS_EXIBICAO: Record<string, string> = {
   cancelado: "Cancelado",
   em_reembolso: "Desistência (reembolso)",
   reembolsado: "Reembolsado",
+  chargeback: "Chargeback (pagamento contestado)",
 };
 
 export function statusExibicao(status: string, itens: { status_entrega: string }[]): string {

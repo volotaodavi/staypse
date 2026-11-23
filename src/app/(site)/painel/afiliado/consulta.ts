@@ -31,9 +31,9 @@ export type Comissao = {
 
 export const SITUACAO_COMISSAO: Record<string, string> = {
   aguardando_pagamento: "Aguardando pagamento",
-  a_receber: "A receber",
-  repassada: "Repassada pelo split",
-  estornada: "Estornada (desistência)",
+  a_receber: "Pendente (prazo de 7 dias)",
+  repassada: "Liberada (repassada pelo split)",
+  estornada: "Estornada (desistência, reembolso ou chargeback)",
   cancelada: "Pedido cancelado",
 };
 

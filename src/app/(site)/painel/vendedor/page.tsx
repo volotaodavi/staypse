@@ -119,7 +119,7 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
         itens={[
           { rotulo: "Vendas", valor: inteiro(ind.vendas), destaque: true },
           { rotulo: "Total vendido por você", valor: formatarPreco(ind.vendido_centavos) },
-          { rotulo: "Comissões a receber", valor: formatarPreco(ind.a_receber_centavos), nota: "Previsão de recebimento" },
+          { rotulo: "Comissões pendentes", valor: formatarPreco(ind.a_receber_centavos), nota: "Liberadas após o prazo de 7 dias" },
           { rotulo: soFolha ? "Comissões liberadas" : "Repassado pelo split", valor: formatarPreco(ind.repassada_centavos) },
           { rotulo: "Estornado (desistências)", valor: formatarPreco(ind.estornada_centavos) },
         ]}

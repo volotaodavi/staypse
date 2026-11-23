@@ -2,8 +2,11 @@
 // Ações do comprador (sem conta): valem com o código + o token do link secreto.
 // Tudo passa por funções do banco que conferem o token e as regras de prazo.
 import { redirect } from "next/navigation";
-import { mensagemDeErro, pagamentoSimulado } from "@/lib/pedidos";
+import { iniciarCobranca } from "@/lib/pagamentos/cobrancas";
+import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
+import { mensagemDeErro } from "@/lib/pedidos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { urlDoSite } from "@/lib/supabase/env";
 
 const texto = (f: FormData, nome: string) => String(f.get(nome) ?? "").trim();
 
@@ -44,17 +47,23 @@ export async function confirmarRecebimento(f: FormData) {
   voltar(codigo, token, "Recebimento confirmado. Obrigado!");
 }
 
-// SÓ em teste local (PAGAMENTO_SIMULADO=1): faz o papel do aviso da Lytex
-export async function simularPagamento(f: FormData) {
+// "Pagar agora": cria a cobrança no provedor (se ainda não existe) e leva à página de pagamento dele.
+// O pagamento só é confirmado quando o PROVEDOR avisa (webhook ou conciliação), nunca por esta tela.
+export async function iniciarPagamento(f: FormData) {
   const { codigo, token } = dadosDoPedido(f);
-  if (!pagamentoSimulado()) voltar(codigo, token, "Pagamento simulado desligado.", true);
-  const admin = criarClienteAdmin();
-  const { data: pedido } = await admin.rpc("pedido_do_comprador", { p_codigo: codigo, p_token: token });
+  const { data: pedido } = await criarClienteAdmin().rpc("pedido_do_comprador", { p_codigo: codigo, p_token: token });
   const id = (pedido as { id?: string } | null)?.id;
   if (!id) voltar(codigo, token, "Pedido não encontrado.", true);
-  const { error } = await admin.rpc("confirmar_pagamento", { p_order: id });
-  if (error) voltar(codigo, token, "Este pedido não está aguardando pagamento.", true);
-  voltar(codigo, token, "Pagamento confirmado (simulação de teste).");
+  let destino: string | null = null;
+  let falha = "";
+  try {
+    destino = (await iniciarCobranca(id, `${urlDoSite()}/pedido/${codigo}?t=${token}`)).url;
+  } catch (e) {
+    console.error("iniciarCobranca:", e instanceof Error ? e.message : e);
+    falha = e instanceof Error && e.message.includes("pedido_nao_aguarda_pagamento") ? "Este pedido não está aguardando pagamento." : mensagemDePagamento(e);
+  }
+  if (destino) redirect(destino);
+  voltar(codigo, token, falha || "A página de pagamento não está disponível agora. Tente de novo em alguns minutos.", true);
 }
 
 // Perdeu o link: código + e-mail geram um link novo

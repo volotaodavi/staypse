@@ -13,20 +13,18 @@ import {
   data,
   dataHora,
   enderecoEmLinha,
-  pagamentoSimulado,
   type PedidoComprador,
 } from "@/lib/pedidos";
 import { formatarCnpj, formatarPreco } from "@/lib/produtor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/supabase/env";
-import { confirmarRecebimento, desistir, simularPagamento } from "./acoes";
+import { confirmarRecebimento, desistir, iniciarPagamento } from "./acoes";
 
 export const instant = false;
 export const metadata: Metadata = { title: "Seu pedido", robots: { index: false } };
 
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const botaoPrincipal = "inline-flex min-h-12 items-center justify-center rounded-full bg-petroleo px-6 py-3 font-medium text-branco hover:bg-petroleo/90";
-const botaoContorno = "inline-flex min-h-12 items-center justify-center rounded-full border border-petroleo px-6 py-3 font-medium hover:bg-gelo";
 
 export default async function PaginaPedido({ params, searchParams }: PageProps<"/pedido/[codigo]">) {
   const { codigo } = await params;
@@ -61,7 +59,12 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
       : { nome: p.entrega_modo === "retirada" ? "Pronto / retirado" : "Enviado", feito: enviado || Boolean(p.entregue_em), quando: null },
     ...(p.entrega_modo === "digital" ? [] : [{ nome: "Recebido", feito: Boolean(p.entregue_em), quando: p.entregue_em }]),
   ];
-  const encerrado = ["cancelado", "em_reembolso", "reembolsado"].includes(p.status);
+  const encerrado = ["cancelado", "em_reembolso", "reembolsado", "chargeback"].includes(p.status);
+  // página de pagamento do provedor (guardada só no servidor; nunca vem do navegador)
+  const { data: cobranca } =
+    p.status === "aguardando_pagamento"
+      ? await admin.from("orders").select("cobranca_url").eq("id", p.id).maybeSingle()
+      : { data: null };
   const campos = (
     <>
       <input type="hidden" name="codigo" value={p.codigo} />
@@ -119,6 +122,16 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             )}
           </section>
 
+          {p.status === "chargeback" && (
+            <section role="status" className="flex flex-col gap-2 rounded-3xl border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
+              <h2 className="text-xl">Pagamento contestado</h2>
+              <p>
+                O pagamento deste pedido foi contestado junto ao emissor do cartão (chargeback) e o valor foi devolvido por lá.
+                O pedido foi encerrado e o acesso digital foi fechado. Se foi engano ou você precisa de ajuda, abra um atendimento.
+              </p>
+            </section>
+          )}
+
           {p.status === "aguardando_pagamento" && (
             <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6">
               <h2 className="text-xl">Pagamento</h2>
@@ -127,13 +140,22 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
                 automaticamente entre a loja, quem indicou e a Staypse. Pedidos não pagos em 3 dias são cancelados sozinhos,
                 sem custo.
               </p>
-              <p className="rounded-xl bg-gelo px-4 py-3 text-sm">O pagamento online abre em breve. Você não será cobrado antes disso.</p>
-              {pagamentoSimulado() && (
-                <form action={simularPagamento}>
+              {cobranca?.cobranca_url ? (
+                <a href={cobranca.cobranca_url} className={`${botaoPrincipal} w-fit`} data-pagar>
+                  Pagar agora
+                </a>
+              ) : (
+                <form action={iniciarPagamento}>
                   {campos}
-                  <button className={botaoContorno}>Simular pagamento (só em teste)</button>
+                  <button className={botaoPrincipal} data-pagar>
+                    Pagar agora
+                  </button>
                 </form>
               )}
+              <p className="text-xs text-petroleo/75">
+                Você paga na página da instituição de pagamento. A Staypse não recebe nem guarda o seu dinheiro, e dados de
+                cartão nunca passam por aqui. Este pedido muda para &quot;Pago&quot; quando a instituição confirmar.
+              </p>
             </section>
           )}
 

@@ -1,7 +1,8 @@
 "use server";
 // Checkout em duas etapas:
 //  1. "revisar": confere os dados e pede ao BANCO o preço, o frete e o total;
-//  2. "confirmar": com o resumo aceito (regra 4), o SERVIDOR cria o pedido.
+//  2. "confirmar": com o resumo aceito (regra 4), o SERVIDOR cria o pedido e a cobrança no
+//     provedor de pagamento, e leva o comprador à página de pagamento do provedor.
 // A indicação (afiliado) vem de duas fontes, ambas conferidas pelo BANCO:
 //  * o cookie assinado do link curto (origem "link");
 //  * o CÓDIGO de indicação digitado pelo comprador (origem "codigo") — para quem clicou
@@ -16,7 +17,10 @@ import { comprasAbertas, cpfValido, mensagemDeErro, type ModoEntrega } from "@/l
 import { hashDoIp } from "@/lib/ip";
 import { registrarAcesso } from "@/lib/acesso";
 import { usuarioAtual } from "@/lib/papeis";
+import { iniciarCobranca } from "@/lib/pagamentos/cobrancas";
+import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { urlDoSite } from "@/lib/supabase/env";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 export type Resumo = {
@@ -140,5 +144,18 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   if (error || !pedido) return resumo(mensagemDeErro(error, "Não foi possível criar o pedido. Tente de novo."));
 
   await registrarAcesso("pedido", usuario?.id);
-  redirect(`/pedido/${pedido.codigo}?t=${pedido.token}&novo=1`);
+
+  // pedido criado → o SERVIDOR pede a cobrança ao provedor (já com o split: loja, indicação e taxa da
+  // Staypse) e leva o comprador à página de pagamento DELE. Nenhum dado de cartão passa por aqui.
+  // Se o provedor não responder, o pedido fica guardado e a página do pedido oferece "Pagar agora".
+  const caminho = `/pedido/${pedido.codigo}?t=${pedido.token}&novo=1`;
+  let destino = caminho;
+  try {
+    const { url } = await iniciarCobranca(pedido.id, `${urlDoSite()}${caminho}`);
+    if (url) destino = url;
+  } catch (e) {
+    console.error("iniciarCobranca:", e instanceof Error ? e.message : e);
+    destino = `${caminho}&${new URLSearchParams({ erro: mensagemDePagamento(e) }).toString()}`;
+  }
+  redirect(destino);
 }

@@ -8,12 +8,6 @@ export function comprasAbertas(): boolean {
   return process.env.COMPRAS_ABERTAS === "1";
 }
 
-// Pagamento simulado: SÓ para testes locais (nunca ligar na Vercel).
-// Substitui o aviso da Lytex até a Etapa 6.
-export function pagamentoSimulado(): boolean {
-  return process.env.PAGAMENTO_SIMULADO === "1" && process.env.VERCEL !== "1";
-}
-
 export type ModoEntrega = "envio" | "retirada" | "digital";
 
 export const ROTULO_ENTREGA: Record<ModoEntrega, string> = {
@@ -28,6 +22,7 @@ export const STATUS_PEDIDO: Record<string, string> = {
   cancelado: "Cancelado",
   em_reembolso: "Desistência em andamento (reembolso)",
   reembolsado: "Reembolsado",
+  chargeback: "Chargeback (contestação do pagamento)",
 };
 
 export const STATUS_ENTREGA: Record<string, string> = {

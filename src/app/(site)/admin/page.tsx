@@ -25,11 +25,12 @@ export default async function Admin() {
   await exigirPapel("admin");
   const supabase = await criarClienteServidor();
 
-  const [{ data, error }, usuarios, listaEspera, desistencias] = await Promise.all([
+  const [{ data, error }, usuarios, listaEspera, desistencias, chargebacks] = await Promise.all([
     supabase.rpc("admin_contadores"),
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("waitlist").select("*", { count: "exact", head: true }),
-    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "em_reembolso"),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "em_reembolso"),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "chargeback"),
   ]);
   if (error || !data) throw new Error(`Contadores indisponíveis: ${error?.message}`);
   const c = data as unknown as Contadores;
@@ -53,6 +54,7 @@ export default async function Admin() {
     { href: "/admin/usuarios", rotulo: "Usuários", valor: usuarios.count ?? 0 },
     { href: "/admin/lista-espera", rotulo: "Lista de espera", valor: listaEspera.count ?? 0 },
     { href: "/admin/pedidos?status=em_reembolso", rotulo: "Desistências a reembolsar", valor: desistencias.count ?? 0 },
+    { href: "/admin/pedidos?status=chargeback", rotulo: "Chargebacks", valor: chargebacks.count ?? 0 },
   ];
 
   return (

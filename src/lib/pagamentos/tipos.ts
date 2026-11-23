@@ -26,22 +26,30 @@ export type ParteSplit = { recebedorProvedorId: string; valorCentavos: number };
 export type DadosCobranca = {
   pedidoId: string;
   totalCentavos: number;
-  meio: "pix" | "cartao" | "boleto";
-  parcelas: number;
+  // quando omitidos, quem paga escolhe o meio (e as parcelas) na página do provedor
+  meio?: "pix" | "cartao" | "boleto";
+  parcelas?: number;
   split: ParteSplit[];
   descricao: string;
+  // para onde a página do provedor devolve o comprador (o link do pedido)
+  urlRetorno: string;
 };
+
+// Status da cobrança, no vocabulário da Staypse (cada provedor traduz o seu para estes):
+//  pendente → aguardando pagamento · paga · recusada · expirada · estornada (reembolso confirmado)
+//  estorno_pendente → estorno pedido, o provedor ainda não confirmou · chargeback → contestação do titular do cartão
+export type StatusCobranca = "pendente" | "paga" | "recusada" | "expirada" | "estornada" | "estorno_pendente" | "chargeback";
 
 export type Cobranca = {
   provedorId: string;
-  status: "pendente" | "paga" | "recusada" | "estornada" | "chargeback";
+  status: StatusCobranca;
   urlPagamento?: string | null; // checkout do provedor (nenhum dado de cartão passa pela Staypse)
 };
 
 // evento de webhook já validado e traduzido para o formato da Staypse
 export type EventoPagamento =
   | { id: string; tipo: "recebedor.status"; provedorId: string; status: StatusRecebedor; motivo?: string | null; documento?: string | null }
-  | { id: string; tipo: "cobranca.status"; provedorId: string; pedidoId: string; status: Cobranca["status"] };
+  | { id: string; tipo: "cobranca.status"; provedorId: string; pedidoId: string; status: StatusCobranca };
 
 export interface PaymentProvider {
   readonly nome: "mock" | "lytex";

@@ -200,6 +200,12 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
                 ? `Prazo de arrependimento (7 dias): até ${data(p.arrependimento_ate)}`
                 : "Prazo de arrependimento: 7 dias a partir do recebimento"}
             </p>
+            {p.status === "chargeback" && (
+              <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-amber-900" data-chargeback>
+                O pagamento foi contestado pelo titular do cartão (chargeback). O valor deste pedido foi debitado pela instituição de
+                pagamento e a comissão foi estornada. Não envie o que ainda não saiu; se já enviou, fale com o suporte.
+              </p>
+            )}
             {p.status === "em_reembolso" && (
               <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-amber-900">
                 O cliente desistiu{p.arrependimento_motivo ? ` (${p.arrependimento_motivo})` : ""}. Combine a devolução sem custo

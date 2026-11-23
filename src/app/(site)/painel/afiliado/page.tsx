@@ -88,7 +88,7 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
           <Numeros
             itens={[
               { rotulo: "Vendas", valor: inteiro(ind.vendas), destaque: true },
-              { rotulo: "Comissões a receber", valor: formatarPreco(ind.a_receber_centavos), nota: "Previsão de recebimento" },
+              { rotulo: "Comissões pendentes", valor: formatarPreco(ind.a_receber_centavos), nota: "Liberadas após o prazo de 7 dias" },
               { rotulo: "Repassado pelo split", valor: formatarPreco(ind.repassada_centavos) },
               { rotulo: "Cliques nos seus links", valor: inteiro(ind.cliques) },
               { rotulo: "Conversão", valor: percentual(ind.vendas, ind.cliques), nota: "Vendas ÷ cliques" },

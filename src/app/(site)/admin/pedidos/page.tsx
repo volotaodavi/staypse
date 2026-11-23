@@ -21,7 +21,7 @@ export default async function AdminPedidos({ searchParams }: PageProps<"/admin/p
   const idsSemNf = semNf ? ((await supabase.rpc("admin_pedidos_sem_nf")).data as string[] | null) ?? [] : [];
   let consulta = supabase
     .from("orders")
-    .select("id, codigo, status, criado_em, total_centavos, arrependimento_solicitado_em, arrependimento_motivo, producers(razao_social)")
+    .select("id, codigo, status, criado_em, total_centavos, arrependimento_solicitado_em, arrependimento_motivo, chargeback_em, cobranca_id, producers(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(200);
   if (status) consulta = consulta.eq("status", status);
@@ -36,6 +36,8 @@ export default async function AdminPedidos({ searchParams }: PageProps<"/admin/p
     total_centavos: number;
     arrependimento_solicitado_em: string | null;
     arrependimento_motivo: string | null;
+    chargeback_em: string | null;
+    cobranca_id: string | null;
     producers: { razao_social: string } | null;
   }[];
 
@@ -90,16 +92,23 @@ export default async function AdminPedidos({ searchParams }: PageProps<"/admin/p
               <p className="text-petroleo/75">
                 {dataHora(p.criado_em)} · {STATUS_PEDIDO[p.status]}
               </p>
+              {p.status === "chargeback" && (
+                <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">
+                  Pagamento contestado (chargeback) em {dataHora(p.chargeback_em)}. Comissões estornadas; o valor foi debitado pela
+                  instituição de pagamento. Veja o registro em auditoria.
+                </p>
+              )}
               {p.status === "em_reembolso" && (
                 <>
                   <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">
                     Desistência em {dataHora(p.arrependimento_solicitado_em)}
                     {p.arrependimento_motivo ? ` · motivo: ${p.arrependimento_motivo}` : ""}. Reembolso total, inclusive frete.
+                    {p.cobranca_id ? " O pedido só vira reembolsado quando a instituição de pagamento confirmar o estorno." : ""}
                   </p>
                   <form action={concluirReembolso}>
                     <input type="hidden" name="pedido" value={p.id} />
                     <button className="inline-flex min-h-11 items-center rounded-full bg-petroleo px-4 text-branco">
-                      Reembolso feito pela instituição de pagamento
+                      Pedir estorno à instituição de pagamento
                     </button>
                   </form>
                 </>
