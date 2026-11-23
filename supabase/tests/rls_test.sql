@@ -2210,6 +2210,112 @@ select teste.bloqueia($$select * from public.minhas_comissoes('afiliado', now() 
                       'visitante não lê comissões nem o nome do comprador');
 
 -- =========================================================================
+-- 8b. Notificações no app e preferências de e-mail
+-- =========================================================================
+reset role;
+-- recebedor recusado (testado acima com o webhook do Davi): ele foi avisado, COM o motivo
+select teste.ok((select count(*) = 1 and bool_and(texto like '%Dados bancários não conferem com o titular.%')
+                 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000d' and tipo = 'recebedor_recusado'),
+                'recebedor recusado: a pessoa recebe notificação com o motivo');
+select teste.ok((select email_pendente from public.notificacoes
+                 where user_id = '00000000-0000-0000-0000-00000000000d' and tipo = 'recebedor_recusado'),
+                'recebedor recusado: e-mail fica na fila (preferência padrão ligada)');
+
+-- gatilho de pedido pago: avisa a loja (venda nova) e quem indicou (só o primeiro nome do comprador)
+update public.orders set status = 'aguardando_pagamento', pago_em = null where id = '00000000-0000-0000-0000-0000000000f8';
+update public.orders set status = 'pago', pago_em = now() where id = '00000000-0000-0000-0000-0000000000f8';
+select teste.ok((select count(*) = 1 and bool_and(titulo = 'Venda nova' and texto like '%BASICO0001%'
+                                                 and link = '/painel/loja/pedidos/BASICO0001' and lida_em is null and email_pendente)
+                 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a' and tipo = 'venda_paga'
+                   and chave = 'pago:00000000-0000-0000-0000-0000000000f8'),
+                'pedido pago: a loja recebe "Venda nova" com link interno e e-mail na fila');
+select teste.ok((select count(*) = 1 and bool_and(texto like '%Helena%' and texto not like '%Basica%' and texto not like '%secreta%'
+                                                 and texto not like '%11999990000%' and texto not like '%Rua%')
+                 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000d' and tipo = 'venda_atribuida'),
+                'venda atribuída: o afiliado vê só o primeiro nome (sem e-mail, telefone, CPF ou endereço)');
+-- repetir o mesmo evento não duplica o aviso
+update public.orders set status = 'aguardando_pagamento' where id = '00000000-0000-0000-0000-0000000000f8';
+update public.orders set status = 'pago' where id = '00000000-0000-0000-0000-0000000000f8';
+select teste.ok((select count(*) = 1 from public.notificacoes where tipo = 'venda_paga'
+                 and chave = 'pago:00000000-0000-0000-0000-0000000000f8'), 'o mesmo pedido pago não gera aviso repetido');
+-- estorno: a loja é avisada da desistência e quem indicou, da comissão estornada
+update public.orders set status = 'em_reembolso' where id = '00000000-0000-0000-0000-0000000000f8';
+select teste.ok(exists (select 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a' and tipo = 'desistencia')
+                and exists (select 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000d' and tipo = 'comissao_estornada'),
+                'desistência avisa a loja e estorna a comissão de quem indicou (com aviso)');
+update public.orders set status = 'chargeback' where id = '00000000-0000-0000-0000-0000000000f8';
+select teste.ok((select count(*) = 1 from public.notificacoes where tipo = 'comissao_estornada'
+                 and user_id = '00000000-0000-0000-0000-00000000000d')
+                and exists (select 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a' and tipo = 'chargeback'),
+                'chargeback avisa a loja e não repete o aviso de comissão estornada');
+update public.orders set status = 'pago' where id = '00000000-0000-0000-0000-0000000000f8';
+
+-- afiliação: pedido novo avisa a loja; decisão avisa o afiliado
+alter table public.afiliacoes disable trigger afiliacoes_y_recebedor;
+insert into public.afiliacoes (afiliado_id, storefront_id, item_id, status)
+  select '00000000-0000-0000-0000-00000000000b', s.id, :'kit', 'pendente'
+  from public.storefronts s where s.revendedor_id = '00000000-0000-0000-0000-00000000000b'
+  on conflict (afiliado_id, item_id) do update set status = 'pendente', decidido_em = null;
+select teste.ok(exists (select 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a' and tipo = 'afiliacao_pedida'),
+                'pedido de afiliação novo avisa a loja');
+update public.afiliacoes set status = 'aprovada', decidido_em = now()
+  where afiliado_id = '00000000-0000-0000-0000-00000000000b' and item_id = :'kit';
+select teste.ok((select count(*) = 1 from public.notificacoes
+                 where user_id = '00000000-0000-0000-0000-00000000000b' and tipo = 'afiliacao_aprovada' and link = '/painel/revendedor/catalogo'),
+                'afiliação aprovada notifica o afiliado');
+alter table public.afiliacoes enable trigger afiliacoes_y_recebedor;
+
+-- denúncia nova avisa os admins
+select teste.ok(exists (select 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000c' and tipo = 'denuncia_nova'),
+                'denúncia nova avisa o admin');
+
+-- pedido sem nota fiscal depois do prazo: a rotina avisa a loja uma vez só
+update public.orders set pago_em = now() - interval '30 days' where id = '00000000-0000-0000-0000-0000000000f8';
+select public.notificar_pedidos_sem_nf();
+select public.notificar_pedidos_sem_nf();
+select teste.ok((select count(*) = 1 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a'
+                 and tipo = 'pedido_sem_nf' and chave = 'sem_nf:00000000-0000-0000-0000-0000000000f8'),
+                'pedido sem nota fiscal após o prazo: a loja é avisada uma única vez');
+
+-- RLS: cada um só lê e marca as próprias
+:comoB
+select teste.ok((select count(*) > 0 from public.notificacoes) and (select bool_and(user_id = '00000000-0000-0000-0000-00000000000b') from public.notificacoes),
+                'usuário só lê as próprias notificações');
+select teste.ok((select count(*) = 0 from public.notificacoes where user_id = '00000000-0000-0000-0000-00000000000a'),
+                'usuário não lê notificação de outro');
+select teste.bloqueia($$select email_pendente from public.notificacoes$$, 'usuário não lê a fila de e-mail');
+select teste.bloqueia($$insert into public.notificacoes (user_id, tipo, titulo, texto) values ('00000000-0000-0000-0000-00000000000b', 'venda_paga', 'x', 'y')$$,
+                      'ninguém cria notificação pelo navegador');
+select teste.bloqueia($$select public.notificar('00000000-0000-0000-0000-00000000000b', 'venda_paga', 'x', 'y')$$,
+                      'ninguém chama notificar() pelo navegador');
+select teste.bloqueia($$update public.notificacoes set titulo = 'alterado'$$, 'usuário só altera a marca de lida (não o texto)');
+select teste.ok(teste.linhas($$update public.notificacoes set lida_em = now() where user_id = '00000000-0000-0000-0000-00000000000a'$$) = 0,
+                'usuário não marca como lida a notificação de outro');
+select teste.ok(teste.linhas($$update public.notificacoes set lida_em = now() where lida_em is null$$) > 0,
+                'usuário marca as próprias notificações como lidas');
+select teste.ok((select count(*) = 0 from public.notificacoes where lida_em is null), 'marcar todas como lidas zera as não lidas');
+reset role;
+select teste.bloqueia($$insert into public.notificacoes (user_id, tipo, titulo, texto, link) values
+  ('00000000-0000-0000-0000-00000000000b', 'venda_paga', 'x', 'y', '//site-externo.com')$$, 'link da notificação só aceita caminho interno');
+select teste.bloqueia($$insert into public.notificacoes (user_id, tipo, titulo, texto) values
+  ('00000000-0000-0000-0000-00000000000b', 'venda_paga', repeat('a', 121), 'y')$$, 'título da notificação tem no máximo 120 caracteres');
+
+-- preferências: só o dono lê e edita; desligar tira o e-mail da fila
+:comoA
+insert into public.preferencias_notificacao (user_id, email_venda) values ('00000000-0000-0000-0000-00000000000a', false);
+select teste.ok((select count(*) = 1 from public.preferencias_notificacao), 'o dono salva as próprias preferências');
+select teste.bloqueia($$insert into public.preferencias_notificacao (user_id) values ('00000000-0000-0000-0000-00000000000b')$$,
+                      'ninguém cria preferências de outra pessoa');
+:comoB
+select teste.ok((select count(*) = 0 from public.preferencias_notificacao), 'preferências de outra pessoa não aparecem');
+select teste.ok(teste.linhas($$update public.preferencias_notificacao set email_venda = true where user_id = '00000000-0000-0000-0000-00000000000a'$$) = 0,
+                'só o dono edita as preferências');
+reset role;
+select public.notificar('00000000-0000-0000-0000-00000000000a', 'venda_paga', 'Venda nova', 'teste de preferência', '/painel/loja/pedidos', 'pref-teste');
+select teste.ok((select not email_pendente from public.notificacoes where chave = 'pref-teste'),
+                'preferência desligada: a venda nova avisa no app mas não entra na fila de e-mail');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

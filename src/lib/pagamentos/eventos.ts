@@ -3,6 +3,7 @@
 //  * idempotência por (provedor, evento_id): o mesmo aviso 2x não repete o efeito;
 //  * evento que falhou antes (erro registrado) é REPROCESSADO quando o provedor reenviar.
 import "server-only";
+import { despacharEmailsNotificacoes } from "@/lib/notificacoes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { aplicarStatusCobranca } from "./cobrancas";
 import type { EventoPagamento, PaymentProvider } from "./tipos";
@@ -51,6 +52,8 @@ export async function processarEvento(provedor: PaymentProvider, evento: EventoP
     erro = (e instanceof Error ? e.message : String(e)).slice(0, 500);
   }
   await admin.from("eventos_pagamento").update({ processado_em: new Date().toISOString(), erro }).eq("id", id);
+  // avisos importantes gerados pelo evento (venda nova, recebedor recusado...) saem por e-mail
+  await despacharEmailsNotificacoes();
   if (erro) throw new Error(erro);
   return { duplicado: false, efeito };
 }

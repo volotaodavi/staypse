@@ -1,5 +1,6 @@
 // Recebedores (cadastro de recebimento na Lytex) e processamento de eventos.
 // A Staypse guarda só o STATUS; documentos e dados bancários ficam com a Lytex.
+import { despacharEmailsNotificacoes } from "@/lib/notificacoes";
 import "server-only";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { provedorPagamentos } from ".";
@@ -54,5 +55,6 @@ export async function reconsultarRecebedor(provedorNome: string, provedorId: str
     p_documento: r.documento ?? null,
   });
   if (error) throw new Error(error.message);
+  await despacharEmailsNotificacoes();
   return r;
 }

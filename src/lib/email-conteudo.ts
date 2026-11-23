@@ -33,3 +33,24 @@ export function emailDaLista({ nome, link, reenvio }: { nome?: string; link: str
       `<p style="font-size:13px">${escapar(final)}</p></div>`,
   };
 }
+
+// E-mail de uma notificação importante (venda nova, recebedor recusado/suspenso,
+// comissão estornada). O texto vem do banco e já não leva dado pessoal do comprador.
+// "link" é caminho interno (começa com "/"); vira endereço completo com o site.
+export function emailDaNotificacao({ titulo, texto, link, siteUrl }: { titulo: string; texto: string; link: string | null; siteUrl: string }): EmailMontado {
+  const interno = link && /^\/($|[^/\\])/.test(link) ? `${siteUrl}${link}` : null;
+  const ajustes = `${siteUrl}/painel/configuracoes`;
+  const final = `Você pode escolher quais e-mails receber em ${ajustes}`;
+  return {
+    assunto: `Staypse: ${titulo}`,
+    texto: [titulo, "", texto, ...(interno ? ["", `Ver no painel: ${interno}`] : []), "", final, "", "Staypse"].join("\n"),
+    html:
+      `<div style="font-family:Arial,Helvetica,sans-serif;color:#062C30;max-width:480px;line-height:1.5">` +
+      `<p><strong>${escapar(titulo)}</strong></p><p>${escapar(texto)}</p>` +
+      (interno
+        ? `<p><a href="${escapar(interno)}" style="display:inline-block;background:#14D6C4;color:#062C30;` +
+          `padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold">Ver no painel</a></p>`
+        : "") +
+      `<p style="font-size:13px">${escapar(final)}</p></div>`,
+  };
+}

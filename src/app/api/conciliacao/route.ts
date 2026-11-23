@@ -6,7 +6,9 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { simuladorAtivo, nomeDoProvedor } from "@/lib/pagamentos";
+import { despacharEmailsNotificacoes } from "@/lib/notificacoes";
 import { conciliarCobrancas } from "@/lib/pagamentos/cobrancas";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 
 const hash = (v: string) => createHash("sha256").update(v).digest();
 
@@ -26,8 +28,11 @@ async function conciliar(request: Request) {
   if (nomeDoProvedor() === "mock" && !simuladorAtivo()) return NextResponse.json({ erro: "simulador_desligado" }, { status: 404 });
   try {
     const resumo = await conciliarCobrancas();
+    // pedidos pagos sem nota fiscal depois do prazo: avisa a loja (uma vez por pedido) e envia os e-mails da fila
+    const { data: semNf } = await criarClienteAdmin().rpc("notificar_pedidos_sem_nf");
+    await despacharEmailsNotificacoes();
     // sem integração com o provedor real, o cron falha de forma visível (nunca finge que conciliou)
-    return NextResponse.json({ ok: !resumo.integracao_pendente, ...resumo }, { status: resumo.integracao_pendente ? 501 : 200 });
+    return NextResponse.json({ ok: !resumo.integracao_pendente, ...resumo, avisos_sem_nf: semNf ?? 0 }, { status: resumo.integracao_pendente ? 501 : 200 });
   } catch {
     return NextResponse.json({ erro: "falha_na_conciliacao" }, { status: 500 });
   }

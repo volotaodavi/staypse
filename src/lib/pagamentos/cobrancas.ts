@@ -4,6 +4,7 @@
 // loja, quem indicou e a Staypse), guarda-se a referência + o snapshot do split e aplica-se
 // o status que o provedor informa. Nenhum dado de cartão passa por aqui.
 import "server-only";
+import { despacharEmailsNotificacoes } from "@/lib/notificacoes";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { nomeDoProvedor, provedorPagamentos } from ".";
 import { montarSplit, type DadosSplitPedido } from "./montar-split";
@@ -65,6 +66,8 @@ export async function aplicarStatusCobranca(provedor: string, cobrancaId: string
     p_pedido: pedidoId ?? undefined,
   });
   if (error) throw new Error(error.message);
+  // venda nova / comissão estornada: o e-mail importante sai logo depois (sem chave de e-mail, não faz nada)
+  await despacharEmailsNotificacoes();
   return String(data);
 }
 
