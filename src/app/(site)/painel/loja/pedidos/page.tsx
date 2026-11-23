@@ -2,6 +2,7 @@
 // O detalhe (itens, endereço, quem indicou, nota fiscal e rastreio) fica em
 // /painel/loja/pedidos/[código]. Dados do comprador só no detalhe de pedido pago.
 import Link from "next/link";
+import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { NotaPagamentos } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
@@ -20,6 +21,8 @@ const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const campo = "w-full min-w-0 rounded-xl border border-petroleo/60 bg-branco px-3 py-2.5 text-base font-normal";
 
 export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel/loja/pedidos">) {
+  // o período usa a data de hoje: espera a requisição antes de ler o relógio
+  await connection();
   const sp = await searchParams;
   const { periodo, filtro, pedidos } = await lerPedidosDaLoja(sp);
   const { supabase } = await minhaLoja();

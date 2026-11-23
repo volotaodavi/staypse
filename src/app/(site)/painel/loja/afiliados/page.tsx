@@ -2,6 +2,7 @@
 // afiliado no período e bloqueio. Por privacidade (LGPD), só o nome e o @ da
 // vitrine — nunca e-mail ou telefone do afiliado.
 import Link from "next/link";
+import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { NotaPagamentos, inteiro, percentual } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
@@ -21,6 +22,8 @@ type Pendente = { id: string; criado_em: string; items: { nome: string } | null;
 const um = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
 export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/painel/loja/afiliados">) {
+  // o período usa a data de hoje: espera a requisição antes de ler o relógio
+  await connection();
   const sp = await searchParams;
   const periodo = lerPeriodo(sp);
   const { supabase, loja } = await minhaLoja();

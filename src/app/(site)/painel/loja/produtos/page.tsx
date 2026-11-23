@@ -1,5 +1,6 @@
 // Produtos da loja com situação da análise e desempenho no período.
 import Link from "next/link";
+import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { inteiro, percentual } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
@@ -20,6 +21,8 @@ const SITUACAO: Record<string, string> = {
 };
 
 export default async function ProdutosDaLoja({ searchParams }: PageProps<"/painel/loja/produtos">) {
+  // o período usa a data de hoje: espera a requisição antes de ler o relógio
+  await connection();
   const periodo = lerPeriodo(await searchParams);
   const produtos = await lerProdutosDaLoja(periodo);
 

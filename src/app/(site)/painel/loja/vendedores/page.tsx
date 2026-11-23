@@ -1,6 +1,7 @@
 // Vendedores próprios: ranking do período e comissões. A gestão (convites,
 // percentuais, desativar) e o relatório mensal ficam em /painel/produtor/vendedores.
 import Link from "next/link";
+import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { NotaPagamentos, inteiro } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
@@ -13,6 +14,8 @@ export const metadata = { title: "Vendedores próprios" };
 export const instant = false;
 
 export default async function VendedoresDaLoja({ searchParams }: PageProps<"/painel/loja/vendedores">) {
+  // o período usa a data de hoje: espera a requisição antes de ler o relógio
+  await connection();
   const periodo = lerPeriodo(await searchParams);
   const vendedores = await lerVendedoresDaLoja(periodo);
   const mes = hojeBrasil().slice(0, 7);
