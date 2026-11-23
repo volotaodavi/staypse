@@ -52,7 +52,7 @@ export function CartaoItem({
       <FotoItem caminho={foto} alt="" prioridade={prioridade} />
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{nome}</p>
-        <p className="text-base font-extrabold">{formatarPreco(precoCentavos)}</p>
+        <p className="text-base font-semibold">{formatarPreco(precoCentavos)}</p>
         {produtorNome && (
           <p className="mt-auto pt-1 text-[11px] leading-tight text-petroleo/70">
             Vendido por {produtorNome} · pagamento pela Staypse
@@ -90,7 +90,7 @@ export function CartaoLink({ link, vitrine }: { link: LinkExterno; vitrine: stri
       )}
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{link.titulo}</span>
-        {link.preco_centavos != null && <span className="text-sm font-extrabold">{formatarPreco(link.preco_centavos)}</span>}
+        {link.preco_centavos != null && <span className="text-sm font-semibold">{formatarPreco(link.preco_centavos)}</span>}
         <span className="text-[11px] leading-tight text-petroleo/70">
           Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"}). Confira o preço lá: ele pode ter mudado.
         </span>

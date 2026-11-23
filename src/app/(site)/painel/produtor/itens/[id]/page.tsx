@@ -41,7 +41,7 @@ export default async function EditarItem({ params }: PageProps<"/painel/produtor
           <strong className="font-medium">Item recusado:</strong> {item.motivo_rejeicao}
         </p>
       )}
-      <section className="rounded-3xl bg-branco p-5 sm:p-6">
+      <section className="rounded-2xl bg-branco p-5 sm:p-6">
         <FormItem item={item} uid={usuario.id} supabaseUrl={supabaseUrl()} />
       </section>
     </div>

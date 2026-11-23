@@ -22,7 +22,7 @@ export async function MinhasVendas() {
   const total = vendas.filter((v) => v.status === "pago").reduce((s, v) => s + v.comissao_centavos, 0);
 
   return (
-    <section className="rounded-3xl bg-branco p-5" aria-labelledby="titulo-vendas">
+    <section className="rounded-2xl bg-branco p-5" aria-labelledby="titulo-vendas">
       <h2 id="titulo-vendas" className="text-xl">
         Minhas vendas
       </h2>

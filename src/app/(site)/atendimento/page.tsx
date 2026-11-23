@@ -28,7 +28,7 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
       <Cabecalho logado={Boolean(usuario)} />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
         <div className="grid w-full max-w-4xl gap-6 md:grid-cols-[1fr_18rem]">
-          <section className="flex flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
+          <section className="flex flex-col gap-4 rounded-2xl bg-branco p-6 sm:p-8">
             <h1 className="text-3xl">Atendimento</h1>
             <p className="text-petroleo/80">
               Respondemos em até 5 dias. Você recebe um número de protocolo para acompanhar.
@@ -43,7 +43,7 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
             <FormAtendimento inicial={{ nome: usuario?.nome ?? "", email: usuario?.email ?? "", pedido, assunto }} />
           </section>
           <aside className="flex flex-col gap-4 text-sm">
-            <div className="rounded-3xl bg-branco p-5">
+            <div className="rounded-2xl bg-branco p-5">
               <h2 className="text-lg">Quer desistir de uma compra?</h2>
               <p className="mt-1 text-petroleo/80">
                 Use o botão &quot;Desistir da compra&quot; na página do pedido: é mais rápido. Você tem 7 dias a partir do
@@ -57,7 +57,7 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
                 Ler a política de reembolso
               </Link>
             </div>
-            <div className="rounded-3xl bg-branco p-5">
+            <div className="rounded-2xl bg-branco p-5">
               <h2 className="text-lg">Seus dados pessoais</h2>
               <p className="mt-1 text-petroleo/80">
                 Com conta, você baixa seus dados em &quot;Meus dados&quot;. Para corrigir ou excluir, escolha o assunto
@@ -67,7 +67,7 @@ export default async function Atendimento({ searchParams }: PageProps<"/atendime
                 Meus dados
               </Link>
             </div>
-            <div className="rounded-3xl bg-branco p-5">
+            <div className="rounded-2xl bg-branco p-5">
               <h2 className="text-lg">Outros canais</h2>
               <p className="mt-1 text-petroleo/80">
                 {EMPRESA.nomeEmpresarial}

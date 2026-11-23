@@ -75,12 +75,12 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
         </p>
       )}
 
-      <section className="rounded-3xl bg-branco p-5">
+      <section className="rounded-2xl bg-branco p-5">
         <h2 className="mb-3 text-xl">Convidar vendedor</h2>
         <FormConvite loja={produtor?.loja_nome || produtor?.razao_social || "loja"} />
       </section>
 
-      <section className="rounded-3xl bg-branco p-5">
+      <section className="rounded-2xl bg-branco p-5">
         <h2 className="text-xl">Sua equipe ({lista.length})</h2>
         {lista.length === 0 ? (
           <p className="mt-2 text-petroleo/70">Ninguém convidado ainda.</p>
@@ -95,7 +95,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
                       <p className="font-medium">{v.nome ?? v.email}</p>
                       <p className="text-sm text-petroleo/70">
                         {v.email}
-                        {v.arroba && ` · @${v.arroba}`} · {v.cliques_30d} cliques em 30 dias
+                        {v.arroba && `, @${v.arroba}`}, {v.cliques_30d} cliques em 30 dias
                       </p>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${v.status === "ativo" ? "bg-ciano text-petroleo" : "bg-gelo"}`}>
@@ -170,7 +170,7 @@ export default async function Vendedores({ searchParams }: PageProps<"/painel/pr
         )}
       </section>
 
-      <section className="rounded-3xl bg-branco p-5">
+      <section className="rounded-2xl bg-branco p-5">
         <h2 className="text-xl">Relatório mensal de comissões</h2>
         <p className="mt-1 text-sm text-petroleo/75">
           Para o RH: vendas pagas e comissão de cada vendedor no mês. Vendedores em “folha” recebem pela loja; os de

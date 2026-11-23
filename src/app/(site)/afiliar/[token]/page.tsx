@@ -37,7 +37,7 @@ export default async function ConviteAfiliacao({ params }: PageProps<"/afiliar/[
     <>
       <Cabecalho logado={Boolean(usuario)} />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
-        <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
+        <section className="flex w-full max-w-md flex-col gap-4 rounded-2xl bg-branco p-6 sm:p-8">
           {!convite ? (
             <>
               <h1 className="text-2xl">Convite indisponível</h1>
@@ -58,11 +58,11 @@ export default async function ConviteAfiliacao({ params }: PageProps<"/afiliar/[
               <dl className="grid grid-cols-2 gap-3 rounded-2xl bg-gelo p-4 text-sm">
                 <div>
                   <dt className="text-petroleo/70">Preço</dt>
-                  <dd className="text-lg font-extrabold">{formatarPreco(convite.preco_centavos)}</dd>
+                  <dd className="text-lg font-semibold">{formatarPreco(convite.preco_centavos)}</dd>
                 </div>
                 <div>
                   <dt className="text-petroleo/70">Comissão</dt>
-                  <dd className="text-lg font-extrabold">
+                  <dd className="text-lg font-semibold">
                     {formatarPreco(estimativaComissao(convite.preco_centavos, pct))} <span className="text-sm font-medium">({pct}%)</span>
                   </dd>
                 </div>

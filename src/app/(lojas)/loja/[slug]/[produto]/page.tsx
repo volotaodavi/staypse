@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: PageProps<"/loja/[slug]/[prod
   const { slug, produto } = await params;
   const [item, dados] = await Promise.all([buscarProduto(slug, produto), buscarLoja(slug)]);
   if (!item || !dados) return { title: "Produto não encontrado", robots: { index: false } };
-  const descricao = `${formatarPreco(item.preco_centavos)} · ${dados.loja.loja_nome}. ${item.descricao ?? ""}`.slice(0, 200);
+  const descricao = `${formatarPreco(item.preco_centavos)}, ${dados.loja.loja_nome}. ${item.descricao ?? ""}`.slice(0, 200);
   return {
     title: { absolute: `${item.nome} | ${dados.loja.loja_nome}` },
     description: descricao,
@@ -226,10 +226,10 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
             <h2 className="text-base font-semibold">Quem vende</h2>
             <address className="flex flex-col gap-0.5 text-sm text-neutral-700 not-italic">
               <span>
-                {loja.razao_social} · CNPJ {formatarCnpj(loja.cnpj)}
+                {loja.razao_social}, CNPJ {formatarCnpj(loja.cnpj)}
               </span>
               {(loja.endereco || loja.cidade) && (
-                <span>{[loja.endereco, [loja.cidade, loja.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")}</span>
+                <span>{[loja.endereco, [loja.cidade, loja.uf].filter(Boolean).join("/")].filter(Boolean).join(", ")}</span>
               )}
               {loja.email_contato && <span>{loja.email_contato}</span>}
             </address>

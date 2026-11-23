@@ -15,7 +15,7 @@ const caixa = "flex min-h-11 items-start gap-3 rounded-xl border border-petroleo
 export function FormConta({ nome, telefone, email, avisos }: Props) {
   return (
     <FormAcao acao={salvarConfiguracoesConta}>
-      <fieldset className="grid gap-4 rounded-3xl bg-branco p-5 sm:p-6">
+      <fieldset className="grid gap-4 rounded-2xl bg-branco p-5 sm:p-6">
         <legend className="px-1 text-xl">Contato</legend>
         <Campo rotulo="Nome" name="nome" required minLength={2} maxLength={120} defaultValue={nome} autoComplete="name" />
         <Campo
@@ -33,7 +33,7 @@ export function FormConta({ nome, telefone, email, avisos }: Props) {
       </fieldset>
 
       {avisos.length > 0 ? (
-        <fieldset className="flex flex-col gap-3 rounded-3xl bg-branco p-5 sm:p-6">
+        <fieldset className="flex flex-col gap-3 rounded-2xl bg-branco p-5 sm:p-6">
           <legend className="px-1 text-xl">Avisos por e-mail</legend>
           <p className="text-sm text-petroleo/80">
             Todos os avisos aparecem no sininho do painel. Aqui você escolhe quais também chegam por e-mail.
@@ -49,7 +49,7 @@ export function FormConta({ nome, telefone, email, avisos }: Props) {
           ))}
         </fieldset>
       ) : (
-        <p className="rounded-3xl bg-branco p-5 text-sm text-petroleo/80 sm:p-6">
+        <p className="rounded-2xl bg-branco p-5 text-sm text-petroleo/80 sm:p-6">
           Como administrador, você recebe os avisos (denúncias e lojas para análise) no sininho do painel.
         </p>
       )}

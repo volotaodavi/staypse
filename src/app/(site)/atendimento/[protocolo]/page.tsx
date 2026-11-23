@@ -41,7 +41,7 @@ export default async function VerAtendimento({ params, searchParams }: PageProps
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
         <div className="flex w-full max-w-xl flex-col gap-4">
           {um(sp.novo) === "1" && (
-            <section className="flex flex-col gap-3 rounded-3xl bg-petroleo p-6 text-branco">
+            <section className="flex flex-col gap-3 rounded-2xl bg-petroleo p-6 text-branco">
               <h2 className="text-2xl text-ciano">Recebemos sua mensagem</h2>
               <p className="text-gelo/90">
                 Protocolo <strong className="font-medium text-branco">{a.protocolo}</strong>. Respondemos até {data(a.prazo_ate)}.
@@ -54,11 +54,11 @@ export default async function VerAtendimento({ params, searchParams }: PageProps
               />
             </section>
           )}
-          <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6 text-sm">
+          <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6 text-sm">
             <p className="text-petroleo/75">Protocolo {a.protocolo}</p>
             <h1 className="text-2xl">{STATUS[a.status] ?? a.status}</h1>
             <p className="text-petroleo/80">
-              {ASSUNTOS_ATENDIMENTO[a.assunto]} · aberto em {dataHora(a.criado_em)} · resposta até {data(a.prazo_ate)}
+              {ASSUNTOS_ATENDIMENTO[a.assunto]}, aberto em {dataHora(a.criado_em)}, resposta até {data(a.prazo_ate)}
             </p>
             <div className="rounded-2xl bg-gelo p-4">
               <p className="font-medium">Sua mensagem</p>
@@ -66,7 +66,7 @@ export default async function VerAtendimento({ params, searchParams }: PageProps
             </div>
             {a.resposta ? (
               <div className="rounded-2xl border border-petroleo/20 p-4" data-resposta>
-                <p className="font-medium">Resposta · {dataHora(a.respondido_em)}</p>
+                <p className="font-medium">Resposta de {dataHora(a.respondido_em)}</p>
                 <p className="mt-1 whitespace-pre-line">{a.resposta}</p>
               </div>
             ) : (

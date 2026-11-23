@@ -78,7 +78,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
                     )}
                   </p>
                   <p className="text-petroleo/75">
-                    {l.items?.nome} · pediu em {data(l.criado_em)}
+                    {l.items?.nome}, pediu em {data(l.criado_em)}
                   </p>
                 </div>
                 <form action={decidirAfiliacaoAcao} className="flex gap-2">
@@ -112,7 +112,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
                 <p className="min-w-0 flex-1">
                   <span className="font-medium">{c.item_nome}</span>
                   <span className="block text-petroleo/75">
-                    Criado em {data(c.criado_em)} · vale até {data(c.expira_em)}
+                    Criado em {data(c.criado_em)}, vale até {data(c.expira_em)}
                   </span>
                 </p>
                 <form action={revogarConviteAfiliacao}>

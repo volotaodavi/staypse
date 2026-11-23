@@ -4,7 +4,7 @@ import { Logo } from "./Logo";
 
 const ATALHOS = [
   ["Como funciona", "/#como-funciona"],
-  ["Para quem", "/#para-quem"],
+  ["Perfis", "/#para-quem"],
   ["Regras", "/#regras"],
   ["Perguntas", "/#faq"],
 ] as const;
@@ -24,7 +24,7 @@ type Props = {
 
 export function Cabecalho({ logado = false, preLancamento = false, largo = false, acoes }: Props) {
   return (
-    <header className="sticky top-0 z-20 border-b border-petroleo/10 bg-branco/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-petroleo/10 bg-branco">
       <div className={`mx-auto flex items-center justify-between px-4 py-3 ${largo ? "lg:px-6" : "max-w-6xl"}`}>
         <Link href="/" aria-label="Staypse, página inicial" className="inline-flex min-h-11 items-center">
           <Logo className="h-7 w-auto" />

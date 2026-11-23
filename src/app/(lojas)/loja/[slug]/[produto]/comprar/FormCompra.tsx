@@ -232,8 +232,8 @@ export function FormCompra({
                 <>
                   <br />
                   {estado.valores.logradouro}, {estado.valores.numero}
-                  {estado.valores.complemento ? `, ${estado.valores.complemento}` : ""} · {estado.valores.bairro} ·{" "}
-                  {estado.valores.cidade}/{estado.valores.uf} · CEP {estado.valores.cep}
+                  {estado.valores.complemento ? `, ${estado.valores.complemento}` : ""}, {estado.valores.bairro} ·{" "}
+                  {estado.valores.cidade}/{estado.valores.uf}, CEP {estado.valores.cep}
                 </>
               )}
               {r.prazo_postagem_dias != null && r.tipo === "fisico" && (
@@ -245,10 +245,10 @@ export function FormCompra({
               )}
             </Bloco>
             <Bloco titulo="Quem compra">
-              {estado.valores.nome} · {estado.valores.email}
+              {estado.valores.nome}, {estado.valores.email}
             </Bloco>
             <Bloco titulo="Quem vende">
-              {r.razao_social} · CNPJ {formatarCnpj(r.cnpj)}. A loja emite a nota fiscal.
+              {r.razao_social}, CNPJ {formatarCnpj(r.cnpj)}. A loja emite a nota fiscal.
             </Bloco>
             {estado.indicadoPor && (
               <Bloco titulo="Indicação">
@@ -294,7 +294,7 @@ export function FormCompra({
             </span>
           </label>
           <Mensagem texto={estado.erro} />
-          <Enviar intencao="confirmar">Confirmar pedido · {formatarPreco(r.total_centavos)}</Enviar>
+          <Enviar intencao="confirmar">Confirmar pedido: {formatarPreco(r.total_centavos)}</Enviar>
           <button
             type="submit"
             name="intencao"
@@ -367,9 +367,9 @@ export function FormCompra({
                 {m === "envio" && opcoes.frete_fixo_centavos != null && (
                   <span className="block text-neutral-700">
                     Frete {opcoes.frete_fixo_centavos === 0 ? "grátis" : formatarPreco(opcoes.frete_fixo_centavos)}
-                    {opcoes.frete_quem_paga === "loja" ? " · a loja paga o envio" : ""}
-                    {opcoes.frete_gratis_acima_centavos ? ` · grátis acima de ${formatarPreco(opcoes.frete_gratis_acima_centavos)}` : ""}
-                    {opcoes.frete_prazo_dias ? ` · chega em até ${opcoes.frete_prazo_dias} dia(s) útil(eis) após a postagem` : ""}
+                    {opcoes.frete_quem_paga === "loja" ? ", a loja paga o envio" : ""}
+                    {opcoes.frete_gratis_acima_centavos ? `, grátis acima de ${formatarPreco(opcoes.frete_gratis_acima_centavos)}` : ""}
+                    {opcoes.frete_prazo_dias ? `, chega em até ${opcoes.frete_prazo_dias} dia(s) útil(eis) após a postagem` : ""}
                   </span>
                 )}
                 {m === "retirada" && <span className="block text-neutral-700">Sem frete. A loja combina o local e o horário com você.</span>}

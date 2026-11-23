@@ -130,10 +130,26 @@ export function mapearStatusFatura(f: FaturaLytex): StatusCobranca {
 // Cliente HTTP
 // ---------------------------------------------------------------------------------------------
 
+// Conta PRÓPRIA da Staypse na Lytex (a conta principal das credenciais LYTEX_CLIENT_*), só para o admin.
+// Os valores vêm do spec como `number` sem dizer a unidade; tratamos como CENTAVOS (o `amount` do saque é
+// integer) e a pergunta está em docs/lytex/PERGUNTAS.md.
+export type CarteiraLytex = { saldoCentavos: number; saldoFuturoCentavos: number; saqueMinimoCentavos: number; taxaAtual: number };
+export type ResumoCarteiraLytex = { entradasCentavos: number; saidasCentavos: number; taxasCentavos: number };
+export type ContaBancariaLytex = { id: string; banco: string; agencia: string; conta: string; titular: string };
+export type SaqueLytex = { id: string; valorCentavos: number; taxasCentavos: number; status: string };
+
+export type ContaLytex = {
+  carteira(): Promise<CarteiraLytex>;
+  resumoCarteira(): Promise<ResumoCarteiraLytex>;
+  contasBancarias(): Promise<ContaBancariaLytex[]>;
+  solicitarSaque(valorCentavos: number, contaBancariaId: string): Promise<SaqueLytex>;
+};
+
 // mesmo contrato do PaymentProvider, aceitando também os dados extras que a Lytex exige
 export type ProvedorLytex = Omit<PaymentProvider, "criarRecebedor" | "criarCobranca"> & {
   criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor>;
   criarCobranca(dados: DadosCobrancaLytex): Promise<Cobranca>;
+  conta: ContaLytex;
 };
 
 export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
@@ -236,9 +252,48 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
     return paraRecebedor(s, provedorId);
   };
 
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+
+  const conta: ContaLytex = {
+    // WalletController_getWalletInfo_v2: GET /v2/wallet → balance, futureBalance, minimumWithdrawal, currentTax
+    async carteira() {
+      const w = (await api("GET", "/v2/wallet")) as { balance?: number; futureBalance?: number; minimumWithdrawal?: number; currentTax?: number } | null;
+      return { saldoCentavos: num(w?.balance), saldoFuturoCentavos: num(w?.futureBalance), saqueMinimoCentavos: num(w?.minimumWithdrawal), taxaAtual: num(w?.currentTax) };
+    },
+    // WalletController_getWalletTransactionsResume_v2: GET /v2/wallet/transactions/resume → in, out, taxes
+    async resumoCarteira() {
+      const r = (await api("GET", "/v2/wallet/transactions/resume")) as { in?: number; out?: number; taxes?: number } | null;
+      return { entradasCentavos: num(r?.in), saidasCentavos: num(r?.out), taxasCentavos: num(r?.taxes) };
+    },
+    // BankAccountsController_listBankAccounts_v2: GET /v2/bank_accounts?active=true → results[]
+    async contasBancarias() {
+      type Conta = { _id?: string; owner?: { name?: string }; bank?: { name?: string }; agency?: { number?: string }; account?: { number?: string; dv?: string } };
+      const r = (await api("GET", "/v2/bank_accounts?active=true&perPage=100")) as { results?: Conta[] } | null;
+      return (r?.results ?? [])
+        .filter((c): c is Conta & { _id: string } => typeof c._id === "string")
+        .map((c) => ({
+          id: c._id,
+          banco: c.bank?.name ?? "Não informado",
+          agencia: c.agency?.number ?? "Não informado",
+          conta: c.account?.number ? `${c.account.number}${c.account.dv ? `-${c.account.dv}` : ""}` : "Não informado",
+          titular: c.owner?.name ?? "Não informado",
+        }));
+    },
+    // WalletController_createWithdrawSolicitation_v2: POST /v2/wallet/withdraw {amount:integer>=1, _bankAccountId}
+    // → 201 WithdrawSolicitation (status: waiting_approval | approved | rejected | reproved | released)
+    async solicitarSaque(valorCentavos, contaBancariaId) {
+      if (!Number.isInteger(valorCentavos) || valorCentavos < 1) throw new Error("saque_valor_invalido");
+      const w = (await api("POST", "/v2/wallet/withdraw", { amount: valorCentavos, _bankAccountId: contaBancariaId })) as
+        | { _id?: string; amount?: number; taxes?: number; status?: string }
+        | null;
+      return { id: w?._id ?? "", valorCentavos: num(w?.amount) || valorCentavos, taxasCentavos: num(w?.taxes), status: w?.status ?? "waiting_approval" };
+    },
+  };
+
   return {
     nome: "lytex",
     consultarRecebedor,
+    conta,
 
     // SubAccountsController_create_v2: POST /v2/sub-accounts
     async criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor> {
@@ -371,4 +426,7 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
   };
 }
 
-export const lytex: PaymentProvider = criarLytex();
+const instancia = criarLytex();
+export const lytex: PaymentProvider = instancia;
+// conta própria da Staypse (carteira, contas bancárias, saque): só o admin usa
+export const contaLytex: ContaLytex = instancia.conta;

@@ -283,7 +283,7 @@ export function SecoesLoja({
           <p className="whitespace-pre-line">{sobre.descricao || `Conheça os produtos de ${sobre.nome}.`}</p>
           <p className="text-sm text-neutral-600">
             {sobre.razaoSocial}
-            {sobre.cidade && ` · ${[sobre.cidade, sobre.uf].filter(Boolean).join("/")}`}
+            {sobre.cidade && `, ${[sobre.cidade, sobre.uf].filter(Boolean).join("/")}`}
           </p>
         </div>
       </Secao>

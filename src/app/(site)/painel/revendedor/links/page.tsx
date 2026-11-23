@@ -36,7 +36,7 @@ export default async function Links() {
         outro site”.
       </p>
 
-      <section className="rounded-3xl bg-branco p-5">
+      <section className="rounded-2xl bg-branco p-5">
         <h2 className="mb-3 text-xl">Adicionar link</h2>
         <FormLink />
       </section>
@@ -53,7 +53,7 @@ export default async function Links() {
                   <p className="truncate font-medium">{l.titulo}</p>
                   <p className="truncate text-xs text-petroleo/70">
                     {PLATAFORMAS[l.plataforma]}
-                    {l.preco_centavos ? ` · ${formatarPreco(l.preco_centavos)}` : ""} · {l.url}
+                    {l.preco_centavos ? `, ${formatarPreco(l.preco_centavos)}` : ""}, {l.url}
                   </p>
                 </div>
                 <form action={removerLink}>

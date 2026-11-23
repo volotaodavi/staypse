@@ -60,7 +60,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
       )}
 
       {/* vitrine */}
-      <section className="rounded-3xl bg-petroleo p-6 text-gelo">
+      <section className="rounded-2xl bg-petroleo p-6 text-gelo">
         <h2 className="text-xl text-branco">Sua vitrine</h2>
         {vitrine ? (
           <>
@@ -99,12 +99,12 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
 
       {vitrine && (
         <nav className="grid grid-cols-2 gap-3" aria-label="Atalhos">
-          <Link href="/painel/revendedor/catalogo" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Catálogo</span>
+          <Link href="/painel/revendedor/catalogo" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Catálogo</span>
             <span className="text-sm text-petroleo/75">Escolha produtos para indicar</span>
           </Link>
-          <Link href="/painel/revendedor/links" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Minhas indicações</span>
+          <Link href="/painel/revendedor/links" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Minhas indicações</span>
             <span className="text-sm text-petroleo/75">Links da Shopee, Mercado Livre e TikTok Shop</span>
           </Link>
         </nav>
@@ -112,7 +112,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
 
       {/* afiliações */}
       {vitrine && (
-        <section className="rounded-3xl bg-branco p-5">
+        <section className="rounded-2xl bg-branco p-5">
           <h2 className="text-xl">Minhas afiliações</h2>
           {!afiliacoes?.length ? (
             <p className="mt-2 text-petroleo/70">
@@ -170,7 +170,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
       {/* vendas e cliques */}
       <MinhasVendas />
       {vitrine && (
-        <section className="rounded-3xl bg-branco p-5">
+        <section className="rounded-2xl bg-branco p-5">
           <h2 className="text-xl">Cliques</h2>
           <p className="text-sm text-petroleo/70">Pessoas que abriram seus produtos. Repetições da mesma pessoa em 10 minutos contam uma vez.</p>
           {!cliques?.length ? (

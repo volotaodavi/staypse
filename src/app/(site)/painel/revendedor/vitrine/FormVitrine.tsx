@@ -65,7 +65,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
 
       {/* passo 1 */}
       <fieldset hidden={passo !== 1} className="flex flex-col gap-4">
-        <legend className="mb-2 text-xl font-extrabold">Como sua vitrine se chama?</legend>
+        <legend className="mb-2 text-xl font-semibold">Como sua vitrine se chama?</legend>
         <Campo
           rotulo="Nome da vitrine"
           name="nome_exibicao"
@@ -94,7 +94,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
 
       {/* passo 2 */}
       <fieldset hidden={passo !== 2} className="flex flex-col gap-3">
-        <legend className="mb-2 text-xl font-extrabold">Qual é o nicho da vitrine?</legend>
+        <legend className="mb-2 text-xl font-semibold">Qual é o nicho da vitrine?</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {NICHOS_VITRINE.map((n) => (
             <label
@@ -112,7 +112,7 @@ export function FormVitrine({ inicial, site, uid }: { inicial: Inicial | null; s
 
       {/* passo 3 */}
       <fieldset hidden={passo !== 3} className="flex flex-col gap-4">
-        <legend className="mb-2 text-xl font-extrabold">Visual da vitrine</legend>
+        <legend className="mb-2 text-xl font-semibold">Visual da vitrine</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           {(Object.keys(MODELOS_VISUAIS) as ModeloVisual[]).map((m) => (
             <label

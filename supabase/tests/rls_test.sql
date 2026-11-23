@@ -86,7 +86,8 @@ select teste.ok((select count(*) from public.terms_acceptances
                  where user_id = '00000000-0000-0000-0000-00000000000a' and versao = '2026-11-16') = 2,
                 'aceite de termos e privacidade registrado com versão');
 
--- admin só é criado direto no banco (SQL Editor)
+-- admin só é criado direto no banco (SQL Editor), e só para o e-mail configurado (admin único)
+select public.definir_admin_email('Caio@Teste.com');
 insert into public.user_roles values ('00000000-0000-0000-0000-00000000000c', 'admin');
 
 -- =========================================================================
@@ -1421,7 +1422,7 @@ select teste.ok(public.configuracoes_publicas() ? 'meios_pagamento' and not (pub
                 and not (public.configuracoes_publicas() ? 'palavras_proibidas'),
                 'leitura pública traz só chaves não sensíveis (sem taxa nem palavras proibidas)');
 :comoC
-select teste.ok((select count(*) from public.configuracoes) = 6, 'admin lê as 6 configurações');
+select teste.ok((select count(*) from public.configuracoes) = 7, 'admin lê as 7 configurações (6 de regras + admin_email)');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 80}')$$, 'mínimo maior que o máximo salvo é recusado');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 40, "comissao_max_percentual": 30}')$$, 'faixa incoerente (min > max) é recusada');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": 101}')$$, 'taxa acima de 100 é recusada');
@@ -2314,6 +2315,87 @@ reset role;
 select public.notificar('00000000-0000-0000-0000-00000000000a', 'venda_paga', 'Venda nova', 'teste de preferência', '/painel/loja/pedidos', 'pref-teste');
 select teste.ok((select not email_pendente from public.notificacoes where chave = 'pref-teste'),
                 'preferência desligada: a venda nova avisa no app mas não entra na fila de e-mail');
+
+
+-- =========================================================================
+-- 8b. Admin único + Financeiro do admin (migração 20261209000001)
+-- =========================================================================
+reset role;
+select teste.ok(public.admin_email_configurado() = 'caio@teste.com', 'admin_email guardado em minúsculas');
+select teste.bloqueia($$insert into public.user_roles values ('00000000-0000-0000-0000-00000000000a', 'admin')$$,
+                      'papel admin recusado para outro e-mail (até para o servidor)');
+select teste.bloqueia($$update public.user_roles set papel = 'admin' where user_id = '00000000-0000-0000-0000-00000000000b' and papel = 'revendedor'$$,
+                      'promover papel existente a admin também é recusado');
+select teste.ok((select count(*) = 1 from public.user_roles where papel = 'admin'), 'existe um único admin');
+:comoC
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"admin_email": "outro@teste.com"}'::jsonb)$$,
+                      'nem o admin troca o admin_email pela tela');
+select teste.ok(public.is_admin(), 'admin com o e-mail configurado é admin');
+
+-- cenário pequeno, em 2020 (não mistura com os pedidos dos outros testes)
+reset role;
+insert into public.orders (id, producer_id, revendedor_id, comprador_nome, comprador_email, subtotal_centavos, total_centavos,
+                           resumo_aceito_em, termos_versao, status, pago_em, reembolsado_em, split_snapshot)
+select v.id, (select id from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'), v.rev,
+       'Fin Teste', 'fin@teste.com', v.total, v.total, now(), '2026-11-16', v.status, v.pago, v.reemb, v.snap::jsonb
+from (values
+  ('00000000-0000-0000-0000-0000000000a1'::uuid, '00000000-0000-0000-0000-00000000000b'::uuid, 10000, 'pago', '2020-03-10 15:00Z'::timestamptz, null::timestamptz,
+   '{"resultado":{"produtorCentavos":8500,"indicadorCentavos":1000,"staypseCentavos":500,"taxaMeioCentavos":0,"comissaoDevidaCentavos":1000},"taxaMeioInformada":false}'),
+  ('00000000-0000-0000-0000-0000000000a2'::uuid, null::uuid, 20000, 'pago', '2020-03-11 12:00Z'::timestamptz, null::timestamptz,
+   '{"resultado":{"produtorCentavos":19000,"indicadorCentavos":0,"staypseCentavos":1000,"taxaMeioCentavos":0,"comissaoDevidaCentavos":0},"taxaMeioInformada":false}'),
+  ('00000000-0000-0000-0000-0000000000a3'::uuid, null::uuid, 5000, 'reembolsado', '2020-03-10 16:00Z'::timestamptz, '2020-03-12 12:00Z'::timestamptz,
+   '{"resultado":{"produtorCentavos":4750,"indicadorCentavos":0,"staypseCentavos":250,"taxaMeioCentavos":0,"comissaoDevidaCentavos":0},"taxaMeioInformada":false}')
+) as v(id, rev, total, status, pago, reemb, snap);
+
+:comoC
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'gmv_centavos')::int = 30000, 'financeiro: GMV soma só os pedidos pagos');
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'staypse_centavos')::int = 1500, 'financeiro: receita Staypse vem do snapshot (reembolsado fora)');
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'comissao_afiliados_centavos')::int = 1000, 'financeiro: comissão de afiliados');
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'liquido_lojas_centavos')::int = 27500, 'financeiro: líquido das lojas');
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'taxa_meio_informada_pedidos')::int = 0, 'financeiro: taxa da Lytex ainda não informada');
+select teste.ok((public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'reembolsos_centavos')::int = 5000
+                and (public.admin_fin_resumo('2020-03-01T00:00-03', '2020-04-01T00:00-03') ->> 'reembolsos_qtd')::int = 1, 'financeiro: reembolsos do período');
+select teste.ok((public.admin_fin_resumo('2020-03-11T00:00-03', '2020-03-12T00:00-03') ->> 'pedidos')::int = 1, 'financeiro: o período filtra por dia de Brasília');
+select teste.ok((select count(*) = 2 and sum(staypse_centavos) = 1500 from public.admin_fin_por_dia('2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: série por dia');
+select teste.ok((select pedidos = 2 and vendido_centavos = 30000 and valor_centavos = 27500 and total_linhas = 1
+                 from public.admin_fin_ranking('loja', '2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: ranking por loja');
+select teste.ok((select pedidos = 1 and vendido_centavos = 10000 and valor_centavos = 1000 and nome = 'Bia Revendedora'
+                 from public.admin_fin_ranking('afiliado', '2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: ranking por afiliado');
+select teste.ok((select count(*) = 0 from public.admin_fin_ranking('vendedor', '2020-03-01T00:00-03', '2020-04-01T00:00-03')), 'financeiro: sem vendedor, ranking vazio');
+select teste.ok((select count(*) = 1 from public.admin_fin_ranking('afiliado', '2020-03-01T00:00-03', '2020-04-01T00:00-03', 'bia')), 'financeiro: busca pelo nome');
+select teste.ok((select count(*) = 0 from public.admin_fin_ranking('afiliado', '2020-03-01T00:00-03', '2020-04-01T00:00-03', '%zz_')), 'financeiro: busca com curinga não casa tudo');
+select teste.bloqueia($$select * from public.admin_fin_ranking('banco', now(), now())$$, 'financeiro: tipo de ranking inválido');
+select teste.bloqueia($$select * from public.admin_fin_ranking('loja', now(), now(), null, 0, 0)$$, 'financeiro: limite inválido');
+
+-- saque da conta própria: registro antes/depois + aviso aos admins
+select teste.bloqueia($$select public.admin_registrar_saque('antes', 0)$$, 'saque de valor zero recusado');
+select public.admin_registrar_saque('antes', 5000);
+select public.admin_registrar_saque('depois', 5000, false, 'lytex_http_400');
+reset role;
+select teste.ok((select count(*) = 2 from public.audit_log where acao in ('saque_staypse_antes', 'saque_staypse_depois')), 'saque: registro antes e depois no log');
+select teste.ok((select count(*) = 1 from public.notificacoes where tipo = 'saque_staypse' and user_id = '00000000-0000-0000-0000-00000000000c'), 'saque: admin recebe o aviso');
+
+-- quem não é admin não acessa nada do financeiro
+:comoA
+select teste.bloqueia($$select public.admin_fin_resumo('2020-03-01', '2020-04-01')$$, 'financeiro: não-admin não vê o resumo');
+select teste.bloqueia($$select * from public.admin_fin_por_dia('2020-03-01', '2020-04-01')$$, 'financeiro: não-admin não vê a série');
+select teste.bloqueia($$select * from public.admin_fin_ranking('loja', '2020-03-01', '2020-04-01')$$, 'financeiro: não-admin não vê o ranking');
+select teste.bloqueia($$select public.admin_registrar_saque('antes', 100)$$, 'saque: não-admin não registra');
+select teste.bloqueia($$select split_snapshot from public.orders$$, 'split_snapshot segue ilegível para usuário logado');
+:comoAnon
+select teste.bloqueia($$select public.admin_fin_resumo('2020-03-01', '2020-04-01')$$, 'financeiro: visitante não vê o resumo');
+select teste.bloqueia($$select public.definir_admin_email('x@y.com')$$, 'visitante não define o admin_email');
+:comoA
+select teste.bloqueia($$select public.definir_admin_email('ana@teste.com')$$, 'usuário logado não define o admin_email');
+
+-- trocar o e-mail do admin tira o papel de quem não é mais ele (o servidor não tem usuário logado)
+:comoServidor
+select public.definir_admin_email('ana@teste.com');
+select teste.ok((select count(*) = 0 from public.user_roles where papel = 'admin'), 'trocar o admin_email remove o papel do antigo admin');
+select public.definir_admin_email('caio@teste.com');
+insert into public.user_roles values ('00000000-0000-0000-0000-00000000000c', 'admin');
+:comoC
+select teste.ok(public.is_admin(), 'admin restaurado');
 
 -- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas

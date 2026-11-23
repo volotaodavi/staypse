@@ -451,6 +451,23 @@ async function criarPedidos() {
       pedido.arrependimento_solicitado_em = sol.toISOString();
       if (e === "reembolsado") pedido.reembolsado_em = apos(sol, 1.5).toISOString();
     }
+    // split gravado como no checkout real (taxa Staypse 5% do subtotal; taxa da Lytex ainda não informada),
+    // para o Financeiro do admin ter números
+    if (pedido.pago_em) {
+      const o = ok(await admin.from("orders").select("subtotal_centavos, total_centavos, revendedor_id, vendedor_id, order_items(comissao_percentual)").eq("id", id).single(), "ler pedido");
+      const forma = o.vendedor_id ? ok(await admin.from("loja_vendedores").select("forma_pagamento").eq("id", o.vendedor_id).single(), "ler vendedor").forma_pagamento : null;
+      const pct = Math.max(0, ...o.order_items.map((i) => Number(i.comissao_percentual)));
+      const comissao = o.revendedor_id ? Math.round((o.subtotal_centavos * pct) / 100) : 0;
+      const indicador = forma === "folha" ? 0 : comissao;
+      const staypse = Math.round((o.subtotal_centavos * 5) / 100);
+      pedido.split_snapshot = {
+        versao: 1,
+        entrada: { indicador: !o.revendedor_id ? "nenhum" : o.vendedor_id ? (forma === "folha" ? "vendedor_folha" : "vendedor_split") : "afiliado" },
+        resultado: { produtorCentavos: o.total_centavos - staypse - indicador, indicadorCentavos: indicador, staypseCentavos: staypse, taxaMeioCentavos: 0, comissaoDevidaCentavos: comissao },
+        taxaMeioInformada: false,
+        partes: [],
+      };
+    }
     ok(await admin.from("orders").update(pedido).eq("id", id), "ajustar datas do pedido");
     if (["enviado", "entregue", "reembolso", "reembolsado"].includes(e) && !it.digital) {
       ok(await admin.from("order_items").update({ enviado_em: enviadoEm.toISOString(), nota_fiscal_emitida_em: pagoEm.toISOString() }).eq("order_id", id), "ajustar datas de envio");
@@ -507,6 +524,8 @@ async function criarCliques(total = 200) {
 await limpar();
 log("Criando dados de demonstração...");
 const adm = await criarUsuario("admin", "Admin Demo", []);
+// admin único: o banco só aceita o papel admin para o e-mail configurado (no app vem do ADMIN_EMAIL)
+ok(await admin.rpc("definir_admin_email", { p_email: adm.email }), "definir e-mail do admin");
 ok(await admin.from("user_roles").insert({ user_id: adm.id, papel: "admin" }), "papel admin");
 ctx.admin = { user: adm, cliente: await entrar(adm) };
 for (const l of LOJAS) await criarLoja(l);

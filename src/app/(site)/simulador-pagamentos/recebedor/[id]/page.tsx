@@ -30,11 +30,11 @@ export default async function SimuladorRecebedor({ params, searchParams }: PageP
     <>
       <Cabecalho logado />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
-        <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl border-2 border-dashed border-petroleo/40 bg-branco p-6">
-          <p className="text-sm font-medium text-petroleo/75">Ambiente de teste · simula a Lytex</p>
+        <section className="flex w-full max-w-md flex-col gap-4 rounded-2xl border-2 border-dashed border-petroleo/40 bg-branco p-6">
+          <p className="text-sm font-medium text-petroleo/75">Ambiente de teste, simula a Lytex</p>
           <h1 className="text-2xl">Cadastro de recebimento</h1>
           <p className="text-sm">
-            Papel: {r.papel} · documento {r.documento}
+            Papel: {r.papel}, documento {r.documento}
             <br />
             Situação:{" "}
             <strong className="font-medium" data-status-recebedor>

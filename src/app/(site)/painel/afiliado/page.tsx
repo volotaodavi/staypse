@@ -136,7 +136,7 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
                       {p.nome}
                       <span className="block font-normal text-petroleo/75">{p.loja}</span>
                     </span>,
-                    `${String(Number(p.comissao_percentual)).replace(".", ",")}% · ${formatarPreco(comissao)}`,
+                    `${String(Number(p.comissao_percentual)).replace(".", ",")}%, ${formatarPreco(comissao)}`,
                     <span key="s" className={p.status === "bloqueada" || p.status === "recusada" ? "text-red-800" : ""}>
                       {STATUS_AFILIACAO[p.status] ?? p.status}
                     </span>,

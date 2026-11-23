@@ -1,6 +1,7 @@
 // Quem está logado, quais papéis tem e para qual página deve ir.
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { ehEmailAdmin, sincronizarAdminEmail } from "@/lib/admin-email";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 export type Papel = "produtor" | "revendedor" | "admin" | "vendedor_proprio";
@@ -26,6 +27,8 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
   const id = data?.claims?.sub;
   if (!id) return null;
 
+  await sincronizarAdminEmail();
+  const email = String(data.claims.email ?? "");
   const [{ data: perfil }, { data: papeis }] = await Promise.all([
     supabase.from("profiles").select("nome, suspenso_motivo").eq("id", id).single(),
     supabase.from("user_roles").select("papel").eq("user_id", id),
@@ -33,9 +36,10 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
 
   return {
     id,
-    email: String(data.claims.email ?? ""),
+    email,
     nome: perfil?.nome ?? "",
-    papeis: (papeis ?? []).map((p) => p.papel as Papel),
+    // admin único: o papel só vale para o e-mail de ADMIN_EMAIL (sem diferenciar maiúsculas)
+    papeis: (papeis ?? []).map((p) => p.papel as Papel).filter((p) => p !== "admin" || ehEmailAdmin(email)),
     suspensoMotivo: perfil?.suspenso_motivo ?? null,
   };
 }

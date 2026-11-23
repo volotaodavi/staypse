@@ -82,3 +82,12 @@ Fonte: `docs/lytex/openapi-v2-sandbox.json`. O que o spec responde está impleme
 50. **Split.** O split aceita `fixedValue` em centavos e exige 2 a 10 recebedores. O emissor (conta principal da integração) entra no split automaticamente? A taxa da Staypse deve ser uma subconta própria (pergunta 28)? A soma das partes precisa fechar o total? Qual o mínimo (`POST /v2/invoices/split-min-value`, `taxationMode: onlyPrimary`)?
 51. **Taxas por meio.** `POST /v2/invoices/rates/methods` devolve `{boleto, pix, creditCard}` como números sem unidade (percentual? centavos?). Sem isso `montar-split.ts` segue com taxa 0.
 52. **Sandbox — credenciais.** `POST /v2/auth/obtain_token` respondeu 401 "Client inválido" com as credenciais de `.env.local` (formato aparentemente correto: id 24 caracteres, segredo 256). Conferir se são credenciais de SANDBOX e se o par está ativo.
+
+## Conta própria da Staypse (admin, financeiro)
+Usamos só o que o spec tem: GET /v2/wallet, GET /v2/wallet/transactions/resume, GET /v2/bank_accounts e POST /v2/wallet/withdraw (tags "Carteira" e "Contas Bancárias"). Perguntas abertas:
+- Os valores de `balance`, `futureBalance`, `minimumWithdrawal`, `currentTax`, `in`, `out`, `taxes` e o `amount` do saque são em **centavos** ou reais? (o spec só diz `number`/`integer`; tratamos como centavos)
+- `currentTax` é a tarifa por saque em valor fixo ou percentual?
+- Os itens de GET /v2/wallet/transactions não têm campos descritos no spec (`items: {}`). Quais campos vêm (data, tipo, valor, descrição) para montar o extrato?
+- As credenciais (client_id/secret) da API acessam a carteira da conta principal da Staypse ou de uma subconta?
+- O saque exige conta bancária ativa com o mesmo CPF/CNPJ da Staypse? Há limite diário e horário de corte?
+- Existe webhook de aprovação do saque (`waiting_approval` para `approved`/`released`)?

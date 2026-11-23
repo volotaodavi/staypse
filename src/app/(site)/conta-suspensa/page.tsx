@@ -16,7 +16,7 @@ export default async function ContaSuspensa() {
     <>
       <Cabecalho logado />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
-        <section className="flex h-fit w-full max-w-xl flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
+        <section className="flex h-fit w-full max-w-xl flex-col gap-4 rounded-2xl bg-branco p-6 sm:p-8">
           <h1 className="text-3xl">Conta suspensa</h1>
           <p>Sua conta está suspensa e os painéis ficam indisponíveis.</p>
           <p className="rounded-xl bg-gelo px-4 py-3 text-sm">Motivo informado: {usuario.suspensoMotivo}</p>

@@ -29,7 +29,7 @@ export default async function MeusDados() {
         </p>
       </div>
 
-      <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6">
+      <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6">
         <h2 className="text-xl">Baixar meus dados</h2>
         <p className="text-sm text-petroleo/80">
           Um arquivo (JSON) com sua conta, perfil, papéis, aceites de termos, empresa, vitrine, links, afiliações, compras e
@@ -40,7 +40,7 @@ export default async function MeusDados() {
         </a>
       </section>
 
-      <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6">
+      <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6">
         <h2 className="text-xl">Corrigir ou excluir</h2>
         <ul className="flex flex-col gap-2 text-sm">
           <li>
@@ -72,7 +72,7 @@ export default async function MeusDados() {
         </p>
       </section>
 
-      <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6">
+      <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6">
         <h2 className="text-xl">Meus atendimentos</h2>
         {!atendimentos?.length ? (
           <p className="text-sm text-petroleo/80">Nenhum atendimento aberto com esta conta.</p>
@@ -80,7 +80,7 @@ export default async function MeusDados() {
           <ul className="flex flex-col divide-y divide-petroleo/10 text-sm">
             {atendimentos.map((a) => (
               <li key={a.protocolo} className="py-2">
-                <span className="font-medium">{a.protocolo}</span> · {ASSUNTOS_ATENDIMENTO[a.assunto]} · {data(a.criado_em)} ·{" "}
+                <span className="font-medium">{a.protocolo}</span>, {ASSUNTOS_ATENDIMENTO[a.assunto]}, {data(a.criado_em)} ·{" "}
                 {a.status === "aberto" ? "aguardando resposta" : a.status}
               </li>
             ))}

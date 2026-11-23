@@ -229,7 +229,7 @@ export function FormLoja({
     </label>
   );
 
-  const titulo = "text-xl font-extrabold";
+  const titulo = "text-xl font-semibold";
   const bloco = "flex flex-col gap-4 border-t border-petroleo/10 pt-5";
 
   return (

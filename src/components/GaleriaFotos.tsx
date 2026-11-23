@@ -48,7 +48,7 @@ export function GaleriaFotos({ fotos, nome }: { fotos: string[]; nome: string })
   };
 
   const botao =
-    "flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-neutral-900 shadow-sm ring-1 ring-neutral-300 hover:bg-white";
+    "flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-neutral-900 ring-1 ring-neutral-300 hover:bg-white";
   const seta = `${botao} absolute top-1/2 -translate-y-1/2`;
 
   return (

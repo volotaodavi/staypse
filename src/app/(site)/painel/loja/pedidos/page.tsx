@@ -120,7 +120,7 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
           {atendimentos.map((a) => (
             <article key={a.id} className="flex flex-col gap-2 rounded-2xl bg-branco p-4 text-sm">
               <p className="text-petroleo/75">
-                Protocolo {a.protocolo} · {ASSUNTOS_ATENDIMENTO[a.assunto]} · responder até {data(a.prazo_ate)}
+                Protocolo {a.protocolo}, {ASSUNTOS_ATENDIMENTO[a.assunto]}, responder até {data(a.prazo_ate)}
               </p>
               <p className="font-medium">{a.nome}</p>
               <p className="whitespace-pre-line">{a.mensagem}</p>

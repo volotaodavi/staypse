@@ -41,22 +41,22 @@ export default async function Obrigado({ params }: PageProps<"/lista/[codigo]">)
       <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col bg-gelo px-4 py-10">
         <div className="mx-auto flex w-full max-w-md flex-col gap-5">
-          <section className="rounded-3xl bg-petroleo p-6 text-gelo">
+          <section className="rounded-2xl bg-petroleo p-6 text-gelo">
             <p className="text-sm font-medium tracking-wide text-ciano uppercase">Inscrição confirmada</p>
             <h1 className="mt-2 text-3xl">Você está na lista!</h1>
             <p className="mt-6 text-gelo/80">Sua posição na fila de {fila}</p>
-            <p className="text-6xl font-extrabold text-ciano">{data.posicao}º</p>
+            <p className="text-6xl font-semibold text-ciano">{data.posicao}º</p>
             <p className="text-gelo/80">de {data.total}</p>
           </section>
 
-          <section className="rounded-3xl bg-branco p-6">
+          <section className="rounded-2xl bg-branco p-6">
             <h2 className="text-xl">Suba na fila indicando</h2>
             <p className="mt-2 text-petroleo/80">
               Quem trouxer mais pessoas entra primeiro no acesso antecipado. Não há sorteio nem
               prêmio em dinheiro: a vantagem é só a prioridade na entrada.
             </p>
             <p className="mt-4 text-lg">
-              <strong className="font-extrabold">{data.indicacoes}</strong>{" "}
+              <strong className="font-semibold">{data.indicacoes}</strong>{" "}
               {data.indicacoes === 1 ? "pessoa entrou" : "pessoas entraram"} pelo seu link
             </p>
 

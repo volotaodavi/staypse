@@ -149,18 +149,18 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
           {itens.map((item) => {
             const pct = Number(item.comissao_percentual);
             return (
-              <li key={item.id} className="flex flex-col overflow-hidden rounded-3xl bg-branco">
+              <li key={item.id} className="flex flex-col overflow-hidden rounded-2xl bg-branco">
                 <FotoItem caminho={item.fotos[0]} alt={item.nome} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" />
                 <div className="flex flex-1 flex-col gap-2 p-4">
                   <p className="text-xs text-petroleo/70">
                     {item.tipo === "digital" ? "Digital" : "Físico"}
-                    {item.categoria ? ` · ${ROTULO_NICHO[item.categoria] ?? item.categoria}` : ""} · {item.produtor_nome}
+                    {item.categoria ? `, ${ROTULO_NICHO[item.categoria] ?? item.categoria}` : ""}, {item.produtor_nome}
                   </p>
                   <Link href={`/loja/${item.loja_slug}/${item.slug}`} className="block py-1 font-medium leading-snug underline-offset-2 hover:underline">
                     {item.nome}
                   </Link>
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-lg font-extrabold">{formatarPreco(item.preco_centavos)}</span>
+                    <span className="text-lg font-semibold">{formatarPreco(item.preco_centavos)}</span>
                     <span className="rounded-full bg-gelo px-2.5 py-1 text-sm font-medium">{pct}% de comissão</span>
                   </div>
                   <p className="rounded-xl bg-petroleo px-3 py-2 text-sm text-gelo" data-comissao-reais>

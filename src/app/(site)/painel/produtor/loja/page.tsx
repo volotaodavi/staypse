@@ -72,7 +72,7 @@ export default async function PaginaLoja() {
               Ver loja pública
             </Link>
           )}
-          <div className="rounded-3xl bg-branco p-5">
+          <div className="rounded-2xl bg-branco p-5">
             <FormLoja
               inicial={produtor}
               nomeEmpresa={produtor.razao_social}

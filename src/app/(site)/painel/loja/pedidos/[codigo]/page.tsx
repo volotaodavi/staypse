@@ -91,7 +91,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
             {STATUS_EXIBICAO[st] ?? st}
           </h1>
         </div>
-        <p className="text-3xl font-extrabold tabular-nums">{formatarPreco(p.total_centavos)}</p>
+        <p className="text-3xl font-semibold tabular-nums">{formatarPreco(p.total_centavos)}</p>
       </div>
       {um(sp.msg) && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">
@@ -116,14 +116,14 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
                   <span className="font-medium">
                     {i.nome_item} × {i.quantidade}
                   </span>{" "}
-                  · {formatarPreco(i.preco_unitario_centavos * i.quantidade)} ·{" "}
+                 , {formatarPreco(i.preco_unitario_centavos * i.quantidade)} ·{" "}
                   <span data-status-entrega>{STATUS_ENTREGA[i.status_entrega] ?? i.status_entrega}</span>
                   {i.enviado_em && <span className="text-petroleo/75"> em {dataHora(i.enviado_em)}</span>}
                 </p>
                 {i.nota_fiscal_numero && (
                   <p className="text-petroleo/75">
                     Nota {i.nota_fiscal_numero}
-                    {i.codigo_rastreio ? ` · rastreio ${i.codigo_rastreio}` : ""}
+                    {i.codigo_rastreio ? `, rastreio ${i.codigo_rastreio}` : ""}
                   </p>
                 )}
                 {p.status === "pago" && i.status_entrega !== "entregue" && i.status_entrega !== "cancelado" && (
@@ -158,7 +158,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
                         </button>
                       )}
                       <button name="acao" value="entregue" className={`${botao} bg-ciano text-petroleo`}>
-                        {p.entrega_modo === "digital" ? "Nota emitida · concluir" : p.entrega_modo === "retirada" ? "Cliente retirou" : "Marcar como entregue"}
+                        {p.entrega_modo === "digital" ? "Nota emitida, concluir" : p.entrega_modo === "retirada" ? "Cliente retirou" : "Marcar como entregue"}
                       </button>
                     </div>
                     <p className="text-xs text-petroleo/75 sm:col-span-2">A nota fiscal é obrigatória antes do envio.</p>
@@ -217,7 +217,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
             <h2 className="text-base font-medium">Quem indicou</h2>
             {p.vendedor_id ? (
               <p data-indicou>
-                Vendedor próprio · {p.loja_vendedores?.email ?? "Não informado"}
+                Vendedor próprio, {p.loja_vendedores?.email ?? "Não informado"}
                 {origemTexto(p.atribuicao_origem)}
               </p>
             ) : p.revendedor_id ? (
@@ -243,7 +243,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
                 <p className="font-medium">{p.comprador_nome}</p>
                 <p className="text-petroleo/80">
                   {p.comprador_email}
-                  {p.comprador_telefone ? ` · ${p.comprador_telefone}` : ""}
+                  {p.comprador_telefone ? `, ${p.comprador_telefone}` : ""}
                 </p>
                 <p className="text-petroleo/80">CPF {formatarCpf(p.comprador_documento)} (para a nota fiscal)</p>
                 <p className="mt-1">{p.entrega_modo ? ROTULO_ENTREGA[p.entrega_modo] : ""}</p>

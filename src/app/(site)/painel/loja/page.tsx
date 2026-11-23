@@ -155,7 +155,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
         pontos={r.serie.map((d) => ({
           rotulo: diaCurto(d.dia),
           valor: d.vendas,
-          detalhe: `${formatarDia(d.dia)}: ${d.vendas} ${d.vendas === 1 ? "venda" : "vendas"} · ${formatarPreco(d.faturamento_centavos)}`,
+          detalhe: `${formatarDia(d.dia)}: ${d.vendas} ${d.vendas === 1 ? "venda" : "vendas"}, ${formatarPreco(d.faturamento_centavos)}`,
         }))}
       />
 

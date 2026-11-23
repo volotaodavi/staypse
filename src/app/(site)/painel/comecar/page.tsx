@@ -27,12 +27,12 @@ export default async function Comecar() {
     <>
       <h1 className="text-3xl">Como você quer usar a Staypse?</h1>
       <form action={escolherPapel} className="mt-6 grid gap-4 sm:grid-cols-2">
-        <button name="papel" value="revendedor" className="rounded-3xl bg-petroleo p-6 text-left text-gelo">
-          <span className="block text-2xl font-extrabold text-ciano">Revendedor</span>
+        <button name="papel" value="revendedor" className="rounded-xl bg-petroleo p-6 text-left text-gelo">
+          <span className="block text-2xl font-semibold text-ciano">Revendedor</span>
           <span className="mt-1 block text-gelo/85">Quero montar minha vitrine e indicar.</span>
         </button>
-        <button name="papel" value="produtor" className="rounded-3xl bg-petroleo p-6 text-left text-gelo">
-          <span className="block text-2xl font-extrabold text-ciano">Produtor</span>
+        <button name="papel" value="produtor" className="rounded-xl bg-petroleo p-6 text-left text-gelo">
+          <span className="block text-2xl font-semibold text-ciano">Produtor</span>
           <span className="mt-1 block text-gelo/85">Tenho CNPJ e quero vender meus produtos.</span>
         </button>
       </form>

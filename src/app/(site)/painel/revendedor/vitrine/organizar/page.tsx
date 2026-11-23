@@ -44,7 +44,7 @@ export default async function PaginaOrganizar() {
         visita continua indo para a loja que vende.
       </p>
       {itens.length === 0 ? (
-        <p className="rounded-3xl bg-branco p-5">
+        <p className="rounded-2xl bg-branco p-5">
           Você ainda não tem produtos aprovados na vitrine.{" "}
           <Link href="/painel/revendedor/catalogo" className="font-medium underline">
             Ver o catálogo
@@ -52,7 +52,7 @@ export default async function PaginaOrganizar() {
           .
         </p>
       ) : (
-        <div className="rounded-3xl bg-branco p-5">
+        <div className="rounded-2xl bg-branco p-5">
           <FormOrganizar
             slug={vitrine.slug}
             itens={itens}

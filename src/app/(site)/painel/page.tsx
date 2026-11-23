@@ -20,7 +20,7 @@ export default async function Painel() {
       <p className="mt-1 text-petroleo/75">Você tem mais de um papel na Staypse.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {AREAS.filter((a) => usuario.papeis.includes(a.papel)).map((a) => (
-          <Link key={a.papel} href={a.caminho} className="rounded-3xl bg-petroleo p-6 text-gelo hover:bg-petroleo/90">
+          <Link key={a.papel} href={a.caminho} className="rounded-2xl bg-petroleo p-6 text-gelo hover:bg-petroleo/90">
             <h2 className="text-2xl text-ciano">{a.titulo}</h2>
             <p className="mt-1 text-gelo/85">{a.texto}</p>
           </Link>

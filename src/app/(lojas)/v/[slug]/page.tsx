@@ -105,7 +105,7 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
               <h1 className="truncate text-2xl font-semibold">{nome}</h1>
               <p className="text-sm text-neutral-600">
                 @{slug}
-                {vitrine.nicho ? ` · ${ROTULO_NICHO_VITRINE[vitrine.nicho]}` : ""}
+                {vitrine.nicho ? `, ${ROTULO_NICHO_VITRINE[vitrine.nicho]}` : ""}
               </p>
             </div>
           </div>

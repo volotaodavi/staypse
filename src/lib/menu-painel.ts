@@ -52,6 +52,7 @@ export const AREAS_MENU: AreaMenu[] = [
       { href: "/admin/itens", rotulo: "Itens", icone: "produtos", grupo: "Análise" },
       { href: "/admin/recebedores", rotulo: "Recebedores", icone: "recebimentos", grupo: "Análise" },
       { href: "/admin/denuncias", rotulo: "Denúncias", icone: "denuncias", grupo: "Análise" },
+      { href: "/admin/financeiro", rotulo: "Financeiro", icone: "recebimentos", grupo: "Finanças" },
       { href: "/admin/pedidos", rotulo: "Pedidos", icone: "pedidos", grupo: "Operação" },
       { href: "/admin/atendimentos", rotulo: "Atendimentos", icone: "atendimentos", grupo: "Operação" },
       { href: "/admin/usuarios", rotulo: "Usuários", icone: "usuarios", grupo: "Operação" },

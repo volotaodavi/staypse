@@ -62,7 +62,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
         ))}
       </ol>
 
-      <section className="mt-5 rounded-3xl bg-branco p-5 sm:p-6">
+      <section className="mt-5 rounded-2xl bg-branco p-5 sm:p-6">
         {passo === 1 && (
           <FormAcao acao={salvarEmpresa}>
             <h2 className="text-xl">Dados da empresa</h2>
@@ -147,7 +147,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
               <span className="sr-only"> (abre em nova aba)</span>
             </Link>
             {contratoAceito ? (
-              <p className="rounded-xl bg-gelo px-4 py-3 text-sm">✓ Você já aceitou esta versão do contrato.</p>
+              <p className="rounded-xl bg-gelo px-4 py-3 text-sm"> Você já aceitou esta versão do contrato.</p>
             ) : (
               <label className="flex gap-3 text-sm">
                 <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
@@ -171,7 +171,7 @@ export default async function CadastroProdutor({ searchParams }: PageProps<"/pai
             <h2 className="text-xl">Revisar e enviar</h2>
             {produtor && (
               <p className="text-sm">
-                {produtor.razao_social} · CNPJ {formatarCnpj(produtor.cnpj)} ·{" "}
+                {produtor.razao_social}, CNPJ {formatarCnpj(produtor.cnpj)} ·{" "}
                 {STATUS_PRODUTOR[produtor.status_verificacao]}
               </p>
             )}

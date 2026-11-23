@@ -78,7 +78,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
         <div className="flex w-full max-w-2xl flex-col gap-5">
           {novo && (
-            <section className="flex flex-col gap-3 rounded-3xl bg-petroleo p-6 text-branco">
+            <section className="flex flex-col gap-3 rounded-2xl bg-petroleo p-6 text-branco">
               <h2 className="text-2xl text-ciano">Pedido feito!</h2>
               <p className="text-gelo/90">
                 Guarde este link: é por ele que você acompanha o pedido, recebe o acesso e, se quiser, desiste da compra.
@@ -99,7 +99,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             </p>
           )}
 
-          <section className="flex flex-col gap-4 rounded-3xl bg-branco p-6">
+          <section className="flex flex-col gap-4 rounded-2xl bg-branco p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm text-petroleo/75">Pedido {p.codigo}</p>
@@ -112,7 +112,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
                 {etapas.map((e) => (
                   <li key={e.nome} className={`rounded-xl px-3 py-2 text-sm ${e.feito ? "bg-petroleo text-branco" : "bg-gelo text-petroleo/75"}`}>
                     <span className="block font-medium">
-                      {e.feito ? "✓ " : ""}
+                      {e.feito ? "Feito: " : ""}
                       {e.nome}
                     </span>
                     {e.quando && <span className="block text-xs opacity-80">{dataHora(e.quando)}</span>}
@@ -123,7 +123,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
           </section>
 
           {p.status === "chargeback" && (
-            <section role="status" className="flex flex-col gap-2 rounded-3xl border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
+            <section role="status" className="flex flex-col gap-2 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
               <h2 className="text-xl">Pagamento contestado</h2>
               <p>
                 O pagamento deste pedido foi contestado junto ao emissor do cartão (chargeback) e o valor foi devolvido por lá.
@@ -133,7 +133,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
           )}
 
           {p.status === "aguardando_pagamento" && (
-            <section className="flex flex-col gap-3 rounded-3xl bg-branco p-6">
+            <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6">
               <h2 className="text-xl">Pagamento</h2>
               <p className="text-petroleo/80">
                 O pagamento (Pix, boleto ou cartão) é feito pela instituição de pagamento parceira, que divide o valor
@@ -159,7 +159,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             </section>
           )}
 
-          <section className="flex flex-col gap-4 rounded-3xl bg-branco p-6">
+          <section className="flex flex-col gap-4 rounded-2xl bg-branco p-6">
             <h2 className="text-xl">Itens</h2>
             <ul className="flex flex-col divide-y divide-petroleo/10">
               {p.itens.map((i) => (
@@ -181,7 +181,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
                       Nota fiscal nº {i.nota_fiscal_numero}
                       {i.nota_fiscal_url && (
                         <>
-                          {" · "}
+                          {", "}
                           <a href={i.nota_fiscal_url} target="_blank" rel="noopener noreferrer" className="underline">
                             ver nota
                             <span className="sr-only"> (abre em nova aba)</span>
@@ -227,7 +227,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             </dl>
           </section>
 
-          <section className="flex flex-col gap-2 rounded-3xl bg-branco p-6 text-sm">
+          <section className="flex flex-col gap-2 rounded-2xl bg-branco p-6 text-sm">
             <h2 className="text-xl">Entrega</h2>
             <p>{ROTULO_ENTREGA[p.entrega_modo]}</p>
             {p.endereco && <p className="text-petroleo/80">{enderecoEmLinha(p.endereco)}</p>}
@@ -243,10 +243,10 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             )}
           </section>
 
-          <section className="flex flex-col gap-2 rounded-3xl bg-branco p-6 text-sm">
+          <section className="flex flex-col gap-2 rounded-2xl bg-branco p-6 text-sm">
             <h2 className="text-xl">Quem vende</h2>
             <address className="not-italic text-petroleo/80">
-              {p.loja.razao_social} · CNPJ {formatarCnpj(p.loja.cnpj)}
+              {p.loja.razao_social}, CNPJ {formatarCnpj(p.loja.cnpj)}
               {p.loja.email && <span className="block">{p.loja.email}</span>}
               {p.loja.whatsapp && <span className="block">WhatsApp {p.loja.whatsapp}</span>}
             </address>
@@ -260,7 +260,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
           </section>
 
           {p.pode_desistir && (
-            <section className="flex flex-col gap-3 rounded-3xl border border-petroleo/20 bg-branco p-6 text-sm">
+            <section className="flex flex-col gap-3 rounded-2xl border border-petroleo/20 bg-branco p-6 text-sm">
               <h2 className="text-xl">{p.status === "aguardando_pagamento" ? "Cancelar pedido" : "Desistir da compra"}</h2>
               <p className="text-petroleo/80">
                 {p.status === "aguardando_pagamento"

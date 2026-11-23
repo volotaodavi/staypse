@@ -32,7 +32,7 @@ export default async function Frete() {
       {!p ? (
         <p className="rounded-2xl bg-branco p-4">Cadastre sua empresa primeiro.</p>
       ) : (
-        <section className="rounded-3xl bg-branco p-6">
+        <section className="rounded-2xl bg-branco p-6">
           <FormFrete
             inicial={{
               envia: p.frete_fixo_centavos != null ? "sim" : "nao",

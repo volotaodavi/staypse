@@ -12,7 +12,7 @@ export default async function EncontrarPedido({ searchParams }: PageProps<"/pedi
     <>
       <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
-        <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
+        <section className="flex w-full max-w-md flex-col gap-4 rounded-2xl bg-branco p-6 sm:p-8">
           <h1 className="text-3xl">Encontrar meu pedido</h1>
           <p className="text-petroleo/80">
             Use o código do pedido (10 letras e números) e o e-mail que você informou na compra. Geramos um link novo e o

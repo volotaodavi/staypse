@@ -45,7 +45,7 @@ export default async function Notificacoes() {
       </div>
 
       {lista.length === 0 ? (
-        <p className="rounded-3xl bg-branco p-6 text-sm text-petroleo/80">
+        <p className="rounded-2xl bg-branco p-6 text-sm text-petroleo/80">
           Quando algo importante acontecer (uma venda, uma decisão sobre sua afiliação, uma mudança no cadastro de recebimento), o aviso aparece aqui.
         </p>
       ) : (

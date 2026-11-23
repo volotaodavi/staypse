@@ -21,7 +21,7 @@ export default async function NovoItem() {
         ← Painel do produtor
       </Link>
       <h1 className="mt-2 mb-5 text-3xl">Novo item</h1>
-      <section className="rounded-3xl bg-branco p-5 sm:p-6">
+      <section className="rounded-2xl bg-branco p-5 sm:p-6">
         <FormItem uid={usuario.id} supabaseUrl={supabaseUrl()} />
       </section>
     </div>

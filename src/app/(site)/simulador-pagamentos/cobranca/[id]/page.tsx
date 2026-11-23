@@ -46,8 +46,8 @@ export default async function SimuladorCobranca({ params, searchParams }: PagePr
     <>
       <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
-        <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl border-2 border-dashed border-petroleo/40 bg-branco p-6">
-          <p className="text-sm font-medium text-petroleo/75">Ambiente de teste · simula a página de pagamento da Lytex</p>
+        <section className="flex w-full max-w-md flex-col gap-4 rounded-2xl border-2 border-dashed border-petroleo/40 bg-branco p-6">
+          <p className="text-sm font-medium text-petroleo/75">Ambiente de teste, simula a página de pagamento da Lytex</p>
           <h1 className="text-2xl">Pagamento do pedido</h1>
           <p className="text-3xl font-medium">{formatarPreco(c.total_centavos)}</p>
           <p className="text-sm">

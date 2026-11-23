@@ -73,7 +73,7 @@ export function EnviarArquivo({
       >
         <span className="truncate" role="status">
           {estado === "enviando" && "Enviando..."}
-          {estado === "ok" && `✓ Enviado${mensagem ? `: ${mensagem}` : ""}`}
+          {estado === "ok" && `Enviado${mensagem ? `: ${mensagem}` : ""}`}
           {(estado === "" || estado === "erro") && "Toque para escolher o arquivo"}
         </span>
         <span className="shrink-0 rounded-full bg-petroleo px-3 py-1 text-xs text-branco">

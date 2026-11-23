@@ -23,11 +23,11 @@ export default async function Imprimir({ searchParams }: PageProps<"/painel/prod
     <div className="flex flex-col gap-4 bg-white p-6 text-neutral-900 print:p-0">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold">
+          <h1 className="text-2xl font-semibold">
             Comissões de vendedores, {m}/{ano}
           </h1>
           <p className="text-sm">
-            {produtor?.razao_social} · CNPJ {produtor?.cnpj}
+            {produtor?.razao_social}, CNPJ {produtor?.cnpj}
           </p>
           <p className="text-sm text-neutral-600">
             Gerado em {new Date().toLocaleString("pt-BR")} pela Staypse (registro; a Staypse não paga comissões de folha).

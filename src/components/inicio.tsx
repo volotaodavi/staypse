@@ -1,119 +1,72 @@
 // Peças da página inicial (pré-lançamento).
-// O elemento central é a "vitrine com o split": mostra, de forma ilustrativa,
-// como UM pagamento se divide entre produtor, revendedor e Staypse, a mesma
-// ideia do "yp" da logo. Não mostra valores de ganho (regra de comunicação).
+// Duas peças mostram o produto como ele é: o caminho de um link curto até a loja
+// oficial (com a divisão do pagamento) e a tabela de produtos do painel da loja.
+// Os percentuais são exemplos; a comissão real de cada produto é da loja.
 
-// ---------- ícones (traço simples, herdam a cor do texto) ----------
-type IconeProps = { className?: string };
-const base = "h-6 w-6 shrink-0";
+const SPLIT = [
+  ["Lia Calçados", "produtor", 66, "bg-petroleo"],
+  ["Ana", "afiliada", 26, "bg-ciano"],
+  ["Staypse", "taxa da plataforma", 8, "bg-petroleo/30"],
+] as const;
 
-export const IconeSplit = ({ className = base }: IconeProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="M12 3v7M12 10l-6 6v5M12 10l6 6v5" />
-  </svg>
-);
-export const IconeSelo = ({ className = base }: IconeProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z" />
-    <path d="M9 12l2 2 4-4" />
-  </svg>
-);
-export const IconeVolta = ({ className = base }: IconeProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="M4 12a8 8 0 1 0 2.4-5.7" />
-    <path d="M4 4v4h4" />
-  </svg>
-);
-export const IconePessoa = ({ className = base }: IconeProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <circle cx="12" cy="8" r="4" />
-    <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
-  </svg>
-);
-export const IconeCheck = ({ className = "h-5 w-5 shrink-0" }: IconeProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="M5 12.5l4.5 4.5L19 7.5" />
-  </svg>
-);
-
-const tr = (d: string) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={base} aria-hidden="true">
-    <path d={d} />
-  </svg>
-);
-export const IconeLoja = () => tr("M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9c0 2 1.5 3 3 3s3-1 3-3c0 2 1.5 3 3 3s3-1 3-3M10 20v-5h4v5");
-export const IconeLink = () => tr("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1");
-export const IconeCrachaVendedor = () => tr("M5 4h14v16H5zM9 9h6M9 13h6M9 17h3");
-export const IconeSacola = () => tr("M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2");
-
-// ---------- vitrine no celular + barra do split ----------
-// "host": endereço do site sem https:// (vem de urlDoSite, nunca fixo no código)
-export function VitrineSplit({ host }: { host: string }) {
+function BarraSplit({ animada = false }: { animada?: boolean }) {
   return (
-    <div role="img" className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">
-      {/* celular */}
-      <div className="rounded-[2.2rem] bg-[#0B3A3F] p-2.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
-        <div className="overflow-hidden rounded-[1.75rem] bg-branco text-petroleo">
-          {/* endereço da vitrine */}
-          <div className="flex items-center gap-2 bg-gelo px-4 py-2.5 text-[11px] text-petroleo/70">
-            <span className="h-2 w-2 rounded-full bg-petroleo/30" />
-            <span className="truncate">
-              {host}/v/<span className="font-medium text-petroleo">ana</span>
-            </span>
-          </div>
+    <div className="flex h-2 gap-1 overflow-hidden rounded-full" aria-hidden="true">
+      {SPLIT.map(([nome, , pct, cor], i) => (
+        <span
+          key={nome}
+          className={`${animada ? "split-segmento " : ""}${cor}`}
+          style={{ flexGrow: pct, animationDelay: `${i * 120}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
 
-          <div className="px-4 pt-4 pb-5">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-petroleo text-sm font-extrabold text-ciano">A</span>
-              <div className="leading-tight">
-                <p className="text-sm font-medium">Vitrine da Ana</p>
-                <p className="text-[11px] text-petroleo/75">Beleza e cuidados</p>
-              </div>
+// ---------- hero: o link curto da Ana até a loja da Lia ----------
+// "host": endereço do site sem https:// (vem de urlDoSite, nunca fixo no código)
+export function LinkParaLoja({ host }: { host: string }) {
+  return (
+    <figure
+      role="img"
+      aria-label="Exemplo: o link /@ana/tenis-runner leva à loja oficial da Lia Calçados, e o pagamento é dividido entre loja, afiliada e Staypse"
+      className="w-full max-w-md justify-self-center lg:justify-self-end"
+    >
+      <div className="overflow-hidden rounded-2xl bg-branco text-petroleo">
+        <div className="bg-gelo px-5 py-3">
+          <p className="text-xs text-petroleo/75">O que a Ana compartilha</p>
+          <p className="mt-0.5 truncate font-mono text-sm">
+            {host}/@ana/<span className="font-medium">tenis-runner</span>
+          </p>
+        </div>
+        <div className="px-5 py-5">
+          <p className="text-xs text-petroleo/75">Quem clica cai na loja oficial</p>
+          <div className="mt-2 flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-medium leading-tight">Tênis Runner</p>
+              <p className="text-sm text-petroleo/75">Lia Calçados</p>
+              <p className="mt-1 font-mono text-xs text-petroleo/75">Indicado por @ana</p>
             </div>
-
-            {/* produto ilustrativo (formas, sem foto) */}
-            <div className="mt-4 rounded-2xl bg-gelo p-3">
-              {/* frasco com conta-gotas, pote e bisnaga (formas de produto, não gráfico) */}
-              <div className="flex h-28 items-end justify-center gap-3 rounded-xl bg-[linear-gradient(160deg,#d7ece9,#eef6f5)] pb-3">
-                <span className="flex flex-col items-center">
-                  <span className="h-3 w-2 rounded-t-full bg-petroleo" />
-                  <span className="h-2 w-4 rounded-sm bg-petroleo" />
-                  <span className="h-12 w-8 rounded-b-xl rounded-t-md bg-petroleo/85" />
-                </span>
-                <span className="flex flex-col items-center">
-                  <span className="h-3 w-12 rounded-t-md bg-petroleo" />
-                  <span className="h-9 w-14 rounded-b-2xl rounded-t-sm bg-ciano" />
-                </span>
-                <span className="flex flex-col items-center">
-                  <span className="h-3 w-4 rounded-t-sm bg-petroleo" />
-                  <span className="h-14 w-6 rounded-b-sm rounded-t-lg bg-branco ring-2 ring-petroleo/30" />
-                </span>
-              </div>
-              <p className="mt-3 text-sm font-medium">Kit cuidados com a pele</p>
-              <p className="text-xs text-petroleo/75">Enviado pelo produtor</p>
-            </div>
-
-            <div className="mt-3 w-full rounded-full bg-petroleo py-2.5 text-center text-sm font-medium text-branco">Comprar</div>
+            <span className="shrink-0 rounded-lg bg-petroleo px-4 py-2 text-sm font-medium text-branco">Comprar</span>
           </div>
+        </div>
+        <div className="border-t border-petroleo/10 px-5 py-5">
+          <p className="text-sm font-medium">Na hora do pagamento, a Lytex divide</p>
+          <div className="mt-3"><BarraSplit animada /></div>
+          <dl className="mt-4 flex flex-col gap-1.5 text-sm">
+            {SPLIT.map(([nome, papel, pct, cor]) => (
+              <div key={nome} className="flex items-baseline gap-2">
+                <span className={`h-2 w-2 shrink-0 self-center rounded-full ${cor}`} />
+                <dt className="font-medium">{nome}</dt>
+                <dd className="flex-1 text-petroleo/75">{papel}</dd>
+                <dd className="font-mono tabular-nums">{pct}%</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
-
-      {/* o split */}
-      <figcaption className="relative -mt-8 mx-3 rounded-2xl bg-branco p-4 text-petroleo shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)]">
-        <p className="text-sm font-medium">Um pagamento, dividido automaticamente</p>
-        <div className="mt-3 flex h-3 gap-1 overflow-hidden" aria-hidden="true">
-          <span className="split-segmento rounded-l-full bg-petroleo" style={{ flexGrow: 66 }} />
-          <span className="split-segmento bg-ciano" style={{ flexGrow: 26, animationDelay: "120ms" }} />
-          <span className="split-segmento rounded-r-full bg-petroleo/30" style={{ flexGrow: 8, animationDelay: "240ms" }} />
-        </div>
-        <ul className="mt-3 grid grid-cols-3 gap-2 text-[11px] leading-tight">
-          <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-petroleo" />Produtor</li>
-          <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-ciano" />Revendedor</li>
-          <li className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-petroleo/30" />Staypse</li>
-        </ul>
-        <p className="mt-2 text-[11px] text-petroleo/75">Ilustrativo. A comissão de cada produto é definida pelo produtor.</p>
-      </figcaption>
-    </div>
+      <figcaption className="mt-3 text-sm text-gelo/75">Exemplo com a comissão da Ana em 26%. Cada loja define a de cada produto.</figcaption>
+    </figure>
   );
 }
 
@@ -149,63 +102,58 @@ export function Perguntas() {
   );
 }
 
-// ---------- painel da loja (ilustrativo, montado em HTML; sem números de ganho) ----------
+// ---------- painel da loja: a tabela de produtos e o último pedido ----------
 const LINHAS_PAINEL = [
-  ["Kit cuidados com a pele", "Aprovado", true],
-  ["Camiseta básica algodão", "Aprovado", true],
-  ["Curso de maquiagem (digital)", "Em análise", false],
+  ["Tênis Runner", "15%", "Aprovado"],
+  ["Camiseta básica algodão", "20%", "Aprovado"],
+  ["Curso de maquiagem (digital)", "30%", "Em análise"],
 ] as const;
 const ETAPAS_PEDIDO = ["Pagamento aprovado na Lytex", "Split feito entre as partes", "Nota fiscal emitida pela loja"] as const;
 
-export function PainelIlustrativo() {
+export function PainelLoja() {
   return (
-    <div role="img" aria-label="Exemplo ilustrativo do painel de uma loja: produtos com comissão definida pela loja e as etapas de um pedido" className="w-full overflow-hidden rounded-2xl bg-branco text-petroleo shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
-      <div className="flex items-center justify-between gap-3 bg-gelo px-4 py-3 text-xs">
-        <span className="flex items-center gap-1.5" aria-hidden="true">
-          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
-          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
-          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
-        </span>
-        <span className="font-medium">Painel da loja</span>
-        <span className="rounded-full bg-petroleo px-2.5 py-1 text-[11px] font-medium text-gelo">Ilustrativo</span>
-      </div>
-      <div className="grid gap-px bg-petroleo/10 md:grid-cols-[1.25fr_1fr]" aria-hidden="true">
-        <div className="bg-branco p-4 sm:p-5">
-          <p className="text-sm font-medium">Produtos</p>
-          <ul className="mt-3 divide-y divide-petroleo/10">
-            {LINHAS_PAINEL.map(([nome, status, ativo]) => (
-              <li key={nome} className="flex items-center gap-3 py-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gelo">
-                  <span className={`h-5 w-4 rounded-sm ${ativo ? "bg-petroleo" : "bg-petroleo/30"}`} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{nome}</span>
-                  <span className="block text-[11px] text-petroleo/75">Comissão definida pela loja</span>
-                </span>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${ativo ? "bg-ciano text-petroleo" : "bg-gelo text-petroleo"}`}>{status}</span>
-              </li>
-            ))}
-          </ul>
+    <figure
+      role="img"
+      aria-label="Exemplo do painel de uma loja: tabela de produtos com a comissão definida pela loja e as etapas do último pedido"
+      className="w-full overflow-hidden rounded-2xl bg-branco text-petroleo"
+    >
+      <div className="grid md:grid-cols-[1.3fr_1fr]" aria-hidden="true">
+        <div className="p-5">
+          <p className="font-mono text-xs text-petroleo/75">Painel da loja / Produtos</p>
+          <table className="mt-3 w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-petroleo/15 text-xs text-petroleo/75">
+                <th className="py-2 pr-3 font-medium">Produto</th>
+                <th className="py-2 pr-3 font-medium">Comissão</th>
+                <th className="py-2 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {LINHAS_PAINEL.map(([nome, pct, status]) => (
+                <tr key={nome} className="border-b border-petroleo/10 last:border-0">
+                  <td className="py-3 pr-3 font-medium">{nome}</td>
+                  <td className="py-3 pr-3 font-mono tabular-nums">{pct}</td>
+                  <td className="py-3 text-petroleo/75">{status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="bg-branco p-4 sm:p-5">
-          <p className="text-sm font-medium">Último pedido</p>
-          <ol className="mt-3 flex flex-col gap-3">
-            {ETAPAS_PEDIDO.map((t) => (
-              <li key={t} className="flex items-center gap-3 text-sm">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petroleo text-ciano"><IconeCheck className="h-3.5 w-3.5" /></span>
+        <div className="border-t border-petroleo/10 bg-gelo p-5 md:border-t-0 md:border-l">
+          <p className="font-mono text-xs text-petroleo/75">Último pedido</p>
+          <ol className="mt-3 flex flex-col gap-2.5 text-sm">
+            {ETAPAS_PEDIDO.map((t, i) => (
+              <li key={t} className="flex gap-3">
+                <span className="w-4 font-mono tabular-nums text-petroleo/75">{i + 1}</span>
                 {t}
               </li>
             ))}
           </ol>
-          <div className="mt-4 flex h-3 gap-1 overflow-hidden">
-            <span className="rounded-l-full bg-petroleo" style={{ flexGrow: 66 }} />
-            <span className="bg-ciano" style={{ flexGrow: 26 }} />
-            <span className="rounded-r-full bg-petroleo/30" style={{ flexGrow: 8 }} />
-          </div>
-          <p className="mt-2 text-[11px] text-petroleo/75">Cada parte recebe a sua direto da Lytex.</p>
+          <div className="mt-5"><BarraSplit /></div>
+          <p className="mt-2 text-xs text-petroleo/75">Cada parte recebe a sua direto da Lytex.</p>
         </div>
       </div>
-    </div>
+    </figure>
   );
 }
 

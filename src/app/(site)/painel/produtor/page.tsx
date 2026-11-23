@@ -64,17 +64,17 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
 
       {aviso.enviado && (
         <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">
-          ✓ Cadastro enviado para análise. Avisaremos aqui quando houver resultado.
+          Cadastro enviado para análise. Avisaremos aqui quando houver resultado.
         </p>
       )}
       {aviso.item && (
         <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">
-          ✓ Item salvo.
+          Item salvo.
         </p>
       )}
 
       {/* Empresa */}
-      <section className="mt-6 rounded-3xl bg-branco p-5 sm:p-6" data-secao="empresa">
+      <section className="mt-6 rounded-2xl bg-branco p-5 sm:p-6" data-secao="empresa">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xl">Sua empresa</h2>
           {produtor && (
@@ -130,31 +130,31 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
 
       {aviso.loja && (
         <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">
-          ✓ Loja salva.
+          Loja salva.
         </p>
       )}
 
       {/* Loja pública e afiliados */}
       {produtor && (
         <nav className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Loja, pedidos, vendedores e afiliados">
-          <Link href="/painel/loja/pedidos" className="rounded-3xl bg-petroleo p-5 text-branco hover:bg-petroleo/90">
-            <span className="block text-lg font-extrabold text-ciano">Pedidos</span>
+          <Link href="/painel/loja/pedidos" className="rounded-xl bg-petroleo p-5 text-branco hover:bg-petroleo/90">
+            <span className="block text-lg font-semibold text-ciano">Pedidos</span>
             <span className="text-sm text-gelo/85">Nota fiscal, envio e entrega</span>
           </Link>
-          <Link href="/painel/produtor/frete" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Frete</span>
+          <Link href="/painel/produtor/frete" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Frete</span>
             <span className="text-sm text-petroleo/75">Valor, frete grátis e prazo</span>
           </Link>
-          <Link href="/painel/produtor/loja" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Sua loja</span>
+          <Link href="/painel/produtor/loja" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Sua loja</span>
             <span className="text-sm text-petroleo/75">Endereço, logo, cores e layout</span>
           </Link>
-          <Link href="/painel/produtor/vendedores" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Vendedores próprios</span>
+          <Link href="/painel/produtor/vendedores" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Vendedores próprios</span>
             <span className="text-sm text-petroleo/75">Sua equipe, comissões e relatório</span>
           </Link>
-          <Link href="/painel/loja/afiliados" className="rounded-3xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
-            <span className="block text-lg font-extrabold">Afiliados</span>
+          <Link href="/painel/loja/afiliados" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Afiliados</span>
             <span className="text-sm text-petroleo/75">Quem indica seus itens</span>
           </Link>
         </nav>
@@ -192,7 +192,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{item.nome}</p>
                       <p className="text-sm text-petroleo/75">
-                        {formatarPreco(item.preco_centavos)} · {item.tipo === "fisico" ? "Físico" : "Digital"}
+                        {formatarPreco(item.preco_centavos)}, {item.tipo === "fisico" ? "Físico" : "Digital"}
                       </p>
                       <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${corStatus[item.status_aprovacao]}`} data-status-item>
                         {STATUS_ITEM[item.status_aprovacao]}
