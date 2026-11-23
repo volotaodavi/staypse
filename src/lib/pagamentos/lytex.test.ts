@@ -210,6 +210,32 @@ describe("lytex: cobrança", () => {
     const c = chamadas.find((x) => x.url === "/v2/invoices")?.corpo as { split: unknown; referenceId: string; referenceIdUniqueExt: string; dueDate: string; items: unknown; client: unknown; paymentMethods: unknown; redirect: { urlRedirect: string } };
     assert.deepEqual(c.paymentMethods, { pix: { enable: false }, boleto: { enable: false }, creditCard: { enable: true, maxParcels: 3 } });
   });
+  it("Pix: só Pix habilitado, sem async, e devolve o copia e cola", async () => {
+    const { f, chamadas } = simular({
+      "POST /v2/auth/obtain_token": () => token(),
+      "POST /v2/invoices": () => ({
+        status: 201,
+        json: { _id: "inv2", status: "waitingPayment", dueDate: "2026-01-13T00:00:00.000Z", paymentMethods: { pix: { enable: true, qrcode: "000201PIX" } } },
+      }),
+    });
+    const r = await criarLytex({ fetch: f, env: ENV }).criarCobranca({ ...dados, meio: "pix" });
+    const c = chamadas.find((x) => x.url === "/v2/invoices")?.corpo as { paymentMethods: unknown; async?: boolean };
+    assert.deepEqual(c.paymentMethods, { pix: { enable: true }, boleto: { enable: false }, creditCard: { enable: false } });
+    assert.equal(c.async, undefined);
+    assert.deepEqual(r.pagamento, { pixCopiaECola: "000201PIX", boletoLinhaDigitavel: null, boletoUrl: null, venceEm: "2026-01-13" });
+  });
+  it("boleto: devolve linha digitável e link do boleto", async () => {
+    const { f } = simular({
+      "POST /v2/auth/obtain_token": () => token(),
+      "POST /v2/invoices": () => ({
+        status: 201,
+        json: { _id: "inv3", status: "waitingPayment", linkBoleto: "https://b/1", paymentMethods: { boleto: { enable: true, digitableLine: "34191.79001" } } },
+      }),
+    });
+    const r = await criarLytex({ fetch: f, env: ENV }).criarCobranca({ ...dados, meio: "boleto" });
+    assert.equal(r.pagamento?.boletoLinhaDigitavel, "34191.79001");
+    assert.equal(r.pagamento?.boletoUrl, "https://b/1");
+  });
   it("valida antes de chamar a Lytex", async () => {
     const p = criarLytex({ fetch: simular({}).f, env: ENV });
     await assert.rejects(p.criarCobranca({ ...dados, split: [dados.split[0]] }), /2_a_10/);

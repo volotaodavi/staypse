@@ -9,8 +9,8 @@ import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { nomeDoProvedor, provedorPagamentos } from ".";
 import { montarSplit, type DadosSplitPedido } from "./montar-split";
 import { efeitoDoStatus, statusCobrancaValido } from "./status";
-import type { Modalidade } from "./taxas";
-import { IntegracaoPendente, type StatusCobranca } from "./tipos";
+import { modalidadeDoPagamento, type Modalidade } from "./taxas";
+import { IntegracaoPendente, type DadosPagamento, type StatusCobranca } from "./tipos";
 
 // Conta da Staypse no provedor (recebedor da taxa da plataforma). Só em variável de ambiente.
 export function staypseRecebedorId(): string {
@@ -21,17 +21,29 @@ export function staypseRecebedorId(): string {
 }
 
 // Cria a cobrança do pedido (uma vez só) e devolve a página de pagamento do provedor.
-// `modalidade` define a taxa total da loja. Enquanto o comprador escolhe o meio na página do
-// provedor (o checkout ainda não pergunta), vale a modalidade padrão (docs/precificacao.md, seção 7).
+// `escolha` vem do checkout (meio e parcelas): define a modalidade da taxa total da loja e o que
+// a fatura habilita. Sem escolha (pedido antigo, "Pagar agora" da página do pedido), o comprador decide
+// na página do provedor e vale a modalidade padrão (docs/precificacao.md, seção 9).
 export const MODALIDADE_PADRAO: Modalidade = "cartao_2a6";
 
-export async function iniciarCobranca(pedidoId: string, urlRetorno: string, modalidade: Modalidade = MODALIDADE_PADRAO): Promise<{ url: string | null }> {
+export type EscolhaPagamento = { meio: "pix" | "boleto" | "cartao"; parcelas: number };
+
+export async function iniciarCobranca(
+  pedidoId: string,
+  urlRetorno: string,
+  escolha?: EscolhaPagamento,
+): Promise<{ url: string | null; pagamento: DadosPagamento | null }> {
+  const modalidade = escolha ? modalidadeDoPagamento(escolha.meio, escolha.parcelas) : MODALIDADE_PADRAO;
   const admin = criarClienteAdmin();
   const provedor = provedorPagamentos();
 
-  const { data: atual } = await admin.from("orders").select("status, cobranca_url, cobranca_id").eq("id", pedidoId).maybeSingle();
+  const { data: atual } = await admin
+    .from("orders")
+    .select("status, cobranca_url, cobranca_id, comprador_nome, comprador_documento, comprador_email")
+    .eq("id", pedidoId)
+    .maybeSingle();
   if (!atual || atual.status !== "aguardando_pagamento") throw new Error("pedido_nao_aguarda_pagamento");
-  if (atual.cobranca_id) return { url: atual.cobranca_url };
+  if (atual.cobranca_id) return { url: atual.cobranca_url, pagamento: null };
 
   const { data: dados, error } = await admin.rpc("dados_split_pedido", { p_order: pedidoId, p_provedor: provedor.nome });
   if (error || !dados) throw new Error(error?.message ?? "falha_ao_montar_split");
@@ -43,6 +55,11 @@ export async function iniciarCobranca(pedidoId: string, urlRetorno: string, moda
     split: partes,
     descricao: String((dados as { descricao?: string }).descricao ?? "Pedido Staypse"),
     urlRetorno,
+    // meio e parcelas: a Lytex habilita só o escolhido (paymentMethods.*.enable e creditCard.maxParcels)
+    ...(escolha ? { meio: escolha.meio, parcelas: escolha.meio === "cartao" ? escolha.parcelas : undefined } : {}),
+    comprador: atual.comprador_documento
+      ? { nome: atual.comprador_nome, documento: atual.comprador_documento, email: atual.comprador_email ?? undefined }
+      : undefined,
   });
 
   const { error: erroRegistro } = await admin.rpc("registrar_cobranca", {
@@ -51,14 +68,17 @@ export async function iniciarCobranca(pedidoId: string, urlRetorno: string, moda
     p_cobranca_id: cobranca.provedorId,
     p_url: cobranca.urlPagamento ?? null,
     p_snapshot: snapshot as never,
+    p_meio: escolha?.meio,
+    p_parcelas: escolha?.meio === "cartao" ? escolha.parcelas : undefined,
+    p_pagamento: (cobranca.pagamento ?? undefined) as never,
   });
   if (erroRegistro) {
     // clique duplo: outra requisição registrou antes, usa a cobrança dela
     const { data: outra } = await admin.from("orders").select("cobranca_url").eq("id", pedidoId).maybeSingle();
-    if (outra?.cobranca_url !== undefined && erroRegistro.message.includes("pedido_sem_cobranca_possivel")) return { url: outra.cobranca_url };
+    if (outra?.cobranca_url !== undefined && erroRegistro.message.includes("pedido_sem_cobranca_possivel")) return { url: outra.cobranca_url, pagamento: null };
     throw new Error(erroRegistro.message);
   }
-  return { url: cobranca.urlPagamento ?? null };
+  return { url: cobranca.urlPagamento ?? null, pagamento: cobranca.pagamento ?? null };
 }
 
 // Aplica o status que o provedor informou (webhook ou conciliação). Idempotente no banco.

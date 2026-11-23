@@ -66,7 +66,15 @@ export const mock: PaymentProvider = {
     // "checkout da Lytex" simulado; o link de volta segue junto (só caminho do nosso próprio site)
     const retorno = new URL(dados.urlRetorno);
     const volta = encodeURIComponent(`${retorno.pathname}${retorno.search}`);
-    return { provedorId, status: "pendente", urlPagamento: `/simulador-pagamentos/cobranca/${provedorId}?volta=${volta}` };
+    // Pix e boleto simulados (no provedor real, vêm da fatura: paymentMethods.pix.qrcode e boleto.digitableLine)
+    const vence = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+    const pagamento =
+      dados.meio === "pix"
+        ? { pixCopiaECola: `00020126580014br.gov.bcb.pix0136${provedorId.slice(-36)}5204000053039865802BR5909STAYPSE6009SAO PAULO6304MOCK`, venceEm: vence }
+        : dados.meio === "boleto"
+          ? { boletoLinhaDigitavel: "00190.00009 01234.567890 12345.678901 1 98760000012345", boletoUrl: null, venceEm: vence }
+          : null;
+    return { provedorId, status: "pendente", urlPagamento: `/simulador-pagamentos/cobranca/${provedorId}?volta=${volta}`, pagamento };
   },
   async consultarCobranca(provedorId) {
     return { provedorId, status: await statusDaCobrancaSimulada(provedorId) };

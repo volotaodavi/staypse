@@ -10,6 +10,7 @@ import { IntegracaoPendente } from "./tipos";
 import type {
   Cobranca,
   DadosCobranca,
+  DadosPagamento,
   DadosRecebedor,
   EventoPagamento,
   PaymentProvider,
@@ -110,9 +111,25 @@ type FaturaLytex = {
   _id?: string;
   status?: string;
   linkCheckout?: string;
+  linkBoleto?: string;
+  dueDate?: string;
+  paymentMethods?: {
+    pix?: { qrcode?: string };
+    boleto?: { digitableLine?: string; qrCode?: { emv?: string } };
+  };
   transactions?: { status?: string }[];
   refundSolicitations?: Solicitacao[];
 };
+
+// Pix e boleto que a fatura devolve (InvoicesController_createInvoice_v2, resposta 201:
+// paymentMethods.pix.qrcode "copia e cola", paymentMethods.boleto.digitableLine, linkBoleto, dueDate)
+export function pagamentoDaFatura(f: FaturaLytex): DadosPagamento | null {
+  const pix = f.paymentMethods?.pix?.qrcode || f.paymentMethods?.boleto?.qrCode?.emv || null;
+  const linha = f.paymentMethods?.boleto?.digitableLine || null;
+  const boletoUrl = f.linkBoleto || null;
+  if (!pix && !linha && !boletoUrl) return null;
+  return { pixCopiaECola: pix, boletoLinhaDigitavel: linha, boletoUrl, venceEm: f.dueDate ? String(f.dueDate).slice(0, 10) : null };
+}
 
 export function mapearStatusFatura(f: FaturaLytex): StatusCobranca {
   let status = f.status ? STATUS_FATURA[f.status] : undefined;
@@ -375,7 +392,9 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
         referenceId: dados.pedidoId,
         referenceIdUniqueExt: dados.pedidoId,
         redirect: { urlRedirect: dados.urlRetorno, autoRedirect: true },
-        async: true, // "somente true se usar o checkout da LyTex" (usamos linkCheckout)
+        // async=true só no cartão (a pessoa paga no checkout da Lytex, linkCheckout). Em Pix e boleto escolhidos
+        // aqui, async=false (padrão) para a fatura já devolver o "copia e cola" e a linha digitável.
+        ...(cartao ? { async: true } : {}),
       };
       let fatura: FaturaLytex;
       try {
@@ -390,13 +409,13 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
         fatura = existente;
       }
       if (!fatura._id) throw new Error("lytex_fatura_sem_id");
-      return { provedorId: fatura._id, status: mapearStatusFatura(fatura), urlPagamento: fatura.linkCheckout ?? null };
+      return { provedorId: fatura._id, status: mapearStatusFatura(fatura), urlPagamento: fatura.linkCheckout ?? null, pagamento: pagamentoDaFatura(fatura) };
     },
 
     // InvoicesController_getInvoice_v2: GET /v2/invoices/{id}
     async consultarCobranca(provedorId): Promise<Cobranca> {
       const f = (await api("GET", `/v2/invoices/${encodeURIComponent(provedorId)}`)) as FaturaLytex;
-      return { provedorId, status: mapearStatusFatura(f), urlPagamento: f.linkCheckout ?? null };
+      return { provedorId, status: mapearStatusFatura(f), urlPagamento: f.linkCheckout ?? null, pagamento: pagamentoDaFatura(f) };
     },
 
     // RefundSolicitationController_create_v2: POST /v2/refund-solicitation {_invoiceId, refundValue} (ambos obrigatórios).

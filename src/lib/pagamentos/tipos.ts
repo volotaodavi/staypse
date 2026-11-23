@@ -40,10 +40,20 @@ export type DadosCobranca = {
 //  estorno_pendente → estorno pedido, o provedor ainda não confirmou · chargeback → contestação do titular do cartão
 export type StatusCobranca = "pendente" | "paga" | "recusada" | "expirada" | "estornada" | "estorno_pendente" | "chargeback";
 
+// O que o comprador precisa para pagar Pix ou boleto na página do pedido (campos da fatura Lytex:
+// paymentMethods.pix.qrcode, paymentMethods.boleto.digitableLine e linkBoleto). Nada de cartão aqui.
+export type DadosPagamento = {
+  pixCopiaECola?: string | null;
+  boletoLinhaDigitavel?: string | null;
+  boletoUrl?: string | null;
+  venceEm?: string | null; // data AAAA-MM-DD
+};
+
 export type Cobranca = {
   provedorId: string;
   status: StatusCobranca;
   urlPagamento?: string | null; // checkout do provedor (nenhum dado de cartão passa pela Staypse)
+  pagamento?: DadosPagamento | null; // Pix/boleto já gerados (só quando o meio foi escolhido antes)
 };
 
 // evento de webhook já validado e traduzido para o formato da Staypse
