@@ -26,7 +26,7 @@ test("configuração válida", () => {
   }
 });
 
-test("recusa mínimo maior que máximo, faixa fora de 0–100 e prazo inválido", () => {
+test("recusa mínimo maior que máximo, faixa fora de 0 a 100 e prazo inválido", () => {
   assert.ok("erro" in validarConfiguracoes({ ...base, comissaoMin: "80" }));
   assert.ok("erro" in validarConfiguracoes({ ...base, taxa: "101" }));
   assert.ok("erro" in validarConfiguracoes({ ...base, comissaoMax: "-3" }));

@@ -1,6 +1,6 @@
 // Peças da página inicial (pré-lançamento).
 // O elemento central é a "vitrine com o split": mostra, de forma ilustrativa,
-// como UM pagamento se divide entre produtor, revendedor e Staypse — a mesma
+// como UM pagamento se divide entre produtor, revendedor e Staypse, a mesma
 // ideia do "yp" da logo. Não mostra valores de ganho (regra de comunicação).
 
 // ---------- ícones (traço simples, herdam a cor do texto) ----------
@@ -47,7 +47,7 @@ export const IconeCrachaVendedor = () => tr("M5 4h14v16H5zM9 9h6M9 13h6M9 17h3")
 export const IconeSacola = () => tr("M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2");
 
 // ---------- vitrine no celular + barra do split ----------
-// "host": endereço do site sem https:// (vem de urlDoSite — nunca fixo no código)
+// "host": endereço do site sem https:// (vem de urlDoSite, nunca fixo no código)
 export function VitrineSplit({ host }: { host: string }) {
   return (
     <div role="img" className="relative mx-auto w-full max-w-[19rem]" aria-label="Exemplo ilustrativo de uma vitrine na Staypse e da divisão de um pagamento">

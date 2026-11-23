@@ -1,6 +1,6 @@
 // Afiliados da loja: pedidos pendentes (aprovar/recusar), desempenho por
 // afiliado no período e bloqueio. Por privacidade (LGPD), só o nome e o @ da
-// vitrine — nunca e-mail ou telefone do afiliado.
+// vitrine, nunca e-mail ou telefone do afiliado.
 import Link from "next/link";
 import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";

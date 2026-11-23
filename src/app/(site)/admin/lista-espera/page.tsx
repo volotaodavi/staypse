@@ -1,4 +1,4 @@
-// Admin: lista de espera em números — total, crescimento por dia, por perfil,
+// Admin: lista de espera em números, total, crescimento por dia, por perfil,
 // quem mais indicou (?ref=) e CSV. Os inscritos em si ficam em /admin/lista.
 import Link from "next/link";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
@@ -66,7 +66,7 @@ export default async function AdminListaEspera({ searchParams }: PageProps<"/adm
         ]}
         linhas={r.top_indicadores.map((t) => ({
           chave: t.codigo,
-          celulas: [t.nome ?? "—", ROTULO_PERFIL[t.perfil] ?? t.perfil, t.codigo, inteiro(t.indicacoes)],
+          celulas: [t.nome ?? "Não informado", ROTULO_PERFIL[t.perfil] ?? t.perfil, t.codigo, inteiro(t.indicacoes)],
         }))}
         vazio={{ texto: "Ainda não há indicações válidas." }}
       />

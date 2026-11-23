@@ -28,7 +28,7 @@ export default function Termos() {
         <>
           <p>
             A Staypse é a tecnologia que liga lojas (produtores) a quem indica os produtos delas. Quem vende é a loja; o pagamento é dividido
-            automaticamente por uma instituição de pagamento parceira — a Staypse não recebe nem guarda o dinheiro de ninguém.
+            automaticamente por uma instituição de pagamento parceira, a Staypse não recebe nem guarda o dinheiro de ninguém.
           </p>
           <p>
             Quem compra tem 7 dias para desistir e recebe de volta tudo o que pagou (veja a{" "}
@@ -185,7 +185,7 @@ export default function Termos() {
               </li>
               <li>A Staypse não é empregadora nem parte do contrato entre a loja e o vendedor. Ela apenas registra as indicações e gera relatórios para a loja.</li>
               <li>A loja pode desativar o vendedor a qualquer momento. A partir daí, os links dele deixam de registrar novas indicações; o histórico continua guardado.</li>
-              <li>O vendedor vê apenas os próprios links, cliques e vendas — nunca os dados de outros vendedores ou o faturamento da loja.</li>
+              <li>O vendedor vê apenas os próprios links, cliques e vendas, nunca os dados de outros vendedores ou o faturamento da loja.</li>
             </Itens>
           ),
         },
@@ -227,8 +227,8 @@ export default function Termos() {
               </p>
               <p>
                 Ao desistir, você recebe de volta <strong className={forte}>todos os valores pagos, inclusive o frete</strong>, de imediato e pelo mesmo
-                meio de pagamento. Entre as partes da venda, a devolução é feita na proporção do split — o produtor, o revendedor e a Staypse
-                devolvem cada um a parte que receberam —, o que nunca reduz o seu reembolso.
+                meio de pagamento. Entre as partes da venda, a devolução é feita na proporção do split, o produtor, o revendedor e a Staypse
+                devolvem cada um a parte que receberam, o que nunca reduz o seu reembolso.
               </p>
               <p>
                 O arrependimento é pedido pelo botão &quot;Desistir da compra&quot; na página do pedido ou pelo{" "}

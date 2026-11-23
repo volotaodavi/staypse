@@ -1,4 +1,4 @@
-// /admin/produtores — curadoria de LOJAS (conteúdo, não identidade).
+// /admin/produtores, curadoria de LOJAS (conteúdo, não identidade).
 // A verificação de identidade é da Lytex (cadastro do recebedor): aqui o admin
 // vê só o STATUS do recebedor, os dados públicos da loja e o contrato aceito.
 import Link from "next/link";
@@ -102,7 +102,7 @@ export default async function AdminProdutores({ searchParams }: PageProps<"/admi
               </p>
               <p className="text-sm text-petroleo/80">
                 {p.logradouro}, {p.numero}
-                {p.complemento && ` (${p.complemento})`} — {p.bairro}, {p.cidade}/{p.uf} · CEP {p.cep}
+                {p.complemento && ` (${p.complemento})`}, {p.bairro}, {p.cidade}/{p.uf} · CEP {p.cep}
               </p>
               {p.enviado_para_analise_em && (
                 <p className="text-xs text-petroleo/70">Enviado em {dataBr(p.enviado_para_analise_em)}</p>

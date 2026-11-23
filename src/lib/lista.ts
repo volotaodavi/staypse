@@ -26,7 +26,7 @@ export const FILA_DO_PERFIL: Record<Perfil, string> = {
 };
 
 // Nichos do revendedor. O "valor" é o que vai para o banco (lista fechada lá
-// também — ao incluir um nicho aqui, inclua na migração).
+// também, ao incluir um nicho aqui, inclua na migração).
 export const NICHOS = [
   { valor: "beleza", rotulo: "Beleza" },
   { valor: "moda", rotulo: "Moda" },

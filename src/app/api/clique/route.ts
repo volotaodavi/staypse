@@ -1,5 +1,5 @@
 // Registra o clique em um link EXTERNO da vitrine (Shopee, Mercado Livre,
-// TikTok Shop) — chamado pelo navegador com navigator.sendBeacon, sem atrasar
+// TikTok Shop), chamado pelo navegador com navigator.sendBeacon, sem atrasar
 // a ida para o outro site. (Produtos da Staypse contam o clique no link curto
 // /@afiliado/produto.)
 // Gravado: vitrine, link, data e o HASH do IP (nunca o IP puro). O banco

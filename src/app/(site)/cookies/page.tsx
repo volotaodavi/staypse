@@ -17,7 +17,7 @@ const COOKIES: [string, string, string, string][] = [
   ["sb-…-auth-token-code-verifier", "Confere que o link de confirmação de e-mail ou de acesso foi aberto por quem o pediu (segurança do login). Só existe durante esse processo.", "Até a confirmação do link", "Estritamente necessário, de segurança. Próprio"],
   [
     "staypse_atrib",
-    "Lembra quem indicou cada produto que você abriu por um link de afiliado (até 12 produtos), para que a comissão vá para a pessoa certa se você comprar. Guarda só códigos internos — nenhum dado seu.",
+    "Lembra quem indicou cada produto que você abriu por um link de afiliado (até 12 produtos), para que a comissão vá para a pessoa certa se você comprar. Guarda só códigos internos, nenhum dado seu.",
     "30 dias",
     "Funcional, NÃO essencial: a compra funciona sem ele. Próprio, sem terceiros. Só é gravado quando você abre um link de afiliado",
   ],

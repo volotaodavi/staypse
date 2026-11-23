@@ -1,5 +1,5 @@
 // "Página da Lytex" SIMULADA (só com PAYMENTS_PROVIDER=mock e fora de produção).
-// Faz o papel do onboarding do recebedor: aprova, recusa ou suspende — e manda
+// Faz o papel do onboarding do recebedor: aprova, recusa ou suspende, e manda
 // o webhook ASSINADO para o nosso endereço, como a Lytex de verdade fará.
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";

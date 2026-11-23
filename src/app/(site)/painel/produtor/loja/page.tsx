@@ -1,4 +1,4 @@
-// "Minha loja": configurações do site da loja (/loja/[endereço]) — dados, modelo
+// "Minha loja": configurações do site da loja (/loja/[endereço]), dados, modelo
 // pronto, logo, cores, banner, seções e destaques, com prévia ao vivo.
 import Link from "next/link";
 import { classesFontesLoja } from "@/lib/fontes-loja";

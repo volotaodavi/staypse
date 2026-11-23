@@ -88,7 +88,7 @@ export default async function AdminRecebedores({ searchParams }: PageProps<"/adm
             >
               <div className="min-w-0 flex-1">
                 <p className="font-medium">
-                  {r.profiles?.nome ?? "—"} · {PAPEL[r.papel] ?? r.papel}
+                  {r.profiles?.nome ?? "Não informado"} · {PAPEL[r.papel] ?? r.papel}
                 </p>
                 <p className="text-petroleo/80">
                   {ROTULO_STATUS_RECEBEDOR[r.status_recebedor]}

@@ -5,7 +5,7 @@
 //
 // Validação: o mesmo schema Zod do servidor (src/lib/lista-schema.ts), carregado
 // só quando a pessoa envia (não pesa no carregamento da página). O servidor
-// valida tudo de novo — esta checagem é só para dar resposta rápida.
+// valida tudo de novo, esta checagem é só para dar resposta rápida.
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";

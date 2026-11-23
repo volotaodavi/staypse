@@ -1,6 +1,6 @@
 // Monitoramento gratuito: todo erro do servidor (página, rota, ação) vira uma
 // linha na tabela erros_app, vista pelo admin em /admin/erros.
-// LGPD: nada de dados pessoais — o caminho vai SEM a parte "?..." (que pode ter
+// LGPD: nada de dados pessoais, o caminho vai SEM a parte "?..." (que pode ter
 // o token do pedido) e a mensagem passa por um filtro de e-mails, CPFs e tokens.
 import type { Instrumentation } from "next";
 

@@ -1,6 +1,6 @@
 // Simulador de pagamentos (PAYMENTS_PROVIDER=mock). Imita o que esperamos da
-// Lytex — recebedor em análise → aprovado/recusado, cobrança paga/recusada,
-// estorno e atraso de webhook — para testar o sistema inteiro sem dinheiro real.
+// Lytex, recebedor em análise → aprovado/recusado, cobrança paga/recusada,
+// estorno e atraso de webhook, para testar o sistema inteiro sem dinheiro real.
 // Os webhooks do simulador são ASSINADOS (HMAC), como os de verdade serão.
 import "server-only";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
@@ -72,7 +72,7 @@ export const mock: PaymentProvider = {
     return { provedorId, status: await statusDaCobrancaSimulada(provedorId) };
   },
   // pede o estorno; o simulador só "confirma" (estornada) quando alguém aperta o botão na página dele,
-  // o que dispara o webhook — igual ao que esperamos do provedor real
+  // o que dispara o webhook, igual ao que esperamos do provedor real
   async estornar(provedorId) {
     const admin = criarClienteAdmin();
     const status = await statusDaCobrancaSimulada(provedorId);

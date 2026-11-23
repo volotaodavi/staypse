@@ -1,7 +1,7 @@
 "use client";
 // Compressão de fotos no próprio celular, antes do envio:
 // reduz para no máximo 1600 px no maior lado e converte para WebP.
-// Uma foto de 4 MB do celular costuma virar ~200 KB — envio rápido no 4G.
+// Uma foto de 4 MB do celular costuma virar ~200 KB, envio rápido no 4G.
 
 const LADO_MAXIMO = 1600;
 const QUALIDADE = 0.82;

@@ -1,6 +1,6 @@
 // Início da loja: /loja/[slug]. Mostra SOMENTE itens aprovados (regra no banco).
 // A página é montada a partir do tema em JSON salvo pela loja (4 modelos prontos,
-// seções na ordem escolhida, banner e destaques) — ver lib/tema-loja.ts.
+// seções na ordem escolhida, banner e destaques), ver lib/tema-loja.ts.
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SecoesLoja } from "@/components/loja-secoes";

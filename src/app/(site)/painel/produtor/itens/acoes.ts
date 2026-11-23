@@ -1,7 +1,7 @@
 "use server";
 // Ações dos itens do produtor: salvar (rascunho ou enviar para análise),
 // pausar/ativar e atualizar estoque. O banco garante as regras:
-// comissão 10–70%, item completo para análise, edição de preço/comissão/
+// comissão 10 a 70%, item completo para análise, edição de preço/comissão/
 // descrição de item aprovado → volta para análise.
 import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
@@ -137,7 +137,7 @@ export async function salvarItem(_a: EstadoFormulario, f: FormData): Promise<Est
   redirect("/painel/produtor?item=salvo");
 }
 
-// Pausar (some das vitrines) / ativar de novo — só para itens já aprovados
+// Pausar (some das vitrines) / ativar de novo, só para itens já aprovados
 export async function alternarPausa(f: FormData) {
   await exigirPapel("produtor");
   const id = texto(f, "id");

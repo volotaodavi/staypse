@@ -34,7 +34,7 @@ const CAMPO: Record<string, string> = {
   status: "Situação",
 };
 const valor = (campo: string, v: string | null) =>
-  v == null ? "—" : campo === "forma_pagamento" ? FORMA[v] ?? v : campo === "status" ? STATUS[v] ?? v : campo === "declaracao_nao_empregado" ? (v === "true" ? "sim" : "não") : v.replace(".", ",");
+  v == null ? "Não informado" : campo === "forma_pagamento" ? FORMA[v] ?? v : campo === "status" ? STATUS[v] ?? v : campo === "declaracao_nao_empregado" ? (v === "true" ? "sim" : "não") : v.replace(".", ",");
 
 export default async function Vendedores({ searchParams }: PageProps<"/painel/produtor/vendedores">) {
   const usuario = await exigirPapel("produtor");

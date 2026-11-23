@@ -26,7 +26,7 @@ export default async function AdminConfiguracoes() {
       </Link>
       <h1 className="text-3xl">Configurações</h1>
       <p className="text-sm text-petroleo/80">
-        Regras da plataforma. Última alteração: {ultima ? dataHora(ultima) : "—"}.{" "}
+        Regras da plataforma. Última alteração: {ultima ? dataHora(ultima) : "nunca"}.{" "}
         <Link href="/admin/auditoria?entidade=configuracao" className="inline-flex min-h-11 items-center underline">
           Ver o histórico
         </Link>

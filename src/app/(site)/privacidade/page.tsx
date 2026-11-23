@@ -1,4 +1,4 @@
-// Política de Privacidade (LGPD — Lei 13.709/2018) + canal do titular.
+// Política de Privacidade (LGPD, Lei 13.709/2018) + canal do titular.
 // Ao mudar o texto, troque TERMOS_VERSAO em src/config/empresa.ts.
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -16,15 +16,15 @@ const FINALIDADES: [string, string, string, string][] = [
   ["Criar e manter sua conta", "Nome, e-mail, senha (guardada de forma cifrada), papéis na plataforma, declaração de faixa de idade (18 anos ou mais; ou 16 a 17 com autorização dos responsáveis) e aceite dos termos com data e versão. Não pedimos data de nascimento", "Execução de contrato (inciso V)", "Enquanto a conta existir; depois, o prazo legal (em geral, 5 anos)"],
   ["Cadastro da loja e curadoria", "Razão social, CNPJ, inscrição estadual, endereço comercial e contatos (sem documentos de identidade: quem verifica é a instituição de pagamento)", "Execução de contrato (V) e legítimo interesse na prevenção a fraudes (IX)", "Enquanto a loja existir; depois, o prazo legal (em geral, 5 anos)"],
   ["Cadastro de recebimento (instituição de pagamento)", "CPF ou CNPJ de quem recebe e a situação do cadastro (em análise, aprovado, recusado ou suspenso) com o motivo informado pela instituição. Documentos e dados bancários vão direto para a instituição de pagamento; a Staypse não recebe nem guarda", "Execução de contrato (V)", "Enquanto a conta existir; depois, o prazo legal (em geral, 5 anos)"],
-  ["Mostrar quem vende cada produto", "Razão social, CNPJ, endereço e contato da empresa produtora", "Obrigação legal — Decreto 7.962/2013 (II)", "Enquanto o produto estiver publicado"],
+  ["Mostrar quem vende cada produto", "Razão social, CNPJ, endereço e contato da empresa produtora", "Obrigação legal, Decreto 7.962/2013 (II)", "Enquanto o produto estiver publicado"],
   ["Vitrines, links e atribuição de vendas", "Seu @, nome da vitrine, foto e links; nos cliques: data, produto, origem e o IP transformado em código irreversível (hash). Cookie de atribuição de 30 dias com códigos internos (veja a Política de cookies)", "Execução de contrato com o afiliado (V) e legítimo interesse em pagar corretamente quem indicou a venda (IX)", "Cliques: até 24 meses. Cookie: 30 dias"],
   ["Fotos, textos e marcas que você publica", "Fotos dos produtos, logo da loja ou foto da vitrine, descrições e nomes. Publique só o que você tem direito de usar (veja os Termos)", "Execução de contrato (V)", "Enquanto estiverem publicados"],
   ["Vendedores da loja", "E-mail do convite, comissão combinada, forma de pagamento e histórico de alterações (informados pela loja)", "Execução de contrato (V)", "Enquanto o vínculo existir; o histórico, pelo prazo legal"],
   ["Pedidos e pagamentos", "Nome, e-mail, CPF, telefone (opcional) e endereço de entrega do comprador; dados do pedido, da entrega, da nota fiscal e de eventual desistência. O CPF é pedido para a nota fiscal da loja e para o pagamento", "Execução de contrato (V) e obrigação legal fiscal e do CDC (II)", "Pelo prazo da legislação fiscal (em geral, 5 anos)"],
   ["Acompanhamento de comissões de afiliados e vendedores", "Nome do comprador e valor pago, mostrados ao afiliado ou vendedor que indicou a venda, para acompanhar suas comissões. Nunca e-mail, telefone, CPF, endereço ou código de acesso do comprador", "Execução de contrato (V) e legítimo interesse em permitir que quem indica confira a própria comissão (IX)", "Pelo prazo do pedido (em geral, 5 anos)"],
   ["Consulta de CEP", "O CEP que você digita no checkout é enviado, do seu navegador, ao serviço gratuito BrasilAPI, que devolve o endereço. Nós não guardamos essa consulta; a BrasilAPI pode receber seu IP e o CEP", "Execução de contrato (V): facilitar o preenchimento da entrega. É opcional: você pode digitar o endereço à mão", "Não guardamos"],
-  ["Atendimento, denúncias e pedidos de titulares", "Nome, e-mail, assunto, mensagem, protocolo e, se você informar, o código do pedido; nas denúncias: motivo, descrição, o item denunciado e o e-mail (opcional), com o IP em código irreversível", "Execução de contrato (V) e obrigação legal — Decreto 7.962/2013 e LGPD (II); denúncias: legítimo interesse em manter a plataforma segura (IX)", "Atendimentos: 5 anos (prazo do CDC)"],
-  ["Registros de acesso à aplicação", "IP, data e hora (com fuso) do login, do cadastro e da criação de pedido. Só são lidos para atender ordem judicial ou obrigação legal", "Obrigação legal — Marco Civil da Internet, art. 15 (II)", "6 meses, depois apagados"],
+  ["Atendimento, denúncias e pedidos de titulares", "Nome, e-mail, assunto, mensagem, protocolo e, se você informar, o código do pedido; nas denúncias: motivo, descrição, o item denunciado e o e-mail (opcional), com o IP em código irreversível", "Execução de contrato (V) e obrigação legal, Decreto 7.962/2013 e LGPD (II); denúncias: legítimo interesse em manter a plataforma segura (IX)", "Atendimentos: 5 anos (prazo do CDC)"],
+  ["Registros de acesso à aplicação", "IP, data e hora (com fuso) do login, do cadastro e da criação de pedido. Só são lidos para atender ordem judicial ou obrigação legal", "Obrigação legal, Marco Civil da Internet, art. 15 (II)", "6 meses, depois apagados"],
   ["Segurança e funcionamento do site", "Registros de erros do servidor (data, página e mensagem técnica), sem nome, e-mail, CPF ou códigos de acesso", "Legítimo interesse em manter o site seguro e funcionando (IX)", "90 dias"],
 ];
 
@@ -35,7 +35,7 @@ export default function Privacidade() {
       versao={TERMOS_VERSAO}
       resumo={
         <>
-          <p>Usamos seus dados só para o que você vê na Staypse: sua conta, a loja, as vitrines, as indicações e — quando abrirem — os pedidos.</p>
+          <p>Usamos seus dados só para o que você vê na Staypse: sua conta, a loja, as vitrines, as indicações e, quando abrirem, os pedidos.</p>
           <p>
             Não vendemos dados e não usamos analytics nem cookies de outras empresas. O IP de quem clica nos links vira um código irreversível. Você pode pedir acesso, correção ou exclusão a qualquer
             momento pelo canal no fim desta página.
@@ -90,12 +90,12 @@ export default function Privacidade() {
                 <li><strong className="font-medium">Supabase</strong>: banco de dados, login e armazenamento de arquivos, com servidores em São Paulo (Brasil).</li>
                 <li><strong className="font-medium">Resend</strong>: envio do e-mail de confirmação da lista de espera (seu nome e e-mail), quando o envio está ativado; os servidores podem ficar fora do Brasil.</li>
                 <li><strong className="font-medium">Vercel</strong>: hospedagem do site (região de São Paulo), que pode processar dados de navegação, como o IP, fora do Brasil. A fonte das letras é instalada no próprio site, sem pedir nada ao Google.</li>
-                <li><strong className="font-medium">Instituição de pagamento parceira (Lytex)</strong>: processa os pagamentos e o split e faz a verificação de identidade de lojas, afiliados e vendedores no cadastro de recebimento — como controladora desses dados, pela política dela.</li>
+                <li><strong className="font-medium">Instituição de pagamento parceira (Lytex)</strong>: processa os pagamentos e o split e faz a verificação de identidade de lojas, afiliados e vendedores no cadastro de recebimento, como controladora desses dados, pela política dela.</li>
                 <li><strong className="font-medium">BrasilAPI</strong>: serviço público e gratuito de consulta de CEP, chamado pelo seu navegador no checkout quando você digita o CEP (recebe o CEP e o seu IP).</li>
                 <li><strong className="font-medium">WhatsApp</strong>: só quando você mesmo toca em &quot;Compartilhar no WhatsApp&quot;; abrimos o WhatsApp com a mensagem pronta e não enviamos dados a ele.</li>
                 <li><strong className="font-medium">Shopee, Mercado Livre e TikTok Shop</strong>: nossos servidores consultam a página pública do link que o afiliado cadastra para preencher o título e o preço. Nenhum dado de visitantes é enviado, e a Staypse não carrega imagens desses sites nas vitrines. Ao tocar no link, você sai da Staypse e passa a valer a política do outro site.</li>
                 <li><strong className="font-medium">Produtores</strong>: recebem os dados de entrega e de nota fiscal dos pedidos que vendem e só podem usá-los para cumprir o pedido.</li>
-                <li><strong className="font-medium">Revendedores e vendedores da loja</strong>: veem data, produto, valor, comissão e situação das próprias vendas, além do nome do comprador e do valor pago, para acompanhar suas comissões — nunca e-mail, telefone, CPF ou endereço do comprador.</li>
+                <li><strong className="font-medium">Revendedores e vendedores da loja</strong>: veem data, produto, valor, comissão e situação das próprias vendas, além do nome do comprador e do valor pago, para acompanhar suas comissões, nunca e-mail, telefone, CPF ou endereço do comprador.</li>
                 <li><strong className="font-medium">Autoridades</strong>: quando houver ordem judicial ou obrigação legal.</li>
               </Itens>
               <p>Não vendemos nem alugamos dados pessoais.</p>
@@ -146,7 +146,7 @@ export default function Privacidade() {
               </Itens>
               <p>
                 Respondemos em até 15 dias. Se não ficar satisfeito, você pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD). Alguns
-                dados podem precisar ser mantidos por obrigação legal mesmo após um pedido de exclusão — nesse caso, explicamos o motivo.
+                dados podem precisar ser mantidos por obrigação legal mesmo após um pedido de exclusão, nesse caso, explicamos o motivo.
               </p>
             </>
           ),

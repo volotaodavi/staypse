@@ -1,4 +1,4 @@
-// Validação da lista de espera com Zod — UM schema só, usado no navegador
+// Validação da lista de espera com Zod, UM schema só, usado no navegador
 // (mensagens na hora, antes de enviar) e no servidor (a validação que vale,
 // pois o navegador pode ser burlado). Não importe nada "server-only" aqui.
 import { z } from "zod";

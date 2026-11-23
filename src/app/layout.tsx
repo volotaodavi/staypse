@@ -18,7 +18,7 @@ const descricao =
 
 export const metadata: Metadata = {
   title: {
-    default: "Staypse — plataforma de afiliados para produtos físicos e digitais",
+    default: "Staypse, plataforma de afiliados para produtos físicos e digitais",
     template: "%s | Staypse",
   },
   description: descricao,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: "Staypse",
-    title: "Staypse — plataforma de afiliados para produtos físicos e digitais",
+    title: "Staypse: plataforma de afiliados para produtos físicos e digitais",
     description: descricao,
   },
   twitter: { card: "summary_large_image" },

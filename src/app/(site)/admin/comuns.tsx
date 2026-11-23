@@ -51,7 +51,7 @@ export function Historico({ registros }: { registros?: Registro[] }) {
       <ul className="mt-2 space-y-1 text-petroleo/80" data-historico>
         {registros.map((r, i) => (
           <li key={i}>
-            {new Date(r.criado_em).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} —{" "}
+            {new Date(r.criado_em).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}:{" "}
             {ACOES[r.acao] ?? r.acao}
             {r.profiles?.nome && ` por ${r.profiles.nome}`}
             {r.detalhes?.motivo && ` · "${r.detalhes.motivo}"`}

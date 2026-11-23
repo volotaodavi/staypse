@@ -94,12 +94,12 @@ export function formatarCep(cep: string | null | undefined): string {
 }
 
 export function dataHora(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "Não informado";
   return new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
 }
 
 export function data(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "Não informado";
   return new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
@@ -116,7 +116,7 @@ export type Endereco = {
 export function enderecoEmLinha(e: Endereco | null | undefined): string {
   if (!e) return "";
   return [
-    `${e.logradouro}, ${e.numero}${e.complemento ? ` — ${e.complemento}` : ""}`,
+    `${e.logradouro}, ${e.numero}${e.complemento ? `, ${e.complemento}` : ""}`,
     e.bairro,
     `${e.cidade}/${e.uf}`,
     `CEP ${formatarCep(e.cep)}`,

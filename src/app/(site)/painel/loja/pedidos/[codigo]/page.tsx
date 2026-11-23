@@ -217,7 +217,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
             <h2 className="text-base font-medium">Quem indicou</h2>
             {p.vendedor_id ? (
               <p data-indicou>
-                Vendedor próprio · {p.loja_vendedores?.email ?? "—"}
+                Vendedor próprio · {p.loja_vendedores?.email ?? "Não informado"}
                 {origemTexto(p.atribuicao_origem)}
               </p>
             ) : p.revendedor_id ? (

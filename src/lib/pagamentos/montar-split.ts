@@ -1,4 +1,4 @@
-// Monta o split de uma cobrança a partir dos dados do pedido (dados_split_pedido) — função
+// Monta o split de uma cobrança a partir dos dados do pedido (dados_split_pedido), função
 // PURA, testada em montar-split.test.ts. Quem calcula os valores é calcularSplit; aqui só se
 // traduz "quem recebe quanto" para a lista de partes que o provedor espera e para o
 // snapshot guardado no pedido (auditoria).

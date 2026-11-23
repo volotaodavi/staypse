@@ -5,7 +5,7 @@ import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 
 // HASH_IP_SEGREDO é opcional: sem ele, derivamos um segredo da chave secreta
-// do Supabase (HMAC com rótulo fixo — o valor final não é a chave em si).
+// do Supabase (HMAC com rótulo fixo, o valor final não é a chave em si).
 function segredoDoHash(): string {
   if (process.env.HASH_IP_SEGREDO) return process.env.HASH_IP_SEGREDO;
   return segredoDerivado("staypse:hash-ip:v1");

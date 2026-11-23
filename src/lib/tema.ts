@@ -1,6 +1,6 @@
 // Identidade visual das lojas e vitrines: cores, fonte e layout viram
 // variáveis CSS (--loja-*). Também garante contraste mínimo WCAG AA (4,5:1)
-// para textos — roda no servidor (páginas) e no navegador (prévia ao vivo).
+// para textos, roda no servidor (páginas) e no navegador (prévia ao vivo).
 
 export const FONTES_LOJA = {
   inter: "Inter",

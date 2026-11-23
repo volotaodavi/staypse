@@ -1,4 +1,4 @@
-// Rodapé legal — regra de conformidade 3.
+// Rodapé legal, regra de conformidade 3.
 // Mostra nome empresarial, CNPJ, endereço e contatos lidos de
 // src/config/empresa.ts (para trocar os dados, edite só aquele arquivo).
 import Link from "next/link";

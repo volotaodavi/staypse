@@ -1,7 +1,7 @@
 "use client";
 // Formulário de compra: dados + entrega → resumo do pedido (regra 4) → confirmar.
 // O CEP preenche o endereço pela BrasilAPI (grátis, sem chave). Se ela falhar,
-// a pessoa digita à mão — nada trava.
+// a pessoa digita à mão, nada trava.
 import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
@@ -232,7 +232,7 @@ export function FormCompra({
                 <>
                   <br />
                   {estado.valores.logradouro}, {estado.valores.numero}
-                  {estado.valores.complemento ? ` — ${estado.valores.complemento}` : ""} · {estado.valores.bairro} ·{" "}
+                  {estado.valores.complemento ? `, ${estado.valores.complemento}` : ""} · {estado.valores.bairro} ·{" "}
                   {estado.valores.cidade}/{estado.valores.uf} · CEP {estado.valores.cep}
                 </>
               )}

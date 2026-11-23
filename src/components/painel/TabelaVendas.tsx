@@ -49,9 +49,9 @@ export function TabelaVendas({
             </span>,
             dataHora(v.data),
             v.loja,
-            <span key="o" data-origem={v.origem_atribuicao ?? ""}>{ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "—"}</span>,
+            <span key="o" data-origem={v.origem_atribuicao ?? ""}>{ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "Aguardando pagamento"}</span>,
             v.comprador_nome,
-            v.valor_pago_centavos == null ? "—" : formatarPreco(Number(v.valor_pago_centavos)),
+            v.valor_pago_centavos == null ? "Aguardando pagamento" : formatarPreco(Number(v.valor_pago_centavos)),
             formatarPreco(Number(v.valor_centavos)),
             formatarPreco(Number(v.comissao_centavos)),
             <span key="s" data-situacao={v.situacao}>

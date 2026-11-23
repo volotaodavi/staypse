@@ -115,7 +115,7 @@ export default async function AdminAuditoria({ searchParams }: PageProps<"/admin
           celulas: [
             ACOES[r.acao] ?? r.acao,
             dataHora(r.criado_em),
-            r.profiles?.nome ?? "—",
+            r.profiles?.nome ?? "Não informado",
             <span key="e" className="break-all">
               {ENTIDADES[r.entidade] ?? r.entidade} · {r.entidade_id.slice(0, 8)}
             </span>,
@@ -127,7 +127,7 @@ export default async function AdminAuditoria({ searchParams }: PageProps<"/admin
                 </pre>
               </details>
             ) : (
-              "—"
+              "Não informado"
             ),
           ],
         }))}

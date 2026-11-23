@@ -1,4 +1,4 @@
-// Cálculo da divisão do pagamento (split) — função PURA, sem banco nem rede.
+// Cálculo da divisão do pagamento (split), função PURA, sem banco nem rede.
 // A Staypse não recebe nem repassa dinheiro: este cálculo só diz à instituição
 // de pagamento quanto vai para cada recebedor. Tudo em centavos inteiros.
 //
@@ -6,7 +6,7 @@
 //  * a soma das partes (+ a taxa do meio de pagamento retida pela instituição)
 //    é EXATAMENTE o total pago;
 //  * comissão e taxa da Staypse incidem sobre o valor dos produtos (subtotal),
-//    nunca sobre o frete — o frete é da loja;
+//    nunca sobre o frete, o frete é da loja;
 //  * vendedor "na folha" não tem recebedor: a parte dele fica com a loja, que
 //    paga junto com o salário;
 //  * quem paga a taxa do meio de pagamento é configurável (padrão: produtor);

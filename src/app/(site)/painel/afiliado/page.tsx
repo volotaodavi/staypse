@@ -68,7 +68,7 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
       {!recebedorOk(recebedor) && (
         <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900" data-pendencia-recebedor>
           Cadastro de recebimento: {ROTULO_STATUS_RECEBEDOR[recebedor?.status_recebedor ?? "nao_iniciado"]}
-          {recebedor?.motivo ? ` — ${recebedor.motivo}` : ""}. Você pode ver o catálogo, mas só se afilia e recebe comissões com
+          {recebedor?.motivo ? `, ${recebedor.motivo}` : ""}. Você pode ver o catálogo, mas só se afilia e recebe comissões com
           ele aprovado na Lytex.{" "}
           <Link href="/painel/afiliado/recebimentos" className="font-medium underline">
             Completar cadastro de recebimento
@@ -160,7 +160,7 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
                         </form>
                       </div>
                     ) : (
-                      <span key="l" className="text-petroleo/75">—</span>
+                      <span key="l" className="text-petroleo/75">Sem link</span>
                     ),
                   ],
                 };

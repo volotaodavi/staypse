@@ -1,5 +1,5 @@
 // Vitrine do afiliado: /@[slug] (o proxy reescreve para /v/[slug]).
-// Produtos da Staypse primeiro — cada um aponta para o link curto
+// Produtos da Staypse primeiro, cada um aponta para o link curto
 // /@afiliado/produto, então a compra sempre acontece no site da loja.
 // Depois, "Minhas indicações": links externos marcados como publicidade.
 import type { CSSProperties } from "react";

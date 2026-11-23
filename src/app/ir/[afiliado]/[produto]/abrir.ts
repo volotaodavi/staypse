@@ -28,7 +28,7 @@ export async function abrirLink(request: NextRequest, afiliado: string, produto:
   if (!SLUG.test(arroba) || !SLUG.test(produto)) return new NextResponse("Link inválido", { status: 404 });
 
   const robo = ROBOS.test(request.headers.get("user-agent") ?? "");
-  // de onde veio o clique (só o domínio, ex.: instagram.com) — nada pessoal
+  // de onde veio o clique (só o domínio, ex.: instagram.com), nada pessoal
   let origem: string | null = null;
   try {
     origem = new URL(request.headers.get("referer") ?? "").hostname.slice(0, 100) || null;

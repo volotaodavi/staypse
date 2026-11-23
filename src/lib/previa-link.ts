@@ -5,7 +5,7 @@
 //  - só https e só os sites da lista abaixo (inclusive em cada redirecionamento);
 //  - no máximo 5 s e 1,5 MB; nada de cookies;
 //  - se algo falhar, o revendedor preenche à mão (fallback manual).
-// O link SALVO é sempre o que o revendedor colou — nunca o endereço final.
+// O link SALVO é sempre o que o revendedor colou, nunca o endereço final.
 import "server-only";
 
 const SITES: { sufixo: string; plataforma: string }[] = [

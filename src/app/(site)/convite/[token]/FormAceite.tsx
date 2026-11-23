@@ -1,5 +1,5 @@
 "use client";
-// Aceitar o convite: se a pessoa ainda não tem @ (vitrine), escolhe agora —
+// Aceitar o convite: se a pessoa ainda não tem @ (vitrine), escolhe agora,
 // os links dela serão <site>/@seu-nome/produto.
 import { useState } from "react";
 import { BotaoEnviar, Campo, FormAcao } from "@/components/formulario";

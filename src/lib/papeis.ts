@@ -16,7 +16,7 @@ export type UsuarioAtual = {
 
 // Busca o usuário logado + nome + papéis. Devolve null se ninguém estiver logado.
 // Os papéis vêm do BANCO (tabela user_roles, protegida por RLS), nunca do
-// navegador — assim ninguém se faz de admin mexendo no cookie.
+// navegador, assim ninguém se faz de admin mexendo no cookie.
 export async function usuarioAtual(): Promise<UsuarioAtual | null> {
   // Marca a página como "do momento do pedido": a validação da sessão usa a
   // hora atual (expiração do token), o que o Next não aceita em pré-renderização.

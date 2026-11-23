@@ -1,6 +1,6 @@
 // Listas e regras das vitrines (revendedor) e lojas (produtor), usadas no
 // navegador e no servidor. As listas fechadas espelham as regras do banco
-// (migração 20261120000001) — ao mudar aqui, mude lá também.
+// (migração 20261120000001), ao mudar aqui, mude lá também.
 
 export const NICHOS_VITRINE = [
   { valor: "moda", rotulo: "Moda" },

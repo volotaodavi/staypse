@@ -347,7 +347,7 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
     // RefundSolicitationController_create_v2: POST /v2/refund-solicitation {_invoiceId, refundValue} (ambos obrigatórios).
     // Sem valor = total: usa RefundSolicitationController_getMaxValueToRefund_v2 (GET /v2/refund-solicitation/{_invoiceId}/max-value).
     // /v2/splits/{id}/refund (SplitController_refundSplit_v2) só aceita type "total" por split; não é usado.
-    // TODO(lytex): unidade de refundValue/maxRefundValue não está dita (assumido centavos como nas faturas) — PERGUNTAS 43.
+    // TODO(lytex): unidade de refundValue/maxRefundValue não está dita (assumido centavos como nas faturas), PERGUNTAS 43.
     async estornar(provedorId, valorCentavos): Promise<Cobranca> {
       let valor = valorCentavos;
       if (valor === undefined) {

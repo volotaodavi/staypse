@@ -6,7 +6,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const alt = "Staypse — plataforma de afiliados para produtos físicos e digitais";
+export const alt = "Staypse: plataforma de afiliados para produtos físicos e digitais";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

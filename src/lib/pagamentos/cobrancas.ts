@@ -1,4 +1,4 @@
-// Cobrança com split, estorno e conciliação — tudo contra a INTERFACE PaymentProvider
+// Cobrança com split, estorno e conciliação, tudo contra a INTERFACE PaymentProvider
 // (simulador agora; Lytex quando a documentação oficial chegar). A Staypse NUNCA recebe
 // nem repassa dinheiro: aqui só se pede a cobrança ao provedor (que divide direto entre
 // loja, quem indicou e a Staypse), guarda-se a referência + o snapshot do split e aplica-se
@@ -48,7 +48,7 @@ export async function iniciarCobranca(pedidoId: string, urlRetorno: string): Pro
     p_snapshot: snapshot as never,
   });
   if (erroRegistro) {
-    // clique duplo: outra requisição registrou antes — usa a cobrança dela
+    // clique duplo: outra requisição registrou antes, usa a cobrança dela
     const { data: outra } = await admin.from("orders").select("cobranca_url").eq("id", pedidoId).maybeSingle();
     if (outra?.cobranca_url !== undefined && erroRegistro.message.includes("pedido_sem_cobranca_possivel")) return { url: outra.cobranca_url };
     throw new Error(erroRegistro.message);

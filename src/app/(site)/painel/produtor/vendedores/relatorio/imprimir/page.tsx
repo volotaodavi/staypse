@@ -24,7 +24,7 @@ export default async function Imprimir({ searchParams }: PageProps<"/painel/prod
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold">
-            Comissões de vendedores — {m}/{ano}
+            Comissões de vendedores, {m}/{ano}
           </h1>
           <p className="text-sm">
             {produtor?.razao_social} · CNPJ {produtor?.cnpj}

@@ -5,7 +5,7 @@
 //     provedor de pagamento, e leva o comprador à página de pagamento do provedor.
 // A indicação (afiliado) vem de duas fontes, ambas conferidas pelo BANCO:
 //  * o cookie assinado do link curto (origem "link");
-//  * o CÓDIGO de indicação digitado pelo comprador (origem "codigo") — para quem clicou
+//  * o CÓDIGO de indicação digitado pelo comprador (origem "codigo"), para quem clicou
 //    no celular e compra no computador. O código digitado VENCE o cookie (intenção explícita).
 // Código não é desconto: o preço é o mesmo. Código inválido barra o avanço, com mensagem
 // neutra, e a pessoa pode apagar o campo para comprar sem indicação.

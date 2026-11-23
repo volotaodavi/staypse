@@ -1,5 +1,5 @@
 // =========================================================================
-// DADOS DA EMPRESA — único lugar para trocar nome, CNPJ, endereço e contatos.
+// DADOS DA EMPRESA, único lugar para trocar nome, CNPJ, endereço e contatos.
 // Aparecem no rodapé de TODAS as páginas (regra de conformidade 3).
 // Troque os textos entre colchetes pelos dados do cartão CNPJ.
 // Enquanto um contato estiver entre colchetes, o site NÃO o mostra ao público:
@@ -38,14 +38,14 @@ export const contatoEmLinha = () =>
   [CONTATO.email, CONTATO.whatsapp && `WhatsApp ${CONTATO.whatsapp}`].filter(Boolean).join(" · ");
 
 // =========================================================================
-// VERSÃO DOS TERMOS — regra de conformidade 7.
+// VERSÃO DOS TERMOS, regra de conformidade 7.
 // Sempre que mudar o texto dos Termos de Uso ou da Política de Privacidade,
 // troque esta versão (use a data da mudança). Cada novo aceite fica gravado
 // no banco com a versão vigente.
 // =========================================================================
 // (versão "2026-12-02.1": lista de espera com 4 perfis e e-mail de confirmação pelo
 // Resend, listados na Política de Privacidade)
-// (versão "2026-12-03.1": revisão jurídica — política de reembolso, avaliações, direitos
+// (versão "2026-12-03.1": revisão jurídica, política de reembolso, avaliações, direitos
 // de imagem e aviso de infração, registros de acesso, BrasilAPI, idade mínima na compra)
 // (versão "2026-12-07.1": nome do comprador e valor pago mostrados ao afiliado ou vendedor que indicou a venda)
 export const TERMOS_VERSAO = "2026-12-07.1";

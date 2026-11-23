@@ -106,7 +106,7 @@ export function pendenciasItem(i: DadosItem): string[] {
 
 // ---------- formatos ----------
 export function formatarPreco(centavos: number | null | undefined): string {
-  if (centavos == null) return "—";
+  if (centavos == null) return "Sem valor";
   return (centavos / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 

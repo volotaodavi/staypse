@@ -1,6 +1,6 @@
 // Testes do cálculo do split: npm run test:unit
 // Os percentuais de taxa aqui são EXEMPLOS de teste, não as taxas da Lytex
-// (essas dependem do contrato — ver docs/lytex/PERGUNTAS.md).
+// (essas dependem do contrato, ver docs/lytex/PERGUNTAS.md).
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { calcularSplit, type EntradaSplit } from "./split";

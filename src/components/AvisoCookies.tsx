@@ -3,7 +3,7 @@
 // (Guia de Cookies da ANPD): só há cookies próprios, sem analytics nem terceiros;
 // o de atribuição não é "estritamente necessário" e se apoia no legítimo interesse
 // (ver /cookies). SE algum dia entrar analytics, pixel ou embed de terceiros, este
-// aviso precisa virar OPT-IN (bloquear até o aceite) — não basta o "Entendi". Some depois do "Entendi" (guardado só neste navegador).
+// aviso precisa virar OPT-IN (bloquear até o aceite), não basta o "Entendi". Some depois do "Entendi" (guardado só neste navegador).
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 

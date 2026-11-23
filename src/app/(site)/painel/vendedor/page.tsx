@@ -1,6 +1,6 @@
 // Painel do vendedor próprio da loja: só as PRÓPRIAS vendas e comissões, o vínculo
 // com a loja e os links dos produtos. Nunca mostra totais da loja, outros
-// vendedores nem dados de compradores — o banco também não deixa (funções
+// vendedores nem dados de compradores, o banco também não deixa (funções
 // filtradas por auth.uid()). Mesmo padrão do painel do afiliado.
 import Link from "next/link";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";

@@ -1,5 +1,5 @@
 // Webhook do provedor de pagamento: /api/webhooks/pagamentos/mock | /lytex
-//  1. confere a assinatura (origem verdadeira) — sem ela, 401;
+//  1. confere a assinatura (origem verdadeira), sem ela, 401;
 //  2. grava o evento bruto (auditoria) e ignora repetições (idempotência);
 //  3. aplica o efeito (status do recebedor; cobrança: pago, recusado, estornado, chargeback).
 // Lytex: responde 501 até a integração ser feita com a documentação oficial.

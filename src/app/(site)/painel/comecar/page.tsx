@@ -8,7 +8,7 @@ export const metadata = { title: "Começar" };
 export const instant = false;
 
 // Grava o papel escolhido. A RLS só deixa gravar produtor/revendedor
-// para o próprio usuário — "admin" seria recusado pelo banco.
+// para o próprio usuário, "admin" seria recusado pelo banco.
 async function escolherPapel(formData: FormData) {
   "use server";
   const papel = String(formData.get("papel"));

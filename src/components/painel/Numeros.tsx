@@ -44,4 +44,4 @@ export function NotaPagamentos() {
 // "1.234" / "12,5%"
 export const inteiro = (n: number) => n.toLocaleString("pt-BR");
 export const percentual = (parte: number, todo: number) =>
-  todo > 0 ? `${((parte / todo) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "—";
+  todo > 0 ? `${((parte / todo) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "0%";

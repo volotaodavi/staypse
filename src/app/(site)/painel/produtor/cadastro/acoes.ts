@@ -41,7 +41,7 @@ async function gravar(dados: Record<string, unknown>): Promise<string | null> {
   return null;
 }
 
-// Passo 1 — Empresa
+// Passo 1, Empresa
 export async function salvarEmpresa(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
   const razao_social = texto(f, "razao_social");
   const cnpj = normalizarCnpj(texto(f, "cnpj"));
@@ -60,7 +60,7 @@ export async function salvarEmpresa(_a: EstadoFormulario, f: FormData): Promise<
   redirect("/painel/produtor/cadastro?passo=2");
 }
 
-// Passo 2 — Endereço de envio
+// Passo 2, Endereço de envio
 export async function salvarEndereco(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
   const cep = texto(f, "cep").replace(/\D/g, "");
   const uf = texto(f, "uf");
@@ -84,7 +84,7 @@ export async function salvarEndereco(_a: EstadoFormulario, f: FormData): Promise
 }
 
 
-// Passo 4 — Aceite do Contrato do Produtor (versão + data do servidor)
+// Passo 4, Aceite do Contrato do Produtor (versão + data do servidor)
 export async function aceitarContrato(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
   if (f.get("aceite") !== "sim") return { erro: "Marque que leu e aceita o Contrato do Produtor." };
   const usuario = await exigirPapel("produtor");
@@ -96,7 +96,7 @@ export async function aceitarContrato(_a: EstadoFormulario, f: FormData): Promis
   redirect("/painel/produtor/cadastro?passo=5");
 }
 
-// Passo 5 — Enviar para análise
+// Passo 5, Enviar para análise
 export async function enviarParaAnalise(): Promise<EstadoFormulario> {
   await exigirPapel("produtor");
   const supabase = await criarClienteServidor();

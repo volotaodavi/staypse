@@ -1,4 +1,4 @@
-// Logo oficial da Staypse. SEMPRE usa os SVGs de /public/brand — nunca
+// Logo oficial da Staypse. SEMPRE usa os SVGs de /public/brand, nunca
 // redesenhar a logo em código.
 //  - "principal": para fundos claros (branco/gelo)
 //  - "negativo":  para fundos escuros (petróleo), com "yp" em ciano

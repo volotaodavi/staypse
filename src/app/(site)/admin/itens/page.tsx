@@ -1,4 +1,4 @@
-// /admin/itens — fila de análise de itens. Itens com alerta de palavras
+// /admin/itens, fila de análise de itens. Itens com alerta de palavras
 // proibidas aparecem primeiro e destacados.
 import Link from "next/link";
 import { Miniatura } from "@/components/arquivos";
@@ -104,14 +104,14 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
             >
               {i.alerta_palavras.length > 0 && (
                 <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800" data-alerta>
-                  <strong className="font-medium">⚠ Revisar: termos da lista de proibidos</strong> —{" "}
+                  <strong className="font-medium">⚠ Revisar: termos da lista de proibidos</strong>:{" "}
                   {i.alerta_palavras.join(", ")}
                 </p>
               )}
 
               <div className="flex gap-1">
                 {i.fotos.slice(0, 3).map((f, n) => (
-                  <Miniatura key={f} src={urlFoto(base, f)} alt={`${i.nome} — foto ${n + 1}`} />
+                  <Miniatura key={f} src={urlFoto(base, f)} alt={`${i.nome}: foto ${n + 1}`} />
                 ))}
               </div>
 
@@ -158,7 +158,7 @@ export default async function AdminItens({ searchParams }: PageProps<"/admin/ite
                 </div>
               )}
               <p className="mt-1 text-xs text-petroleo/70">
-                Declarou emitir nota fiscal em {i.declaracao_nf_em ? dataBr(i.declaracao_nf_em) : "—"}
+                Declarou emitir nota fiscal em {i.declaracao_nf_em ? dataBr(i.declaracao_nf_em) : "não informado"}
               </p>
               {i.status_aprovacao === "recusado" && <p className="mt-2 text-sm text-red-800">Motivo: {i.motivo_rejeicao}</p>}
 

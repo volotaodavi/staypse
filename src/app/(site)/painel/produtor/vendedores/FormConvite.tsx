@@ -18,7 +18,7 @@ export function FormConvite({ loja }: { loja: string }) {
     return (
       <div className="flex flex-col gap-3" data-convite>
         <p role="status" className="rounded-xl bg-gelo px-4 py-3 text-sm">
-          Convite criado para <strong className="font-medium">{v.email}</strong>. Envie o link abaixo para essa pessoa —
+          Convite criado para <strong className="font-medium">{v.email}</strong>. Envie o link abaixo para essa pessoa,
           ele vale por 14 dias e só funciona com esse e-mail.
         </p>
         <p className="break-all rounded-lg bg-gelo px-3 py-2 text-xs" data-link-convite>

@@ -1,6 +1,6 @@
 // Qual provedor de pagamento está ativo: PAYMENTS_PROVIDER=mock|lytex.
 // Padrão: simulador no computador; Lytex na Vercel (que, até a documentação
-// oficial chegar, responde "integração pendente" — nunca finge que pagou).
+// oficial chegar, responde "integração pendente", nunca finge que pagou).
 import "server-only";
 import { lytex } from "./lytex";
 import { mock } from "./mock";
@@ -21,7 +21,7 @@ export function provedorPorNome(nome: string): PaymentProvider | null {
 }
 
 // a "página da Lytex" simulada (aprovar/recusar recebedor, pagar cobrança) nunca
-// existe em produção — senão qualquer um aprovaria o próprio cadastro
+// existe em produção, senão qualquer um aprovaria o próprio cadastro
 export function simuladorAtivo(): boolean {
   return nomeDoProvedor() === "mock" && process.env.VERCEL_ENV !== "production";
 }

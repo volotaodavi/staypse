@@ -50,7 +50,7 @@ export default async function VendedoresDaLoja({ searchParams }: PageProps<"/pai
           celulas: [
             <span key="n" data-vendedor={v.nome ?? ""}>
               <span className="text-petroleo/75">{i + 1}º </span>
-              {v.nome ?? "—"}
+              {v.nome ?? "Não informado"}
               {v.arroba ? <span className="text-petroleo/75"> @{v.arroba}</span> : null}
               {v.status !== "ativo" && <span className="block text-petroleo/75">Desativado</span>}
             </span>,

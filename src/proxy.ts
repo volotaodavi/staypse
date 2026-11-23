@@ -3,7 +3,7 @@
 //  1. Renova a sessão do Supabase (o token expira em 1h).
 //  2. Manda para /entrar quem tenta abrir área logada sem estar logado.
 // A checagem de PAPEL (produtor/revendedor/admin) fica em cada página,
-// consultando o banco — o proxy só sabe se há alguém logado.
+// consultando o banco, o proxy só sabe se há alguém logado.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseChavePublica, supabaseUrl } from "@/lib/supabase/env";

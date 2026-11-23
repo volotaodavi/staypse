@@ -1,8 +1,8 @@
 // Página inicial de PRÉ-LANÇAMENTO. O ÚNICO botão da página é entrar na lista
 // de espera (não há "Entrar" nem "Criar conta" aqui). É para onde a bio do
-// Instagram aponta — pensada primeiro para o celular.
+// Instagram aponta, pensada primeiro para o celular.
 // Regras de texto: sem promessa de ganho, sorteio ou ganho por recrutamento;
-// a Staypse nunca "recebe" nem guarda o dinheiro — o split acontece na Lytex.
+// a Staypse nunca "recebe" nem guarda o dinheiro, o split acontece na Lytex.
 import Link from "next/link";
 import { Suspense } from "react";
 import { BarraFixa } from "@/components/BarraFixa";

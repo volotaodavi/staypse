@@ -235,7 +235,7 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
             </address>
             <div className="flex flex-wrap gap-x-6">
               <a
-                href={linkWhatsapp(`${item.nome} — ${formatarPreco(item.preco_centavos)}\n${url}`)}
+                href={linkWhatsapp(`${item.nome}, ${formatarPreco(item.preco_centavos)}\n${url}`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-11 items-center text-sm font-semibold text-[var(--loja-link)] underline"

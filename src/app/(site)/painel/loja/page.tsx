@@ -88,7 +88,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           {!recebe && (
             <li className="rounded-2xl bg-amber-50 px-4 py-3 text-amber-900" data-pendencia-recebedor>
               Cadastro de recebimento: {ROTULO_STATUS_RECEBEDOR[recebedor?.status_recebedor ?? "nao_iniciado"]}
-              {recebedor?.motivo ? ` — ${recebedor.motivo}` : ""}. Sem ele aprovado na Lytex, a loja não publica produtos nem
+              {recebedor?.motivo ? `, ${recebedor.motivo}` : ""}. Sem ele aprovado na Lytex, a loja não publica produtos nem
               recebe pedidos.{" "}
               <Link href="/painel/loja/recebimentos" className="font-medium underline">
                 Completar cadastro de recebimento
@@ -106,7 +106,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           {itensRecusados.map((i) => (
             <li key={i.id} className="rounded-2xl bg-red-50 px-4 py-3 text-red-800">
               Produto recusado: <strong className="font-medium">{i.nome}</strong>
-              {i.motivo_rejeicao ? ` — ${i.motivo_rejeicao}` : ""}.{" "}
+              {i.motivo_rejeicao ? `, ${i.motivo_rejeicao}` : ""}.{" "}
               <Link href={`/painel/produtor/itens/${i.id}`} className="font-medium underline">
                 Corrigir
               </Link>
@@ -142,7 +142,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           { rotulo: "Vendas", valor: inteiro(r.vendas), destaque: true },
           { rotulo: "Faturamento bruto", valor: formatarPreco(r.faturamento_centavos) },
           { rotulo: "Comissões a afiliados e vendedores", valor: formatarPreco(r.comissoes_centavos), nota: "Repassadas pelo split" },
-          { rotulo: "Ticket médio", valor: r.vendas > 0 ? formatarPreco(ticket) : "—" },
+          { rotulo: "Ticket médio", valor: r.vendas > 0 ? formatarPreco(ticket) : "Sem vendas" },
           { rotulo: "Cliques nos links", valor: inteiro(r.cliques) },
           { rotulo: "Conversão", valor: percentual(r.vendas, r.cliques), nota: "Vendas ÷ cliques" },
         ]}

@@ -1,5 +1,5 @@
 // Cliente do Supabase com a chave SECRETA (service_role).
-// Passa por cima da RLS — por isso:
+// Passa por cima da RLS, por isso:
 //  * só pode ser usado no servidor ("server-only" quebra o build se alguém
 //    importar este arquivo numa tela do navegador);
 //  * só para operações que o banco libera exclusivamente ao servidor

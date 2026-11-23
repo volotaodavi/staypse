@@ -27,13 +27,13 @@ export async function cadastrar(
       (PAPEIS_PERMITIDOS as readonly string[]).includes(p),
     );
   const aceitou = formData.get("aceite") === "sim";
-  // declaração de idade (sem data de nascimento): maior de 18/emancipado, ou 16–17 com autorização
+  // declaração de idade (sem data de nascimento): maior de 18/emancipado, ou 16 a 17 com autorização
   const idadeBruta = String(formData.get("idade") ?? "");
   const idade = idadeBruta === "maior" || idadeBruta === "16_17" ? idadeBruta : "";
   // devolvido em caso de erro para não apagar o que foi digitado (nunca a senha)
   const valores = { nome, email, papeis: papeis.join(","), idade };
 
-  // Validações (o banco valida de novo — nunca confiamos só no navegador)
+  // Validações (o banco valida de novo, nunca confiamos só no navegador)
   if (nome.length < 2) return { valores, erro: "Informe seu nome." };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { valores, erro: "Informe um e-mail válido." };
   if (senha.length < 8) return { valores, erro: "A senha precisa ter pelo menos 8 caracteres." };

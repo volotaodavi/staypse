@@ -87,7 +87,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
         ) : (
           <>
             <p className="mt-2 text-gelo/85">
-              Escolha o nome, o nicho e o visual da sua vitrine. Você ganha apenas sobre as suas próprias vendas — sem taxa
+              Escolha o nome, o nicho e o visual da sua vitrine. Você ganha apenas sobre as suas próprias vendas, sem taxa
               de adesão.
             </p>
             <Link href="/painel/revendedor/vitrine" className="mt-4 inline-block rounded-full bg-ciano px-5 py-3 font-medium text-petroleo">

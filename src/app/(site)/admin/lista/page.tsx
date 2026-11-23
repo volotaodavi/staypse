@@ -1,4 +1,4 @@
-// /admin/lista — inscritos da lista de espera.
+// /admin/lista, inscritos da lista de espera.
 // Filtros por tipo, cidade e nicho; contadores; status do contato; CSV.
 import Link from "next/link";
 import { NICHOS, PERFIS, ROTULO_NICHO, ROTULO_PERFIL, STATUS_CONTATO, TIPOS_PRODUTO } from "@/lib/lista";

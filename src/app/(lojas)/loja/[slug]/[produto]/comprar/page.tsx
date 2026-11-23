@@ -1,4 +1,4 @@
-// Checkout: /loja/[loja]/[produto]/comprar — dentro da loja (mesma identidade visual).
+// Checkout: /loja/[loja]/[produto]/comprar, dentro da loja (mesma identidade visual).
 // Fechado enquanto o pagamento (Etapa 6) não estiver ligado: COMPRAS_ABERTAS.
 import type { Metadata } from "next";
 import Link from "next/link";
