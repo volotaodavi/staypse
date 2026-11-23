@@ -1229,6 +1229,167 @@ update public.audit_log set ator_id = null where id = (select min(id) from publi
 select teste.ok(true, 'excluir a conta anonimiza o autor no log (LGPD), sem apagar o registro');
 
 -- =========================================================================
+-- 20. Painel admin (migração 13): denúncias, configurações, suspensão, contadores
+-- =========================================================================
+reset role;
+select id as loja_alvo from public.producers limit 1 \gset
+select id as item_alvo from public.items limit 1 \gset
+
+-- ---------- denúncias ----------
+:comoServidor
+select public.denunciar('loja', :'loja_alvo', 'golpe_ou_fraude', 'A loja não entrega o que vende.', 'quem@denuncia.com', 'ip-1') as den1 \gset
+select teste.ok(:'den1' is not null, 'servidor registra a denúncia (função denunciar)');
+select teste.ok(public.denunciar('loja', :'loja_alvo', 'golpe_ou_fraude', 'A loja não entrega o que vende.', null, 'ip-1') = :'den1'::uuid,
+                'a mesma denúncia do mesmo IP no mesmo alvo não duplica');
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'item', '00000000-0000-0000-0000-0000000000ff',
+                             'outro', 'Descrição suficiente.', 'ip-2'), 'denúncia de alvo inexistente é recusada');
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'item', :'item_alvo',
+                             'motivo_inventado', 'Descrição suficiente.', 'ip-2'), 'motivo fora das categorias é recusado');
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'item', :'item_alvo',
+                             'outro', 'curta', 'ip-2'), 'descrição curta é recusada');
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'item', :'item_alvo',
+                             'outro', repeat('x', 1001), 'ip-2'), 'descrição acima de 1000 letras é recusada');
+-- limite: 5 por hora por IP
+do $$
+declare r record; n int := 0;
+begin
+  for r in select id from public.items limit 5 loop
+    perform public.denunciar('item', r.id, 'produto_proibido', 'Parece produto proibido pela política.', null, 'ip-limite');
+    n := n + 1;
+  end loop;
+  if n < 5 then raise exception 'poucos itens no teste (%)', n; end if;
+end $$;
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'loja', :'loja_alvo',
+                             'outro', 'Sexta denúncia no mesmo horário.', 'ip-limite'), 'limite de 5 denúncias por hora por IP');
+
+:comoAnon
+select teste.bloqueia($$select * from public.denuncias$$, 'anônimo não lê denúncias');
+select teste.bloqueia($$insert into public.denuncias (alvo_tipo, alvo_id, motivo, descricao, ip_hash)
+                        values ('loja', gen_random_uuid(), 'outro', 'Descrição suficiente.', 'x')$$, 'anônimo não insere denúncia direto na tabela');
+select teste.bloqueia(format('select public.denunciar(%L, %L, %L, %L, null, %L)', 'loja', :'loja_alvo', 'outro', 'Descrição suficiente.', 'ip-3'),
+                      'anônimo não chama denunciar direto (só o servidor, com o hash do IP)');
+:comoA
+select teste.ok((select count(*) from public.denuncias) = 0, 'usuário comum não vê denúncias (RLS)');
+select teste.bloqueia($$update public.denuncias set status = 'improcedente'$$, 'usuário comum não altera denúncia');
+select teste.bloqueia(format('select public.admin_decidir_denuncia(%L, %L, %L)', :'den1', 'procedente', 'Confirmado pela análise.'),
+                      'não-admin não decide denúncia');
+:comoC
+select teste.ok((select count(*) from public.denuncias where status = 'aberta') = 6, 'admin vê as denúncias abertas');
+select teste.bloqueia(format('select public.admin_decidir_denuncia(%L, %L, %L)', :'den1', 'procedente', ''), 'decidir exige nota');
+select teste.bloqueia(format('select public.admin_decidir_denuncia(%L, %L, %L)', :'den1', 'aberta', 'Nota qualquer.'), 'status de decisão inválido');
+select public.admin_decidir_denuncia(:'den1', 'procedente', 'Confirmado pela análise.');
+select teste.ok((select status = 'procedente' and decidido_por = '00000000-0000-0000-0000-00000000000c' and decidido_em is not null
+                 from public.denuncias where id = :'den1'), 'admin decide e a denúncia guarda quem e quando');
+select teste.ok((select detalhes #>> '{antes,status}' = 'aberta' and detalhes #>> '{depois,status}' = 'procedente'
+                 from public.audit_log where entidade = 'denuncia' and entidade_id = :'den1'),
+                'decisão da denúncia grava o log com antes e depois');
+select teste.bloqueia(format('select public.admin_decidir_denuncia(%L, %L, %L)', :'den1', 'improcedente', 'Mudei de ideia.'),
+                      'denúncia decidida não é decidida de novo');
+
+-- ---------- configurações ----------
+:comoA
+select teste.ok((select count(*) from public.configuracoes) = 0, 'usuário comum não lê as configurações');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"prazo_nf_dias": 3}')$$, 'não-admin não altera configuração');
+select teste.bloqueia($$update public.configuracoes set valor = '1'$$, 'não-admin não altera a tabela de configurações');
+:comoAnon
+select teste.ok(public.configuracoes_publicas() ? 'meios_pagamento' and not (public.configuracoes_publicas() ? 'taxa_staypse_percentual')
+                and not (public.configuracoes_publicas() ? 'palavras_proibidas'),
+                'leitura pública traz só chaves não sensíveis (sem taxa nem palavras proibidas)');
+:comoC
+select teste.ok((select count(*) from public.configuracoes) = 6, 'admin lê as 6 configurações');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 80}')$$, 'mínimo maior que o máximo salvo é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 40, "comissao_max_percentual": 30}')$$, 'faixa incoerente (min > max) é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": 101}')$$, 'taxa acima de 100 é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": -1}')$$, 'taxa negativa é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": "cinco"}')$$, 'taxa que não é número é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"prazo_nf_dias": 0}')$$, 'prazo de nota fiscal zero é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"prazo_nf_dias": 2.5}')$$, 'prazo de nota fiscal fracionado é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"meios_pagamento": {"pix": true}}')$$, 'meios de pagamento incompletos são recusados');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"meios_pagamento": {"pix": "sim", "cartao": true, "boleto": false}}')$$, 'meio de pagamento não booleano é recusado');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"palavras_proibidas": ["a"]}')$$, 'palavra proibida curta demais é recusada');
+select teste.bloqueia($$select public.admin_salvar_configuracoes('{"chave_inventada": 1}')$$, 'chave desconhecida é recusada');
+select teste.ok((select valor = '5' from public.configuracoes where chave = 'taxa_staypse_percentual'), 'config recusada não altera nada');
+select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": 7.5, "comissao_min_percentual": 15, "comissao_max_percentual": 60,
+                                           "prazo_nf_dias": 3, "meios_pagamento": {"pix": true, "cartao": false, "boleto": true},
+                                           "palavras_proibidas": ["Palavra Nova", "outra coisa"]}');
+select teste.ok((select valor = '7.5' from public.configuracoes where chave = 'taxa_staypse_percentual')
+                and (select valor = '3' from public.configuracoes where chave = 'prazo_nf_dias')
+                and (select valor -> 'cartao' = 'false' from public.configuracoes where chave = 'meios_pagamento'),
+                'configuração válida é salva');
+select teste.ok((select detalhes -> 'antes' = '5' and detalhes -> 'depois' = '7.5'
+                 from public.audit_log where entidade = 'configuracao' and detalhes ->> 'chave' = 'taxa_staypse_percentual'),
+                'alterar configuração grava o log com antes e depois');
+select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 6, 'uma entrada no log por chave alterada');
+select public.admin_salvar_configuracoes('{"prazo_nf_dias": 3}');
+select teste.ok((select count(*) from public.audit_log where acao = 'configuracao_alterada') = 6, 'salvar sem mudança não polui o log');
+select teste.ok((select array_agg(termo order by termo) from public.palavras_proibidas) = array['outra coisa', 'palavra nova'],
+                'a lista de palavras proibidas da configuração vira a lista usada na análise de itens');
+reset role;
+select teste.bloqueia($$update public.configuracoes set valor = '101' where chave = 'taxa_staypse_percentual'$$,
+                      'nem o banco aceita valor fora da faixa (restrição da tabela)');
+select teste.bloqueia($$update public.audit_log set acao = 'x' where entidade = 'configuracao'$$, 'o log das configurações é imutável');
+
+-- ---------- usuários: suspensão ----------
+:comoA
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, true, %L)', '00000000-0000-0000-0000-00000000000b', 'Spam nas vitrines.'),
+                      'não-admin não suspende');
+select teste.bloqueia($$select * from public.admin_listar_usuarios('bia')$$, 'não-admin não lista usuários');
+:comoC
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, true, %L)', '00000000-0000-0000-0000-00000000000b', ''), 'suspender exige motivo');
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, true, %L)', '00000000-0000-0000-0000-00000000000b', 'abc'), 'motivo curto demais');
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, true, %L)', '00000000-0000-0000-0000-00000000000c', 'Teste em mim mesmo.'), 'admin não suspende a si');
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, false, %L)', '00000000-0000-0000-0000-00000000000b', 'Já estava ativo.'), 'reativar quem não está suspenso é recusado');
+select teste.ok((select count(*) from public.admin_listar_usuarios('bia')) = 1
+                and (select email from public.admin_listar_usuarios('bia@teste')) = 'bia@teste.com'
+                and (select count(*) from public.admin_listar_usuarios(null, 2, 0)) = 2
+                and (select total from public.admin_listar_usuarios(null, 2, 0) limit 1) >= 4,
+                'admin busca por nome ou e-mail e pagina');
+select public.admin_suspender_usuario('00000000-0000-0000-0000-00000000000b', true, 'Spam nas vitrines.');
+select teste.ok((select suspenso_em is not null and suspenso_motivo = 'Spam nas vitrines.' and suspenso_por = '00000000-0000-0000-0000-00000000000c'
+                 from public.profiles where id = '00000000-0000-0000-0000-00000000000b'), 'suspensão guarda motivo, quem e quando');
+select teste.ok((select detalhes #>> '{antes,suspenso}' = 'false' and detalhes #>> '{depois,suspenso}' = 'true' and detalhes ->> 'motivo' = 'Spam nas vitrines.'
+                 from public.audit_log where acao = 'usuario_suspenso' and entidade = 'usuario'
+                   and entidade_id = '00000000-0000-0000-0000-00000000000b'),
+                'suspensão grava o log com antes, depois e motivo');
+select teste.bloqueia(format('select public.admin_suspender_usuario(%L, true, %L)', '00000000-0000-0000-0000-00000000000b', 'De novo.'), 'não suspende quem já está suspenso');
+:comoB
+select teste.ok((select suspenso_em is not null from public.profiles where id = '00000000-0000-0000-0000-00000000000b'),
+                'o usuário suspenso vê a própria suspensão (o site bloqueia os painéis)');
+select teste.bloqueia($$update public.profiles set suspenso_em = null, suspenso_motivo = null where id = '00000000-0000-0000-0000-00000000000b'$$,
+                      'usuário não se reativa sozinho');
+:comoC
+select public.admin_suspender_usuario('00000000-0000-0000-0000-00000000000b', false, 'Recurso aceito.');
+select teste.ok((select suspenso_em is null and suspenso_motivo is null from public.profiles where id = '00000000-0000-0000-0000-00000000000b')
+                and (select detalhes #>> '{depois,suspenso}' = 'false' from public.audit_log where acao = 'usuario_reativado'
+                     and entidade_id = '00000000-0000-0000-0000-00000000000b'),
+                'reativação limpa a suspensão e grava o log');
+
+-- ---------- contadores, lista de espera e log (só admin) ----------
+:comoA
+select teste.bloqueia($$select public.admin_contadores()$$, 'não-admin não vê os contadores');
+select teste.bloqueia($$select public.admin_lista_espera_resumo(now() - interval '7 days', now())$$, 'não-admin não vê o resumo da lista de espera');
+select teste.bloqueia($$select public.admin_acoes_auditoria()$$, 'não-admin não lista ações do log');
+select teste.ok((select count(*) from public.audit_log) = 0, 'não-admin não lê o log de auditoria');
+:comoC
+select teste.ok((public.admin_contadores() ->> 'denuncias_abertas')::int = 5 and public.admin_contadores() ? 'pedidos_sem_nf'
+                and (public.admin_contadores() ->> 'prazo_nf_dias')::int = 3, 'contadores do admin (denúncias abertas, prazo de NF vindo da configuração)');
+select teste.ok(jsonb_array_length(public.admin_lista_espera_resumo(now() - interval '6 days', now()) -> 'por_dia') >= 6
+                and (public.admin_lista_espera_resumo(now() - interval '6 days', now()) ->> 'total')::int >= 1,
+                'resumo da lista de espera traz o crescimento por dia');
+select teste.ok('usuario_suspenso' in (select public.admin_acoes_auditoria()), 'admin lista as ações do log para filtrar');
+:comoServidor
+select teste.bloqueia($$delete from public.audit_log where entidade in ('configuracao', 'usuario', 'denuncia')$$, 'o log continua imutável para o servidor');
+reset role;
+
+-- pedido pago há mais que o prazo e sem nota fiscal entra na fila
+update public.orders set status = 'pago', pago_em = now() - interval '10 days'
+where id = (select order_id from public.order_items where nota_fiscal_numero is null limit 1);
+:comoC
+select teste.ok((public.admin_contadores() ->> 'pedidos_sem_nf')::int >= 1
+                and (select count(*) from public.admin_pedidos_sem_nf()) >= 1, 'pedido pago há mais de X dias sem nota fiscal aparece na fila');
+reset role;
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

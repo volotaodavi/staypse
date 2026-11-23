@@ -10,6 +10,8 @@ export type UsuarioAtual = {
   email: string;
   nome: string;
   papeis: Papel[];
+  // preenchido quando o admin suspendeu a conta (motivo mostrado à pessoa)
+  suspensoMotivo: string | null;
 };
 
 // Busca o usuário logado + nome + papéis. Devolve null se ninguém estiver logado.
@@ -25,7 +27,7 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
   if (!id) return null;
 
   const [{ data: perfil }, { data: papeis }] = await Promise.all([
-    supabase.from("profiles").select("nome").eq("id", id).single(),
+    supabase.from("profiles").select("nome, suspenso_motivo").eq("id", id).single(),
     supabase.from("user_roles").select("papel").eq("user_id", id),
   ]);
 
@@ -34,6 +36,7 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
     email: String(data.claims.email ?? ""),
     nome: perfil?.nome ?? "",
     papeis: (papeis ?? []).map((p) => p.papel as Papel),
+    suspensoMotivo: perfil?.suspenso_motivo ?? null,
   };
 }
 
@@ -41,6 +44,8 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
 export async function exigirPapel(papel?: Papel): Promise<UsuarioAtual> {
   const usuario = await usuarioAtual();
   if (!usuario) redirect("/entrar");
+  // conta suspensa pelo admin: nenhum painel abre
+  if (usuario.suspensoMotivo) redirect("/conta-suspensa");
   if (papel && !usuario.papeis.includes(papel)) redirect("/painel");
   return usuario;
 }
@@ -50,6 +55,7 @@ export async function exigirPapel(papel?: Papel): Promise<UsuarioAtual> {
 export async function exigirAlgumPapel(papeis: Papel[]): Promise<UsuarioAtual> {
   const usuario = await usuarioAtual();
   if (!usuario) redirect("/entrar");
+  if (usuario.suspensoMotivo) redirect("/conta-suspensa");
   if (!papeis.some((p) => usuario.papeis.includes(p))) redirect("/painel");
   return usuario;
 }
