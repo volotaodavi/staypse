@@ -2,7 +2,6 @@
 // (Etapa 3), frete e produtos.
 import Link from "next/link";
 import { STATUS_PRODUTOR } from "@/lib/produtor";
-import { AbasLoja } from "../AbasLoja";
 import { minhaLoja } from "../dados";
 
 export const metadata = { title: "Minha loja" };
@@ -23,7 +22,6 @@ export default async function MinhaLoja() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl">Minha loja</h1>
-      <AbasLoja />
       <ul className="grid gap-3 sm:grid-cols-2">
         {atalhos.map(([href, titulo, texto]) => (
           <li key={href}>

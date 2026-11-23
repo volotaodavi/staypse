@@ -68,7 +68,7 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
     <div className="flex flex-col gap-5">
       <div>
         <p className="text-sm text-petroleo/75">Vendedor da loja</p>
-        <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+        <h1 className="text-3xl">Resumo</h1>
       </div>
       {aviso === "salva" && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">

@@ -8,7 +8,6 @@ import { meuRecebedor, recebedorOk } from "@/components/painel/Recebimento";
 import { ROTULO_STATUS_RECEBEDOR } from "@/lib/pagamentos/recebedores";
 import { diaCurto, formatarDia, lerPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
-import { AbasLoja } from "./AbasLoja";
 import { minhaLoja } from "./dados";
 
 export const metadata = { title: "Painel da loja" };
@@ -28,12 +27,12 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
   // o período usa a data de hoje: espera a requisição antes de ler o relógio
   await connection();
   const periodo = lerPeriodo(await searchParams);
-  const { usuario, supabase, loja } = await minhaLoja();
+  const { supabase, loja } = await minhaLoja();
 
   if (!loja || loja.status_verificacao !== "aprovado") {
     return (
       <div className="flex flex-col gap-5">
-        <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+        <h1 className="text-3xl">Resumo</h1>
         <section className="flex flex-col items-start gap-3 rounded-2xl bg-branco p-5">
           <p>
             {!loja
@@ -82,7 +81,6 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           </Link>
         )}
       </div>
-      <AbasLoja />
       <FiltroPeriodo periodo={periodo} caminho="/painel/loja" />
 
       {(!recebe || (semNota ?? 0) > 0 || itensRecusados.length > 0 || r.aguardando_envio > 0 || r.desistencias > 0 || loja.frete_fixo_centavos == null) && (

@@ -22,7 +22,7 @@ type Contadores = {
 };
 
 export default async function Admin() {
-  const usuario = await exigirPapel("admin");
+  await exigirPapel("admin");
   const supabase = await criarClienteServidor();
 
   const [{ data, error }, usuarios, listaEspera, desistencias] = await Promise.all([
@@ -57,56 +57,40 @@ export default async function Admin() {
 
   return (
     <>
-      <p className="text-sm font-medium text-petroleo/75">Admin</p>
-      <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+      <p className="text-sm text-petroleo/75">Admin</p>
+      <h1 className="text-3xl">Visão geral</h1>
 
-      <h2 className="mt-6 text-xl">Filas</h2>
-      <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <h2 className="mt-8 text-xl">Filas de trabalho</h2>
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {filas.map((f) => (
           <li key={f.href}>
             <Link
               href={f.href}
               data-fila={f.href}
-              className={`flex h-full min-h-11 flex-col justify-between rounded-3xl p-5 hover:brightness-110 ${
-                f.valor > 0 ? "bg-petroleo text-gelo" : "bg-branco text-petroleo"
+              className={`relative flex h-full min-h-28 flex-col justify-between gap-3 rounded-2xl border p-5 transition-colors hover:bg-gelo ${
+                f.valor > 0 ? "border-petroleo/30 bg-branco" : "border-petroleo/10 bg-branco"
               }`}
             >
-              <span className={`text-4xl font-extrabold tabular-nums ${f.valor > 0 ? "text-ciano" : "text-petroleo"}`}>{f.valor}</span>
-              <span className="mt-1 text-sm">{f.rotulo}</span>
+              {/* fila com trabalho: ponto ciano (decoração; o número já diz o resto) */}
+              {f.valor > 0 && <span aria-hidden="true" className="absolute right-4 top-4 size-2 rounded-full bg-ciano ring-1 ring-petroleo/30" />}
+              <span className={`text-3xl font-semibold tabular-nums ${f.valor > 0 ? "text-petroleo" : "text-petroleo/75"}`}>{f.valor}</span>
+              <span className="text-sm text-petroleo/80">{f.rotulo}</span>
             </Link>
           </li>
         ))}
       </ul>
 
-      <h2 className="mt-8 text-xl">Visão geral</h2>
-      <ul className="mt-3 grid gap-3 sm:grid-cols-3">
+      <h2 className="mt-10 text-xl">Em números</h2>
+      <ul className="mt-4 grid gap-3 sm:grid-cols-3">
         {gerais.map((g) => (
           <li key={g.href}>
-            <Link href={g.href} className="flex min-h-11 flex-col rounded-2xl bg-branco p-4 hover:bg-white">
-              <span className="text-3xl font-extrabold tabular-nums">{g.valor}</span>
+            <Link href={g.href} className="flex min-h-11 flex-col gap-1 rounded-2xl border border-petroleo/10 bg-branco p-5 transition-colors hover:bg-gelo">
+              <span className="text-2xl font-semibold tabular-nums">{g.valor}</span>
               <span className="text-sm text-petroleo/80">{g.rotulo}</span>
             </Link>
           </li>
         ))}
       </ul>
-
-      <h2 className="mt-8 text-xl">Áreas</h2>
-      <nav className="mt-3 flex flex-col flex-wrap gap-3 sm:flex-row" aria-label="Áreas do admin">
-        {[
-          ["/admin/pedidos", "Pedidos"],
-          ["/admin/lista", "Inscritos da lista"],
-          ["/admin/configuracoes", "Configurações"],
-          ["/admin/auditoria", "Log de auditoria"],
-        ].map(([href, rotulo]) => (
-          <Link
-            key={href}
-            href={href}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-ciano px-6 py-3 text-center font-medium text-petroleo hover:brightness-95"
-          >
-            {rotulo} →
-          </Link>
-        ))}
-      </nav>
     </>
   );
 }

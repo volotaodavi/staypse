@@ -18,10 +18,10 @@ export function TabelaDados({
 }) {
   if (linhas.length === 0) {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-2xl bg-branco p-5">
-        <p className="text-petroleo/80">{vazio.texto}</p>
+      <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-petroleo/20 bg-branco px-5 py-8">
+        <p className="max-w-prose text-petroleo/80">{vazio.texto}</p>
         {vazio.acao && (
-          <Link href={vazio.acao.href} className="inline-flex min-h-11 items-center rounded-full bg-petroleo px-5 font-medium text-branco">
+          <Link href={vazio.acao.href} className="inline-flex min-h-11 items-center rounded-lg bg-petroleo px-5 font-medium text-branco">
             {vazio.acao.rotulo}
           </Link>
         )}
@@ -32,11 +32,11 @@ export function TabelaDados({
   return (
     <>
       {/* computador */}
-      <div className="hidden overflow-x-auto rounded-2xl bg-branco md:block">
+      <div className="hidden overflow-x-auto rounded-2xl border border-petroleo/10 bg-branco md:block">
         <table className="w-full text-sm">
           <caption className="sr-only">{legenda}</caption>
           <thead>
-            <tr className="border-b border-petroleo/10 text-left text-petroleo/75">
+            <tr className="border-b border-petroleo/10 bg-gelo/50 text-left text-petroleo/75">
               {colunas.map((c) => (
                 <th key={c.titulo} scope="col" className={`px-4 py-3 font-medium ${c.numero ? "text-right" : ""}`}>
                   {c.titulo}
@@ -46,7 +46,7 @@ export function TabelaDados({
           </thead>
           <tbody>
             {linhas.map((l) => (
-              <tr key={l.chave} className="border-b border-petroleo/10 last:border-0">
+              <tr key={l.chave} className="border-b border-petroleo/10 transition-colors last:border-0 hover:bg-gelo/60">
                 {l.celulas.map((cel, i) => (
                   <td key={colunas[i].titulo} className={`px-4 py-3 align-top ${colunas[i].numero ? "text-right tabular-nums" : ""}`}>
                     {cel}
@@ -60,7 +60,7 @@ export function TabelaDados({
       {/* celular */}
       <ul className="flex flex-col gap-2 md:hidden" aria-label={legenda}>
         {linhas.map((l) => (
-          <li key={l.chave} className="rounded-2xl bg-branco p-4 text-sm">
+          <li key={l.chave} className="rounded-2xl border border-petroleo/10 bg-branco p-4 text-sm">
             <div className="font-medium">{l.celulas[principal]}</div>
             <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
               {l.celulas.map((cel, i) =>

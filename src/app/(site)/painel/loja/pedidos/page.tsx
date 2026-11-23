@@ -9,7 +9,6 @@ import { TabelaDados } from "@/components/painel/TabelaDados";
 import { ASSUNTOS_ATENDIMENTO, data, dataHora } from "@/lib/pedidos";
 import { parametrosPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
-import { AbasLoja } from "../AbasLoja";
 import { STATUS_EXIBICAO, minhaLoja, statusExibicao } from "../dados";
 import { responderAtendimento } from "./acoes";
 import { lerPedidosDaLoja, origemDaVenda } from "./consulta";
@@ -38,7 +37,6 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl">Pedidos</h1>
-      <AbasLoja />
       {um(sp.msg) && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">
           {um(sp.msg)}

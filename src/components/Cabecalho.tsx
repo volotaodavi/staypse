@@ -16,12 +16,14 @@ type Props = {
   // botão é a lista de espera (/entrar e /cadastro seguem existindo para quem
   // tem o link, mas não são oferecidos ao público).
   preLancamento?: boolean;
+  // Painéis com menu lateral: o logo alinha com o menu, sem largura máxima.
+  largo?: boolean;
 };
 
-export function Cabecalho({ logado = false, preLancamento = false }: Props) {
+export function Cabecalho({ logado = false, preLancamento = false, largo = false }: Props) {
   return (
     <header className="sticky top-0 z-20 border-b border-petroleo/10 bg-branco/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <div className={`mx-auto flex items-center justify-between px-4 py-3 ${largo ? "lg:px-6" : "max-w-6xl"}`}>
         <Link href="/" aria-label="Staypse — página inicial">
           <Logo className="h-7 w-auto" />
         </Link>

@@ -3,10 +3,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatarPreco } from "@/lib/produtor";
+import { urlFoto } from "@/lib/produtor";
 import { comprasAbertas } from "@/lib/pedidos";
 import { usuarioAtual } from "@/lib/papeis";
-import { buscarProduto } from "@/lib/publico";
+import { buscarLoja, buscarProduto } from "@/lib/publico";
+import { supabaseUrl } from "@/lib/supabase/env";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 import { FormCompra } from "./FormCompra";
 
@@ -16,8 +17,8 @@ export const metadata: Metadata = { title: "Finalizar compra", robots: { index: 
 export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produto]/comprar">) {
   if (!comprasAbertas()) notFound();
   const { slug, produto } = await params;
-  const item = await buscarProduto(slug, produto);
-  if (!item) notFound();
+  const [item, dadosLoja] = await Promise.all([buscarProduto(slug, produto), buscarLoja(slug)]);
+  if (!item || !dadosLoja) notFound();
 
   const supabase = await criarClienteServidor();
   const [{ data: opcoes }, usuario, { data: podeVender }] = await Promise.all([
@@ -36,16 +37,11 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
   const temEntrega = opcoes && (opcoes.envio || opcoes.retirada || opcoes.digital);
 
   return (
-    <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-4 py-8">
-      <Link href={`/loja/${slug}/${produto}`} className="inline-block py-2 text-sm font-semibold text-[var(--loja-link)] underline">
-        ← Voltar ao produto
+    <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 md:py-8">
+      <Link href={`/loja/${slug}/${produto}`} className="inline-flex min-h-11 w-fit items-center text-sm font-semibold text-[var(--loja-link)] underline">
+        Voltar ao produto
       </Link>
-      <div>
-        <h1 className="text-2xl font-semibold">Finalizar compra</h1>
-        <p className="mt-1 text-base text-neutral-700">
-          {item.nome} · {formatarPreco(item.preco_centavos)}
-        </p>
-      </div>
+      <h1 className="text-2xl font-semibold">Finalizar compra</h1>
       {!podeVender ? (
         <p role="alert" className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Esta loja ainda não pode receber pagamentos. Volte mais tarde ou fale com a loja.
@@ -61,6 +57,12 @@ export default async function Comprar({ params }: PageProps<"/loja/[slug]/[produ
           produto={produto}
           opcoes={opcoes}
           inicial={{ nome: usuario?.nome ?? "", email: usuario?.email ?? "" }}
+          vitrine={{
+            nome: item.nome,
+            foto: item.fotos[0] ? urlFoto(supabaseUrl(), item.fotos[0]) : null,
+            precoCentavos: item.preco_centavos,
+            lojaNome: dadosLoja.loja.loja_nome,
+          }}
         />
       )}
     </main>

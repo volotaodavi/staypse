@@ -50,7 +50,7 @@ export default async function PainelRevendedor({ searchParams }: PageProps<"/pai
     <div className="flex flex-col gap-6">
       <div>
         <p className="text-sm font-medium text-petroleo/70">Revendedor</p>
-        <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+        <h1 className="text-3xl">Resumo</h1>
       </div>
 
       {aviso === "salva" && (

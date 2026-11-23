@@ -57,7 +57,7 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-sm text-petroleo/75">Afiliado</p>
-          <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+          <h1 className="text-3xl">Resumo</h1>
         </div>
         <Link href="/painel/revendedor/catalogo" className="inline-flex min-h-11 items-center rounded-full bg-ciano px-5 text-sm font-medium text-petroleo">
           Encontrar produtos

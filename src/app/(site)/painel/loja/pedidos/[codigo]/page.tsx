@@ -4,7 +4,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ROTULO_ENTREGA, STATUS_ENTREGA, data, dataHora, enderecoEmLinha, formatarCpf, type Endereco, type ModoEntrega } from "@/lib/pedidos";
 import { formatarPreco } from "@/lib/produtor";
-import { AbasLoja } from "../../AbasLoja";
 import { STATUS_EXIBICAO, minhaLoja, statusExibicao } from "../../dados";
 import { registrarEnvio } from "../acoes";
 
@@ -88,7 +87,6 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
         </div>
         <p className="text-3xl font-extrabold tabular-nums">{formatarPreco(p.total_centavos)}</p>
       </div>
-      <AbasLoja />
       {um(sp.msg) && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">
           {um(sp.msg)}

@@ -60,7 +60,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
   return (
     <>
       <p className="text-sm font-medium text-petroleo/75">Produtor</p>
-      <h1 className="text-3xl">Olá, {usuario.nome.split(" ")[0]}!</h1>
+      <h1 className="text-3xl">Cadastro da loja</h1>
 
       {aviso.enviado && (
         <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">

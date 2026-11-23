@@ -29,10 +29,10 @@ export function GraficoBarras({
   const total = pontos.reduce((s, p) => s + p.valor, 0);
 
   return (
-    <figure className="flex flex-col gap-2 rounded-2xl bg-branco p-4">
-      <figcaption className="text-sm font-medium">{titulo}</figcaption>
+    <figure className="flex flex-col gap-3 rounded-2xl border border-petroleo/10 bg-branco p-4 lg:p-5">
+      <figcaption className="text-base font-medium">{titulo}</figcaption>
       {total === 0 ? (
-        <p className="py-8 text-center text-sm text-petroleo/75">{vazio}</p>
+        <p className="py-10 text-center text-sm text-petroleo/75">{vazio}</p>
       ) : (
         <svg viewBox={`0 0 ${largura} ${ALTURA}`} className="h-44 w-full" role="img" aria-label={`${titulo}: total ${formatar(total)}`} preserveAspectRatio="none">
           {/* grade discreta: base e topo */}
@@ -71,7 +71,7 @@ export function GraficoBarras({
         </svg>
       )}
       <details className="text-sm">
-        <summary className="inline-block cursor-pointer py-1 text-petroleo/80 underline">Ver em tabela</summary>
+        <summary className="inline-flex min-h-11 cursor-pointer items-center text-petroleo/80 underline">Ver em tabela</summary>
         <table className="mt-2 w-full">
           <caption className="sr-only">{titulo}</caption>
           <tbody>

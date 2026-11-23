@@ -1,19 +1,6 @@
-// Moldura da área administrativa.
-import { Suspense } from "react";
-import { Cabecalho } from "@/components/Cabecalho";
-import { NavPainel } from "@/components/NavPainel";
+// Moldura da área administrativa (mesmo menu lateral / barra de baixo do painel).
+import { MolduraPainel } from "@/components/MolduraPainel";
 
 export default function LayoutAdmin({ children }: LayoutProps<"/admin">) {
-  return (
-    <>
-      <Cabecalho logado />
-      {/* abas entre áreas (só para quem tem mais de um papel) */}
-      <Suspense fallback={null}>
-        <NavPainel />
-      </Suspense>
-      <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col bg-gelo">
-        <div className="mx-auto w-full max-w-5xl px-4 py-10">{children}</div>
-      </main>
-    </>
-  );
+  return <MolduraPainel>{children}</MolduraPainel>;
 }

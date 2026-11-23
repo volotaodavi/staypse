@@ -1,15 +1,16 @@
-// Navegação do painel: as áreas da pessoa (produtor, revendedor...) e
-// "Meus dados" (LGPD), sempre à mão para quem está logado.
+// Menu do painel: barra lateral (computador) e barra de baixo (celular) com as
+// seções da área da pessoa. Quem tem 2+ papéis troca de área pelo próprio menu.
 // Fica num <Suspense> no layout: lê a sessão sem travar o resto da página.
-import { AREAS, usuarioAtual } from "@/lib/papeis";
-import { LinksAreas } from "./LinksAreas";
+import { usuarioAtual } from "@/lib/papeis";
+import { AREAS_MENU } from "@/lib/menu-painel";
+import { MenuPainel } from "./MenuPainel";
 
 export async function NavPainel() {
   const usuario = await usuarioAtual();
   if (!usuario) return null;
-  const areas = AREAS.filter((a) => usuario.papeis.includes(a.papel)).map((a) => ({ caminho: a.caminho, titulo: a.titulo }));
-  if (usuario.papeis.includes("admin")) areas.unshift({ caminho: "/admin", titulo: "Administração" });
-  // com uma área só, o atalho dela fica junto de "Meus dados"
-  areas.push({ caminho: "/painel/meus-dados", titulo: "Meus dados" });
-  return <LinksAreas areas={areas} />;
+  // só as áreas dos papéis da pessoa (papéis vêm do banco, nunca do navegador)
+  const chaves = AREAS_MENU.filter((a) => usuario.papeis.includes(a.papel)).map((a) => a.chave);
+  // quem ainda não tem papel (ex.: /painel/comecar) só enxerga "Meus dados" pelo cabeçalho do painel
+  if (chaves.length === 0) return null;
+  return <MenuPainel chaves={chaves} />;
 }

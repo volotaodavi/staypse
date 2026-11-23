@@ -7,7 +7,6 @@ import { NotaPagamentos, inteiro } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { hojeBrasil, lerPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
-import { AbasLoja } from "../AbasLoja";
 import { FORMA_VENDEDOR, lerVendedoresDaLoja } from "./consulta";
 
 export const metadata = { title: "Vendedores próprios" };
@@ -28,7 +27,6 @@ export default async function VendedoresDaLoja({ searchParams }: PageProps<"/pai
           Convidar e gerenciar
         </Link>
       </div>
-      <AbasLoja />
       <FiltroPeriodo periodo={periodo} caminho="/painel/loja/vendedores" />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-petroleo/75">Ranking por comissão no período</p>

@@ -6,7 +6,6 @@ import { inteiro, percentual } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { lerPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
-import { AbasLoja } from "../AbasLoja";
 import { lerProdutosDaLoja } from "./consulta";
 
 export const metadata = { title: "Produtos da loja" };
@@ -34,7 +33,6 @@ export default async function ProdutosDaLoja({ searchParams }: PageProps<"/paine
           Novo produto
         </Link>
       </div>
-      <AbasLoja />
       <FiltroPeriodo periodo={periodo} caminho="/painel/loja/produtos" />
       <div className="flex justify-end">
         <LinkCsv caminho="/painel/loja/produtos/csv" periodo={periodo}>

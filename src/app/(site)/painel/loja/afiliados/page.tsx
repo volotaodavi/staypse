@@ -10,7 +10,6 @@ import { data } from "@/lib/pedidos";
 import { lerPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
 import { decidirAfiliacaoAcao } from "../../produtor/loja/acoes";
-import { AbasLoja } from "../AbasLoja";
 import { minhaLoja } from "../dados";
 import { bloquearAfiliadoAcao, revogarConviteAfiliacao } from "./acoes";
 import { FormConviteAfiliacao } from "./FormConviteAfiliacao";
@@ -50,7 +49,6 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl">Afiliados</h1>
-      <AbasLoja />
       {um(sp.msg) && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">
           {um(sp.msg)}

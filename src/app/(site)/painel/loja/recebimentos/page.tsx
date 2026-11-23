@@ -1,6 +1,5 @@
 // Recebimentos da loja: situação do cadastro de recebimento na Lytex.
 import { Recebimento } from "@/components/painel/Recebimento";
-import { AbasLoja } from "../AbasLoja";
 import { minhaLoja } from "../dados";
 
 export const metadata = { title: "Recebimentos" };
@@ -14,7 +13,6 @@ export default async function RecebimentosLoja({ searchParams }: PageProps<"/pai
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-3xl">Recebimentos</h1>
-      <AbasLoja />
       {um(sp.msg) && (
         <p role="status" className="rounded-xl bg-branco px-4 py-3 text-sm">
           {um(sp.msg)}

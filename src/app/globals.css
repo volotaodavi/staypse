@@ -103,3 +103,11 @@
     animation: none;
   }
 }
+
+/* Celular: a barra de baixo do painel é fixa; o rodapé legal ganha o mesmo
+   espaço para que a última linha nunca fique escondida atrás dela. */
+@media (max-width: 1023.98px) {
+  body:has([data-barra-painel]) footer {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}

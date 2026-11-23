@@ -2,6 +2,7 @@
 // Formulário de compra: dados + entrega → resumo do pedido (regra 4) → confirmar.
 // O CEP preenche o endereço pela BrasilAPI (grátis, sem chave). Se ela falhar,
 // a pessoa digita à mão — nada trava.
+import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -33,16 +34,57 @@ function Enviar({ children, intencao }: { children: React.ReactNode; intencao: s
   );
 }
 
-function Mensagem({ texto }: { texto?: string }) {
+// Qual campo o erro do servidor fala a respeito (para focar nele e marcar como inválido)
+const CAMPOS_ERRO: [RegExp, string][] = [
+  [/quantidade/i, "quantidade"],
+  [/CEP/, "cep"],
+  [/Endereço/, "logradouro"],
+  [/e-mail/i, "email"],
+  [/CPF/, "cpf"],
+  [/nome/i, "nome"],
+];
+const campoDoErro = (erro?: string) => (erro ? (CAMPOS_ERRO.find(([re]) => re.test(erro))?.[1] ?? null) : null);
+const ID_ERRO = "erro-compra";
+
+// Mensagem de erro: o foco vai para o campo com problema (ou para a própria mensagem,
+// se o erro não é de um campo); o leitor de tela anuncia o texto pelo role="alert".
+function Mensagem({ texto, campo }: { texto?: string; campo?: string | null }) {
   const ref = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (texto) ref.current?.focus();
-  }, [texto]);
+    if (!texto) return;
+    const el = campo ? document.querySelector<HTMLElement>(`form [name="${campo}"]`) : null;
+    (el ?? ref.current)?.focus();
+  }, [texto, campo]);
   if (!texto) return null;
   return (
-    <p ref={ref} tabIndex={-1} role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-800 outline-none">
+    <p ref={ref} id={ID_ERRO} tabIndex={-1} role="alert" className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900 outline-none">
       {texto}
     </p>
+  );
+}
+
+// Os 3 passos da compra (a ordem é real: dados, revisão, pagamento)
+function Passos({ atual }: { atual: 0 | 1 }) {
+  const passos = ["Dados e entrega", "Revisão do pedido", "Pagamento"];
+  return (
+    <nav aria-label="Etapas da compra">
+      <ol className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        {passos.map((nome, i) => (
+          <li key={nome} aria-current={i === atual ? "step" : undefined} className={`flex items-center gap-2 ${i === atual ? "font-semibold text-neutral-900" : "text-neutral-700"}`}>
+            <span
+              aria-hidden="true"
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums ${
+                i === atual ? "bg-[var(--loja-principal)] text-[var(--loja-principal-texto)]" : i < atual ? "bg-neutral-900 text-white" : "border border-neutral-400"
+              }`}
+            >
+              {i + 1}
+            </span>
+            {nome}
+            {i < atual && <span className="sr-only"> (concluída)</span>}
+          </li>
+        ))}
+      </ol>
+    </nav>
   );
 }
 
@@ -52,12 +94,15 @@ export function FormCompra({
   produto,
   opcoes,
   inicial,
+  vitrine,
 }: {
   item: string;
   loja: string;
   produto: string;
   opcoes: Opcoes;
   inicial: { nome: string; email: string };
+  // para o resumo ao lado: nome, foto, preço e nome da loja
+  vitrine: { nome: string; foto: string | null; precoCentavos: number; lojaNome: string };
 }) {
   const [estado, acao] = useActionState<EstadoCompra, FormData>(comprar, undefined);
   const v = estado?.valores ?? {};
@@ -65,12 +110,83 @@ export function FormCompra({
   const [modo, setModo] = useState<ModoEntrega>((v.entrega as ModoEntrega) || modos[0]);
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [avisoCep, setAvisoCep] = useState("");
+  const [quantidade, setQuantidade] = useState(v.quantidade || "1");
   const tituloResumo = useRef<HTMLHeadingElement>(null);
+  const campoErro = estado?.etapa === "dados" ? campoDoErro(estado.erro) : null;
+  // marca o campo com erro e liga à mensagem
+  const invalido = (nome: string, outroId?: string) => ({
+    "aria-invalid": campoErro === nome ? (true as const) : undefined,
+    "aria-describedby": [outroId, campoErro === nome ? ID_ERRO : ""].filter(Boolean).join(" ") || undefined,
+  });
 
   // ao chegar no resumo, o foco vai para o título (leitor de tela e celular)
   useEffect(() => {
     if (estado?.etapa === "resumo") tituloResumo.current?.focus();
   }, [estado]);
+
+  // moldura da página: etapas, resumo do pedido ao lado (embaixo do título no celular) e o formulário
+  const moldura = (filho: React.ReactNode) => {
+    const r = estado?.etapa === "resumo" ? estado.resumo : undefined;
+    const q = r ? r.quantidade : Math.min(99, Math.max(1, Math.trunc(Number(quantidade)) || 1));
+    const sub = r ? r.subtotal_centavos : vitrine.precoCentavos * q;
+    const comFrete = r ? r.frete_centavos > 0 || modo === "envio" : modo === "envio" && opcoes.frete_fixo_centavos != null;
+    const frete = r
+      ? r.frete_centavos
+      : opcoes.frete_gratis_acima_centavos != null && sub >= opcoes.frete_gratis_acima_centavos
+        ? 0
+        : (opcoes.frete_fixo_centavos ?? 0);
+    return (
+      <div className="flex flex-col gap-6">
+        <Passos atual={r ? 1 : 0} />
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+          <aside aria-label="Seu pedido" className="flex flex-col gap-4 rounded-lg border border-neutral-200 p-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-start-1">
+            <div className="flex gap-3">
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-neutral-100">
+                {vitrine.foto && <Image src={vitrine.foto} alt="" fill sizes="64px" className="object-cover" />}
+              </div>
+              <div className="min-w-0">
+                <p className="line-clamp-2 text-sm leading-5 font-medium">{vitrine.nome}</p>
+                <p className="text-sm text-neutral-700">
+                  {q} × <span className="tabular-nums">{formatarPreco(vitrine.precoCentavos)}</span>
+                </p>
+              </div>
+            </div>
+            <dl className="flex flex-col gap-2 border-t border-neutral-200 pt-3 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt>Subtotal</dt>
+                <dd className="tabular-nums">{formatarPreco(sub)}</dd>
+              </div>
+              {comFrete && (
+                <div className="flex justify-between gap-4">
+                  <dt>Frete</dt>
+                  <dd className="tabular-nums">{frete === 0 ? "Grátis" : formatarPreco(frete)}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-4 border-t border-neutral-200 pt-2 text-base font-semibold">
+                <dt>Total</dt>
+                <dd className="tabular-nums">{formatarPreco(sub + (comFrete ? frete : 0))}</dd>
+              </div>
+            </dl>
+            {!r && <p className="text-xs text-neutral-700">Você confere o resumo final antes de confirmar.</p>}
+            <ul className="flex flex-col gap-1 border-t border-neutral-200 pt-3 text-xs leading-5 text-neutral-700">
+              <li>
+                <span className="font-medium text-neutral-900">Loja oficial {vitrine.lojaNome}</span>
+              </li>
+              <li>Pagamento processado pela Lytex. Você não digita dados de cartão nesta página.</li>
+              <li>
+                Arrependimento em 7 dias.{" "}
+                <Link href="/reembolso" target="_blank" className="inline-flex min-h-11 items-center font-semibold text-neutral-900 underline">
+                  Política de reembolso
+                  <span className="sr-only"> (abre em nova aba)</span>
+                </Link>
+              </li>
+            </ul>
+          </aside>
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">{filho}</div>
+        </div>
+      </div>
+    );
+  };
 
   const fixos = (
     <>
@@ -89,7 +205,7 @@ export function FormCompra({
 
   if (estado?.etapa === "resumo" && estado.resumo) {
     const r = estado.resumo;
-    return (
+    return moldura(
       <form action={acao} className="flex flex-col gap-6">
         {fixos}
         {Object.entries(estado.valores).map(([k, valor]) =>
@@ -186,7 +302,7 @@ export function FormCompra({
             Voltar e corrigir os dados
           </button>
         </section>
-      </form>
+      </form>,
     );
   }
 
@@ -216,14 +332,25 @@ export function FormCompra({
     }
   }
 
-  return (
+  return moldura(
     <form action={acao} className="flex flex-col gap-6">
       {fixos}
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-lg font-semibold">1. Quantidade e entrega</legend>
+        <legend className="mb-2 text-lg font-semibold">Quantidade e entrega</legend>
         <label className={rotulo}>
           Quantidade
-          <input name="quantidade" type="number" inputMode="numeric" min={1} max={99} required defaultValue={v.quantidade || "1"} className={`${campo} w-28`} />
+          <input
+            name="quantidade"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={99}
+            required
+            value={quantidade}
+            onChange={(e) => setQuantidade(e.target.value)}
+            className={`${campo} w-28`}
+            {...invalido("quantidade")}
+          />
         </label>
         <div className="flex flex-col gap-2" role="radiogroup" aria-label="Forma de entrega">
           {modos.map((m) => (
@@ -250,7 +377,7 @@ export function FormCompra({
 
       {modo === "envio" && (
         <fieldset className="flex flex-col gap-3">
-          <legend className="mb-2 text-lg font-semibold">2. Endereço de entrega</legend>
+          <legend className="mb-2 text-lg font-semibold">Endereço de entrega</legend>
           <label className={rotulo}>
             CEP
             <input
@@ -263,7 +390,7 @@ export function FormCompra({
               defaultValue={v.cep}
               onBlur={(e) => buscarCep(e.currentTarget.value, e.currentTarget.form)}
               className={`${campo} max-w-48`}
-              aria-describedby="aviso-cep"
+              {...invalido("cep", "aviso-cep")}
             />
           </label>
           <p id="aviso-cep" role="status" className="text-sm text-neutral-700">
@@ -274,7 +401,7 @@ export function FormCompra({
           </p>
           <label className={rotulo}>
             Rua
-            <input name="logradouro" autoComplete="address-line1" required maxLength={200} defaultValue={v.logradouro} className={campo} />
+            <input name="logradouro" autoComplete="address-line1" required maxLength={200} defaultValue={v.logradouro} className={campo} {...invalido("logradouro")} />
           </label>
           <div className="grid grid-cols-[7rem_1fr] gap-3">
             <label className={rotulo}>
@@ -304,21 +431,21 @@ export function FormCompra({
       )}
 
       <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-lg font-semibold">{modo === "envio" ? "3" : "2"}. Seus dados</legend>
+        <legend className="mb-2 text-lg font-semibold">Seus dados</legend>
         <label className={rotulo}>
           Nome completo
-          <input name="nome" autoComplete="name" required minLength={2} maxLength={120} defaultValue={v.nome ?? inicial.nome} className={campo} />
+          <input name="nome" autoComplete="name" required minLength={2} maxLength={120} defaultValue={v.nome ?? inicial.nome} className={campo} {...invalido("nome")} />
         </label>
         <label className={rotulo}>
           E-mail
-          <input name="email" type="email" autoComplete="email" required maxLength={200} defaultValue={v.email ?? inicial.email} className={campo} aria-describedby="dica-email" />
+          <input name="email" type="email" autoComplete="email" required maxLength={200} defaultValue={v.email ?? inicial.email} className={campo} {...invalido("email", "dica-email")} />
           <span id="dica-email" className="text-xs font-normal text-neutral-700">
             Para acompanhar o pedido e receber o acesso.
           </span>
         </label>
         <label className={rotulo}>
           CPF
-          <input name="cpf" inputMode="numeric" required maxLength={14} placeholder="000.000.000-00" defaultValue={v.cpf} className={campo} aria-describedby="dica-cpf" />
+          <input name="cpf" inputMode="numeric" required maxLength={14} placeholder="000.000.000-00" defaultValue={v.cpf} className={campo} {...invalido("cpf", "dica-cpf")} />
           <span id="dica-cpf" className="text-xs font-normal text-neutral-700">
             Usado só para a nota fiscal da loja e para o pagamento.
           </span>
@@ -329,7 +456,7 @@ export function FormCompra({
         </label>
       </fieldset>
 
-      <Mensagem texto={estado?.erro} />
+      <Mensagem texto={estado?.erro} campo={campoErro} />
       <Enviar intencao="revisar">Revisar pedido</Enviar>
       <p className="text-xs text-neutral-700">
         Você vê o resumo completo, com frete e total, antes de confirmar. Usamos seus dados só para este pedido, conforme a{" "}
@@ -339,7 +466,7 @@ export function FormCompra({
         </Link>
         .
       </p>
-    </form>
+    </form>,
   );
 }
 

@@ -127,3 +127,23 @@ export async function buscarProduto(loja: string, produto: string) {
   const { data } = await publico().rpc("produto_da_loja", { p_loja: loja, p_produto: produto }).maybeSingle<Produto>();
   return data ?? null;
 }
+
+// Opções de entrega de um produto (frete fixo, frete grátis acima de X, prazo).
+// É a mesma função do banco que o checkout usa; aqui só para mostrar frete e prazo
+// na página do produto, antes da compra. Dados reais da loja: nada é estimado.
+export type EntregaProduto = {
+  envio: boolean;
+  retirada: boolean;
+  digital: boolean;
+  frete_fixo_centavos: number | null;
+  frete_gratis_acima_centavos: number | null;
+  frete_prazo_dias: number | null;
+};
+
+export async function buscarEntrega(itemId: string): Promise<EntregaProduto | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(ETIQUETA_VITRINES);
+  const { data } = await publico().rpc("entregas_do_item", { p_item: itemId }).maybeSingle<EntregaProduto>();
+  return data ?? null;
+}

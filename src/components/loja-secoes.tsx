@@ -10,6 +10,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FotoProduto, classeBotaoLoja } from "@/components/loja";
+import { ListaFiltravel } from "@/components/loja-filtro";
 import { ROTULO_NICHO } from "@/lib/lista";
 import { formatarPreco, urlFoto } from "@/lib/produtor";
 import type { ItemLoja } from "@/lib/publico";
@@ -73,7 +74,7 @@ function Cartao({ item, ctx, prioridade = false, grande = false }: { item: ItemL
           prioridade={prioridade}
         />
         <span className="line-clamp-2 text-lg font-light tracking-tight group-hover:underline">{item.nome}</span>
-        <span className="text-base text-neutral-700">{formatarPreco(item.preco_centavos)}</span>
+        <span className="text-base text-neutral-700 tabular-nums">{formatarPreco(item.preco_centavos)}</span>
       </>,
     );
   }
@@ -90,27 +91,26 @@ function Cartao({ item, ctx, prioridade = false, grande = false }: { item: ItemL
         sizes={grande ? "(min-width: 768px) 50vw, 100vw" : "(min-width: 768px) 25vw, 50vw"}
         prioridade={prioridade}
       />
-      <span className={`line-clamp-2 text-sm group-hover:underline ${caixa ? "px-1" : ""}`}>{item.nome}</span>
-      <span className={`text-base font-semibold ${caixa ? "px-1 pb-1" : ""}`}>{formatarPreco(item.preco_centavos)}</span>
+      <span className={`line-clamp-2 min-h-10 text-sm leading-5 group-hover:underline ${caixa ? "px-1" : ""}`}>{item.nome}</span>
+      <span className={`text-base font-semibold tabular-nums ${caixa ? "px-1 pb-1" : ""}`}>{formatarPreco(item.preco_centavos)}</span>
     </>,
   );
 }
 
 // ---------- lista de produtos (grade, lista compacta ou fotos grandes) ----------
+function classeLista(modelo: ModeloLoja, destaque: boolean) {
+  if (modelo === "catalogo") return "grid grid-cols-1 divide-y divide-neutral-200 border-y border-neutral-200 @2xl:grid-cols-2 @2xl:gap-x-10";
+  if (modelo === "editorial") {
+    return destaque ? "grid grid-cols-1 gap-x-6 gap-y-12 @2xl:grid-cols-2" : "grid grid-cols-1 gap-x-6 gap-y-12 @md:grid-cols-2 @3xl:grid-cols-3";
+  }
+  if (modelo === "vitrine") return "grid grid-cols-2 gap-3 @3xl:grid-cols-4 @3xl:gap-4";
+  return "grid grid-cols-2 gap-x-4 gap-y-8 @3xl:grid-cols-4";
+}
+
 function Produtos({ itens, ctx, prioridade = 0, destaque = false }: { itens: ItemLoja[]; ctx: Ctx; prioridade?: number; destaque?: boolean }) {
   const { modelo } = ctx;
-  const classe =
-    modelo === "catalogo"
-      ? "grid grid-cols-1 divide-y divide-neutral-200 border-y border-neutral-200 @2xl:grid-cols-2 @2xl:gap-x-10"
-      : modelo === "editorial"
-        ? destaque
-          ? "grid grid-cols-1 gap-x-6 gap-y-12 @2xl:grid-cols-2"
-          : "grid grid-cols-1 gap-x-6 gap-y-12 @md:grid-cols-2 @3xl:grid-cols-3"
-        : modelo === "vitrine"
-          ? "grid grid-cols-2 gap-3 @3xl:grid-cols-4 @3xl:gap-4"
-          : "grid grid-cols-2 gap-x-4 gap-y-8 @3xl:grid-cols-4";
   return (
-    <ul className={classe}>
+    <ul className={classeLista(modelo, destaque)}>
       {itens.map((item, i) => (
         // vitrine: no destaque, o primeiro produto ocupa 2 colunas (mosaico)
         <li key={item.id} className={modelo === "vitrine" && destaque && i === 0 ? "col-span-2 @3xl:row-span-2" : undefined}>
@@ -240,7 +240,24 @@ export function SecoesLoja({
     todos_produtos: () => (
       <Secao tipo="todos_produtos" editorial={editorial}>
         {itens.length === 0 ? (
-          <p className="text-base text-neutral-600">Esta loja ainda não tem produtos.</p>
+          <div className={`flex max-w-md flex-col gap-1 rounded-lg border border-neutral-200 p-6 ${editorial ? "mx-auto text-center" : ""}`}>
+            <p className="text-base font-medium text-neutral-900">Esta loja ainda não tem produtos</p>
+            <p className="text-sm text-neutral-700">Os produtos aparecem aqui assim que a loja publicar o primeiro.</p>
+          </div>
+        ) : itens.length >= 2 && (porCategoria.size > 1 || itens.length >= 8) ? (
+          // 2 ou mais categorias: filtro por categoria; 8 ou mais produtos: busca por nome
+          <ListaFiltravel
+            classeLista={classeLista(ctx.modelo, false)}
+            comBusca={itens.length >= 8}
+            centralizado={editorial}
+            itens={itens.map((item, i) => ({
+              id: item.id,
+              nome: item.nome,
+              categoria: item.categoria ?? "",
+              rotuloCategoria: rotuloCategoria(item.categoria),
+              no: <Cartao item={item} ctx={ctx} prioridade={i < pressa("todos_produtos")} />,
+            }))}
+          />
         ) : (
           <Produtos itens={itens} ctx={ctx} prioridade={pressa("todos_produtos")} />
         )}
