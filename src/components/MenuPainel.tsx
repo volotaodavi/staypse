@@ -6,14 +6,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId, useRef, useState } from "react";
 import { Icone } from "./IconesPainel";
-import { AREAS_MENU, MEUS_DADOS, areaAtual, itemAtivo, type AreaMenu, type ItemMenu } from "@/lib/menu-painel";
+import { AREAS_MENU, areaAtual, itemAtivo, itensDaConta, type AreaMenu, type ItemMenu } from "@/lib/menu-painel";
 
 export function MenuPainel({ chaves }: { chaves: string[] }) {
   const caminho = usePathname();
   const areas = AREAS_MENU.filter((a) => chaves.includes(a.chave));
   if (areas.length === 0) return null;
   const area = areaAtual(caminho, areas);
-  const ativo = itemAtivo(caminho, area.itens) ?? (caminho.startsWith(MEUS_DADOS.href) ? MEUS_DADOS.href : null);
+  const conta = itensDaConta(area.chave);
+  // a seção da área vale primeiro; senão, uma das páginas da conta (Configurações, Meus dados, Notificações)
+  const ativo = itemAtivo(caminho, area.itens) ?? conta.find((i) => caminho === i.href || caminho.startsWith(`${i.href}/`))?.href ?? null;
   return (
     <>
       <BarraLateral area={area} areas={areas} ativo={ativo} />
@@ -90,7 +92,13 @@ function BarraLateral({ area, areas, ativo }: { area: AreaMenu; areas: AreaMenu[
       </nav>
 
       <nav aria-label="Conta" className="border-t border-petroleo/10 pt-3">
-        <LinkLateral item={MEUS_DADOS} ativo={ativo === MEUS_DADOS.href} />
+        <ul className="flex flex-col gap-0.5">
+          {itensDaConta(area.chave).map((i) => (
+            <li key={i.href}>
+              <LinkLateral item={i} ativo={ativo === i.href} />
+            </li>
+          ))}
+        </ul>
       </nav>
     </aside>
   );
@@ -108,7 +116,7 @@ function BarraInferior({ area, areas, ativo }: { area: AreaMenu; areas: AreaMenu
   const botao = useRef<HTMLButtonElement>(null);
   const caixa = useRef<HTMLDivElement>(null);
 
-  const todos = [...area.itens, MEUS_DADOS];
+  const todos = [...area.itens, ...itensDaConta(area.chave)];
   // cabe tudo? (até 5 e sem troca de área) senão: 4 itens + "Mais"
   const cabe = todos.length <= 5 && areas.length === 1;
   const barra = cabe ? todos : todos.slice(0, 4);

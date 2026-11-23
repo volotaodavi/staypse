@@ -29,6 +29,15 @@ export type AreaMenu = {
 };
 
 export const MEUS_DADOS: ItemMenu = { href: "/painel/meus-dados", rotulo: "Meus dados", icone: "dados" };
+// preferências da própria conta (avisos por e-mail e contato); para todos os papéis.
+// No admin o rótulo muda para não confundir com as configurações da plataforma.
+export const CONFIGURACOES: ItemMenu = { href: "/painel/configuracoes", rotulo: "Configurações", icone: "config" };
+const CONFIGURACOES_ADMIN: ItemMenu = { ...CONFIGURACOES, rotulo: "Minhas configurações", curto: "Minha conta" };
+
+// itens fixos da conta (fora das seções da área)
+export function itensDaConta(areaChave: string): ItemMenu[] {
+  return [areaChave === "admin" ? CONFIGURACOES_ADMIN : CONFIGURACOES, MEUS_DADOS];
+}
 
 export const AREAS_MENU: AreaMenu[] = [
   {
