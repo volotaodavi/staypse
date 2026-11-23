@@ -36,6 +36,16 @@ export const IconeCheck = ({ className = "h-5 w-5 shrink-0" }: IconeProps) => (
   </svg>
 );
 
+const tr = (d: string) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={base} aria-hidden="true">
+    <path d={d} />
+  </svg>
+);
+export const IconeLoja = () => tr("M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9c0 2 1.5 3 3 3s3-1 3-3c0 2 1.5 3 3 3s3-1 3-3M10 20v-5h4v5");
+export const IconeLink = () => tr("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1");
+export const IconeCrachaVendedor = () => tr("M5 4h14v16H5zM9 9h6M9 13h6M9 17h3");
+export const IconeSacola = () => tr("M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2");
+
 // ---------- vitrine no celular + barra do split ----------
 // "host": endereço do site sem https:// (vem de urlDoSite — nunca fixo no código)
 export function VitrineSplit({ host }: { host: string }) {
@@ -117,6 +127,7 @@ export const PERGUNTAS: [string, string][] = [
   ["Ganho por trazer outras pessoas?", "Não. A comissão vem só das vendas feitas pelo próprio afiliado. Indicar pessoas para a lista de espera só adianta a entrada delas e a sua no acesso antecipado: não há sorteio nem prêmio em dinheiro."],
   ["Trabalho em uma loja. Como entro?", "Escolha \"Trabalho em loja\" na lista e diga em qual loja você trabalha. Quando a loja usar a Staypse, ela poderá convidar você como vendedor e combinar a sua comissão."],
   ["Quem pode vender produtos?", "Lojas e fábricas com CNPJ ativo que emitem nota fiscal de todas as vendas. Cada loja e cada produto passam por análise antes de aparecer nas vitrines."],
+  ["O que a Staypse faz com os meus dados?", "Pedimos só o que é preciso para avisar você da abertura e entender qual é o seu perfil. Você marca o consentimento antes de enviar e pode pedir a exclusão a qualquer momento pelo canal de privacidade (LGPD) da Staypse."],
   ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra e pedir de volta tudo o que pagou, inclusive o frete. A devolução segue a mesma proporção do split."],
 ];
 
@@ -137,3 +148,71 @@ export function Perguntas() {
     </div>
   );
 }
+
+// ---------- painel da loja (ilustrativo, montado em HTML; sem números de ganho) ----------
+const LINHAS_PAINEL = [
+  ["Kit cuidados com a pele", "Aprovado", true],
+  ["Camiseta básica algodão", "Aprovado", true],
+  ["Curso de maquiagem (digital)", "Em análise", false],
+] as const;
+const ETAPAS_PEDIDO = ["Pagamento aprovado na Lytex", "Split feito entre as partes", "Nota fiscal emitida pela loja"] as const;
+
+export function PainelIlustrativo() {
+  return (
+    <div role="img" aria-label="Exemplo ilustrativo do painel de uma loja: produtos com comissão definida pela loja e as etapas de um pedido" className="w-full overflow-hidden rounded-2xl bg-branco text-petroleo shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)] ring-1 ring-white/10">
+      <div className="flex items-center justify-between gap-3 bg-gelo px-4 py-3 text-xs">
+        <span className="flex items-center gap-1.5" aria-hidden="true">
+          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+          <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+        </span>
+        <span className="font-medium">Painel da loja</span>
+        <span className="rounded-full bg-petroleo px-2.5 py-1 text-[11px] font-medium text-gelo">Ilustrativo</span>
+      </div>
+      <div className="grid gap-px bg-petroleo/10 md:grid-cols-[1.25fr_1fr]" aria-hidden="true">
+        <div className="bg-branco p-4 sm:p-5">
+          <p className="text-sm font-medium">Produtos</p>
+          <ul className="mt-3 divide-y divide-petroleo/10">
+            {LINHAS_PAINEL.map(([nome, status, ativo]) => (
+              <li key={nome} className="flex items-center gap-3 py-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gelo">
+                  <span className={`h-5 w-4 rounded-sm ${ativo ? "bg-petroleo" : "bg-petroleo/30"}`} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{nome}</span>
+                  <span className="block text-[11px] text-petroleo/75">Comissão definida pela loja</span>
+                </span>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${ativo ? "bg-ciano text-petroleo" : "bg-gelo text-petroleo"}`}>{status}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="bg-branco p-4 sm:p-5">
+          <p className="text-sm font-medium">Último pedido</p>
+          <ol className="mt-3 flex flex-col gap-3">
+            {ETAPAS_PEDIDO.map((t) => (
+              <li key={t} className="flex items-center gap-3 text-sm">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petroleo text-ciano"><IconeCheck className="h-3.5 w-3.5" /></span>
+                {t}
+              </li>
+            ))}
+          </ol>
+          <div className="mt-4 flex h-3 gap-1 overflow-hidden">
+            <span className="rounded-l-full bg-petroleo" style={{ flexGrow: 66 }} />
+            <span className="bg-ciano" style={{ flexGrow: 26 }} />
+            <span className="rounded-r-full bg-petroleo/30" style={{ flexGrow: 8 }} />
+          </div>
+          <p className="mt-2 text-[11px] text-petroleo/75">Cada parte recebe a sua direto da Lytex.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- como é hoje x com a Staypse (sem citar concorrente) ----------
+export const COMPARATIVO = [
+  ["Comissão", "Combinada por mensagem e difícil de conferir.", "Definida pela loja e visível ao afiliado antes de divulgar."],
+  ["Pagamento", "Acerto manual entre loja e afiliado, depois da venda.", "Split automático na Lytex: cada parte recebe a sua direto."],
+  ["Divulgação", "Link solto, catálogo em PDF ou lista no WhatsApp.", "Vitrine própria, com endereço só do afiliado."],
+  ["Nota fiscal e devolução", "Cada loja resolve do seu jeito.", "A loja emite a nota fiscal e o comprador tem 7 dias para desistir."],
+] as const;

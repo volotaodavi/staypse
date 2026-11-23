@@ -27,28 +27,28 @@ export function Rodape() {
         </div>
 
         <nav aria-label="Informações legais" className="flex flex-col gap-2 text-sm">
-          <Link href="/atendimento" className="inline-block py-1 hover:text-ciano">
+          <Link href="/atendimento" className="inline-flex min-h-11 items-center hover:text-ciano">
             Atendimento
           </Link>
-          <Link href="/pedido" className="inline-block py-1 hover:text-ciano">
+          <Link href="/pedido" className="inline-flex min-h-11 items-center hover:text-ciano">
             Meu pedido
           </Link>
-          <Link href="/reembolso" className="inline-block py-1 hover:text-ciano">
+          <Link href="/reembolso" className="inline-flex min-h-11 items-center hover:text-ciano">
             Reembolso e arrependimento
           </Link>
-          <Link href="/termos" className="inline-block py-1 hover:text-ciano">
+          <Link href="/termos" className="inline-flex min-h-11 items-center hover:text-ciano">
             Termos de uso
           </Link>
-          <Link href="/privacidade" className="inline-block py-1 hover:text-ciano">
+          <Link href="/privacidade" className="inline-flex min-h-11 items-center hover:text-ciano">
             Política de privacidade
           </Link>
-          <Link href="/privacidade#canal-lgpd" className="inline-block py-1 hover:text-ciano">
+          <Link href="/privacidade#canal-lgpd" className="inline-flex min-h-11 items-center hover:text-ciano">
             Canal de privacidade (LGPD)
           </Link>
-          <Link href="/cookies" className="inline-block py-1 hover:text-ciano">
+          <Link href="/cookies" className="inline-flex min-h-11 items-center hover:text-ciano">
             Política de cookies
           </Link>
-          <Link href="/produtos-proibidos" className="inline-block py-1 hover:text-ciano">
+          <Link href="/produtos-proibidos" className="inline-flex min-h-11 items-center hover:text-ciano">
             Produtos proibidos
           </Link>
         </nav>
