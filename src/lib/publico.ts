@@ -56,7 +56,11 @@ export async function buscarVitrine(slug: string) {
     sb.from("external_links").select("id, url, titulo, imagem_url, preco_centavos, plataforma")
       .eq("storefront_id", vitrine.id).order("ordem").order("criado_em"),
   ]);
-  return { vitrine, itens: (itens ?? []) as ItemVitrine[], links: (links ?? []) as LinkExterno[] };
+  // LGPD/direitos de imagem: a foto do produto de outro site NÃO é carregada na vitrine
+  // (o navegador de quem visita enviaria o IP à Shopee/Mercado Livre/TikTok, e a imagem
+  // é de terceiros). O cartão mostra o nome da plataforma no lugar.
+  const externos = ((links ?? []) as LinkExterno[]).map((l) => ({ ...l, imagem_url: null }));
+  return { vitrine, itens: (itens ?? []) as ItemVitrine[], links: externos };
 }
 
 export type Loja = {

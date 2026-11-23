@@ -2,6 +2,8 @@
 // DADOS DA EMPRESA — único lugar para trocar nome, CNPJ, endereço e contatos.
 // Aparecem no rodapé de TODAS as páginas (regra de conformidade 3).
 // Troque os textos entre colchetes pelos dados do cartão CNPJ.
+// Enquanto um contato estiver entre colchetes, o site NÃO o mostra ao público:
+// em vez disso, aponta para o canal /atendimento (use CONTATO, abaixo).
 // =========================================================================
 
 export const EMPRESA = {
@@ -21,6 +23,20 @@ export const EMPRESA = {
   emailPrivacidade: "[e-mail]",
 } as const;
 
+// Contatos prontos para mostrar ao público. Valor ainda entre colchetes
+// (placeholder) vira null: quem exibe usa o /atendimento no lugar. Nunca
+// mostre EMPRESA.email / EMPRESA.whatsapp direto nas páginas.
+const preenchido = (v: string): string | null => (v.trim() && !/[[\]]/.test(v) ? v.trim() : null);
+export const CONTATO = {
+  email: preenchido(EMPRESA.email),
+  whatsapp: preenchido(EMPRESA.whatsapp),
+  emailPrivacidade: preenchido(EMPRESA.emailPrivacidade),
+} as const;
+
+// "e-mail x · WhatsApp y" só com o que existe; vazio se não houver nada.
+export const contatoEmLinha = () =>
+  [CONTATO.email, CONTATO.whatsapp && `WhatsApp ${CONTATO.whatsapp}`].filter(Boolean).join(" · ");
+
 // =========================================================================
 // VERSÃO DOS TERMOS — regra de conformidade 7.
 // Sempre que mudar o texto dos Termos de Uso ou da Política de Privacidade,
@@ -29,7 +45,9 @@ export const EMPRESA = {
 // =========================================================================
 // (versão "2026-12-02.1": lista de espera com 4 perfis e e-mail de confirmação pelo
 // Resend, listados na Política de Privacidade)
-export const TERMOS_VERSAO = "2026-12-02.1";
+// (versão "2026-12-03.1": revisão jurídica — política de reembolso, avaliações, direitos
+// de imagem e aviso de infração, registros de acesso, BrasilAPI, idade mínima na compra)
+export const TERMOS_VERSAO = "2026-12-03.1";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.
