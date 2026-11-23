@@ -1555,7 +1555,7 @@ update public.orders set status = 'pago', pago_em = now() - interval '1 day'
 -- pedidos pagos, mas com os itens cancelados ou devolvidos: não contam no ranking
 select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1) <> 'Kit Banho', 'venda cancelada ou devolvida não conta no ranking');
 reset role;
-update public.order_items set status_entrega = 'entregue' where item_id = :'kit';
+update public.order_items set status_entrega = 'aguardando' where item_id = :'kit';
 :comoF
 select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1) = 'Kit Banho', 'mais vendidos (7 dias): o item com mais vendas recentes vem primeiro');
 select teste.ok((select nome from public.catalogo_afiliados() limit 1) <> 'Kit Banho', 'a ordem padrão continua a dos mais recentes');
