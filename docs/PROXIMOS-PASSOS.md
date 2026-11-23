@@ -1,6 +1,6 @@
 # Próximos passos (retomada)
 
-Estado em 23/11/2026. Tudo publicado na `main`, exceto o que está "em andamento".
+Estado em 23/11/2026. Notificações e LytexProvider (sandbox) já publicados.
 
 ## Em andamento (commits WIP na branch claude/tender-goodall-40gh7c)
 1. Notificações no app + e-mail (Resend) + página de configurações por papel. Migração `20261208000001_notificacoes.sql`, ainda não aplicada em produção.
@@ -9,6 +9,7 @@ Estado em 23/11/2026. Tudo publicado na `main`, exceto o que está "em andamento
 Ao retomar: rodar tsc, eslint, `npm run test:db`, `npm run test:unit`, build e os E2E do scratchpad. Depois aplicar a migração nova em produção e publicar.
 
 ## Fila
+0. EM ANDAMENTO (parou no limite): financeiro do admin (/admin/financeiro) + admin único por ADMIN_EMAIL (mesmo login, redireciona para /admin). Migração 20261209000001_financeiro_admin.sql. Depois: IA no admin (API do Claude, chave em env, só dados agregados, só leitura).
 3. Correções de segurança (`docs/seguranca-auditoria.md`):
    - Altas: `simuladorAtivo()` exige flag explícita; webhook de pagamento confere valor e moeda.
    - Médias: limite em `recuperarLink`, suspensão aplicada no banco (RLS), validação de host em links externos.
