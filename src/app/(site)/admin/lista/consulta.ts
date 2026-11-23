@@ -2,7 +2,7 @@
 // (mesmos filtros nos dois lugares). Roda com a sessão do admin: a RLS só
 // devolve linhas para quem é admin.
 import { criarClienteServidor } from "@/lib/supabase/servidor";
-import { NICHOS } from "@/lib/lista";
+import { NICHOS, PERFIS } from "@/lib/lista";
 
 export type Filtros = { tipo?: string; cidade?: string; nicho?: string };
 
@@ -36,7 +36,7 @@ export function lerFiltros(params: Record<string, string | string[] | undefined>
   const tipo = um(params.tipo);
   const nicho = um(params.nicho);
   return {
-    tipo: tipo === "revendedor" || tipo === "produtor" ? tipo : undefined,
+    tipo: PERFIS.some((p) => p.valor === tipo) ? tipo : undefined,
     cidade: um(params.cidade)?.slice(0, 120),
     nicho: NICHOS.some((n) => n.valor === nicho) ? nicho : undefined,
   };
@@ -62,21 +62,16 @@ export async function buscarInscritos(filtros: Filtros) {
   return (data ?? []) as Inscrito[];
 }
 
-// Contadores gerais (sem filtro): total e por tipo.
+// Contadores gerais (sem filtro): total e por perfil.
 export async function contarInscritos() {
   const supabase = await criarClienteServidor();
-  const contar = (tipo?: string) => {
+  const contar = (perfil?: string) => {
     const q = supabase.from("waitlist").select("*", { count: "exact", head: true });
-    return tipo ? q.eq("interesse", tipo) : q;
+    return perfil ? q.eq("interesse", perfil) : q;
   };
-  const [total, revendedores, produtores] = await Promise.all([
-    contar(),
-    contar("revendedor"),
-    contar("produtor"),
-  ]);
+  const [total, ...porPerfil] = await Promise.all([contar(), ...PERFIS.map((p) => contar(p.valor))]);
   return {
     total: total.count ?? 0,
-    revendedores: revendedores.count ?? 0,
-    produtores: produtores.count ?? 0,
+    porPerfil: PERFIS.map((p, i) => ({ valor: p.valor, rotulo: p.rotulo, n: porPerfil[i].count ?? 0 })),
   };
 }

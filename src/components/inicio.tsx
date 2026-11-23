@@ -109,13 +109,15 @@ export function VitrineSplit({ host }: { host: string }) {
 
 // ---------- perguntas frequentes (sanfona nativa: acessível, sem JavaScript) ----------
 export const PERGUNTAS: [string, string][] = [
-  ["Preciso pagar para entrar?", "Não. Não há taxa de adesão nem mensalidade. A Staypse fica com uma taxa sobre cada venda, descontada automaticamente no split."],
-  ["Preciso ter estoque ou muitos seguidores?", "Não. Como revendedor, você indica pelo seu link e o produtor envia o pedido. Dá para começar indicando para quem você já conhece."],
-  ["Como recebo a minha parte?", "No pagamento, a instituição de pagamento parceira divide o valor automaticamente entre produtor, revendedor e Staypse. A Staypse não recebe nem guarda o dinheiro de ninguém."],
-  ["Ganho por trazer outros revendedores?", "Não. Você ganha somente sobre as suas próprias vendas. Indicar amigos para a lista de espera só adianta a sua entrada no acesso antecipado."],
-  ["Quem pode vender produtos?", "Empresas com CNPJ ativo que emitem nota fiscal de todas as vendas. Cada produtor e cada produto passam por análise antes de aparecer nas vitrines."],
-  ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra e recebe de volta tudo o que pagou, inclusive o frete. Entre produtor, revendedor e Staypse, a devolução segue a mesma proporção do split."],
-  ["Quando a Staypse abre?", "Estamos montando as primeiras vitrines. Quem está na lista de espera recebe o aviso pelo WhatsApp, e quem trouxer mais pessoas entra primeiro."],
+  ["O que é a Staypse?", "Uma plataforma de afiliados para produtos físicos e digitais. Lojas e fábricas cadastram os produtos e definem a comissão; afiliados divulgam pelo próprio link; o pagamento é dividido automaticamente entre as partes."],
+  ["Quando a Staypse abre?", "Ainda não temos data fechada. Estamos montando as primeiras lojas e vitrines. Quem está na lista de espera é avisado antes da abertura, e quem indica mais pessoas entra antes no acesso antecipado."],
+  ["Entrar na lista ou usar a Staypse custa algo?", "Entrar na lista de espera é grátis, e não haverá taxa de adesão nem mensalidade. Quando a plataforma abrir, a Staypse terá uma taxa sobre cada venda, que já sai dividida no pagamento. Os percentuais serão informados antes da abertura."],
+  ["Como funciona o pagamento?", "Pagamentos processados pela Lytex. O split acontece na Lytex: no momento da compra, ela divide o valor entre loja, afiliado e Staypse, e cada parte recebe a sua direto. A Staypse nunca recebe nem guarda o dinheiro de ninguém."],
+  ["Preciso ter estoque ou muitos seguidores para ser afiliado?", "Não. Você divulga pelo seu link e a loja envia o pedido. Os resultados variam: dependem dos produtos que você escolher e de como divulgar."],
+  ["Ganho por trazer outras pessoas?", "Não. A comissão vem só das vendas feitas pelo próprio afiliado. Indicar pessoas para a lista de espera só adianta a entrada delas e a sua no acesso antecipado: não há sorteio nem prêmio em dinheiro."],
+  ["Trabalho em uma loja. Como entro?", "Escolha \"Trabalho em loja\" na lista e diga em qual loja você trabalha. Quando a loja usar a Staypse, ela poderá convidar você como vendedor e combinar a sua comissão."],
+  ["Quem pode vender produtos?", "Lojas e fábricas com CNPJ ativo que emitem nota fiscal de todas as vendas. Cada loja e cada produto passam por análise antes de aparecer nas vitrines."],
+  ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra e pedir de volta tudo o que pagou, inclusive o frete. A devolução segue a mesma proporção do split."],
 ];
 
 export function Perguntas() {

@@ -27,8 +27,9 @@ export const EMPRESA = {
 // troque esta versão (use a data da mudança). Cada novo aceite fica gravado
 // no banco com a versão vigente.
 // =========================================================================
-// (versão "2026-11-23.1": nova seção "Anúncios pagos" nos Termos de uso)
-export const TERMOS_VERSAO = "2026-11-23.1";
+// (versão "2026-12-02.1": lista de espera com 4 perfis e e-mail de confirmação pelo
+// Resend, listados na Política de Privacidade)
+export const TERMOS_VERSAO = "2026-12-02.1";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.

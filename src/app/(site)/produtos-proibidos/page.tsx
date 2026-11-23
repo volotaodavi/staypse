@@ -32,7 +32,7 @@ const PROIBIDOS: [string, string, string][] = [
 export default function ProdutosProibidos() {
   return (
     <>
-      <Cabecalho />
+      <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:py-14">
         <h1 className="text-3xl sm:text-4xl">Produtos proibidos</h1>
         <p className="mt-3 text-petroleo/85">

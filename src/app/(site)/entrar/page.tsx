@@ -4,7 +4,8 @@ import { Cabecalho } from "@/components/Cabecalho";
 import { proximoSeguro } from "@/lib/redirecionamento";
 import { FormEntrar } from "./FormEntrar";
 
-export const metadata: Metadata = { title: "Entrar" };
+// Fora do Google: no pré-lançamento só entra quem recebeu o link.
+export const metadata: Metadata = { title: "Entrar", robots: { index: false } };
 // Lê a sessão (cookie) a cada acesso: página sempre renderizada no servidor.
 export const instant = false;
 

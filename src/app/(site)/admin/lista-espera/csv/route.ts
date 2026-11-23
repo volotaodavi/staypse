@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
 
   const periodo = lerPeriodo(Object.fromEntries(request.nextUrl.searchParams));
   const r = await buscarResumo(periodo);
-  const linhas: unknown[][] = r.por_dia.map((d) => [d.dia, d.revendedor, d.produtor, d.comprador, d.total]);
+  const linhas: unknown[][] = r.por_dia.map((d) => [d.dia, d.loja, d.vendedor, d.afiliado, d.comprador, d.total]);
   linhas.push([], ["Total por perfil (desde o início)", ...r.por_perfil.map((p) => `${ROTULO_PERFIL[p.perfil] ?? p.perfil}: ${p.total}`)]);
 
-  return new NextResponse(montarCsv(["Dia", "Afiliados", "Lojas", "Compradores", "Total"], linhas), {
+  return new NextResponse(montarCsv(["Dia", "Lojas", "Vendedores de loja", "Afiliados", "Compradores", "Total"], linhas), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="lista-de-espera-${periodo.de}-a-${periodo.ate}.csv"`,

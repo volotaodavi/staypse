@@ -1,107 +1,94 @@
 "use server";
 // Inscrição na lista de espera (roda no servidor).
 //
-// Proteção contra spam:
+// Proteção contra spam (nesta ordem):
 //  1. Honeypot: campo "site" escondido. Pessoas não veem e não preenchem;
 //     robôs preenchem tudo. Se vier preenchido, fingimos sucesso e não gravamos.
-//  2. Limite por IP: no banco (função inscrever_na_lista), máx. 5 por hora.
+//  2. Tempo mínimo: o formulário leva um carimbo de hora ASSINADO pelo
+//     servidor (campo "t", ver lista-tempo.ts). Envio em menos de 3 s é recusado.
+//  3. Validação com Zod (mesmo schema do navegador, que aqui é o que vale).
+//  4. Limite por IP: no banco (função inscrever_na_lista), máx. 5 por hora.
 //     O IP vira um hash com segredo antes de sair daqui (LGPD).
+//
+// E-mail repetido: não cria outra inscrição e NÃO mostra a posição (quem
+// digitou o e-mail de outra pessoa não descobre nada). Se o envio de e-mail
+// estiver ativo, o link da posição é reenviado para o próprio e-mail.
 import { redirect } from "next/navigation";
 import type { EstadoFormulario } from "@/components/formulario";
 import { TERMOS_VERSAO } from "@/config/empresa";
-import { hashDoIp } from "@/lib/ip";
-import { NICHOS, TIPOS_PRODUTO, UFS, codigoValido, normalizarCnpj, normalizarWhatsapp } from "@/lib/lista";
+import { emailDaLista } from "@/lib/email-conteudo";
+import { emailAtivo, enviarEmail } from "@/lib/email";
+import { hashDoIp, segredoDerivado } from "@/lib/ip";
+import { lerFormulario, validarLista } from "@/lib/lista-schema";
+import { conferirTempo } from "@/lib/lista-tempo";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
-
-const texto = (formData: FormData, campo: string) => String(formData.get(campo) ?? "").trim();
+import { urlDoSite } from "@/lib/supabase/env";
 
 export async function inscrever(
   _anterior: EstadoFormulario,
   formData: FormData,
 ): Promise<EstadoFormulario> {
   // 1. Honeypot
-  if (texto(formData, "site")) {
+  if (String(formData.get("site") ?? "").trim()) {
     return { sucesso: "Inscrição recebida. Obrigado!" };
   }
 
-  const interesse = texto(formData, "interesse");
-  const nome = texto(formData, "nome");
-  const email = texto(formData, "email").toLowerCase();
-  const whatsappDigitado = texto(formData, "whatsapp");
-  const nichos = formData
-    .getAll("nichos")
-    .map(String)
-    .filter((n) => NICHOS.some((x) => x.valor === n));
+  // 2. Tempo mínimo de preenchimento (hora do servidor, assinada)
+  const tempo = conferirTempo(segredoDerivado("staypse:lista-tempo:v1"), formData.get("t"));
+  if (tempo === "cedo") return { erro: "Quase lá! Aguarde alguns segundos e envie de novo." };
+  if (tempo !== "ok") return { erro: "A página ficou aberta por muito tempo. Atualize e preencha de novo." };
 
-  // tudo o que a pessoa digitou volta para a tela em caso de erro
-  const valores = {
-    interesse,
-    nome,
-    email,
-    whatsapp: whatsappDigitado,
-    cidade: texto(formData, "cidade"),
-    uf: texto(formData, "uf"),
-    nichos: nichos.join(","),
-    empresa: texto(formData, "empresa"),
-    cnpj: texto(formData, "cnpj"),
-    tipo_produto: texto(formData, "tipo_produto"),
-    o_que_vende: texto(formData, "o_que_vende"),
-  };
-  const erro = (mensagem: string): EstadoFormulario => ({ erro: mensagem, valores });
+  // 3. Validação (Zod)
+  const bruto = lerFormulario(formData);
+  const r = validarLista(bruto);
+  if (!r.ok) return { erro: r.primeiro };
+  const d = r.dados;
 
-  // 2. Validações com mensagens claras (o banco valida tudo de novo)
-  if (interesse !== "revendedor" && interesse !== "produtor") return erro("Escolha: revender ou vender seus produtos.");
-  if (nome.length < 2) return erro("Informe seu nome.");
-  const whatsapp = normalizarWhatsapp(whatsappDigitado);
-  if (!whatsapp) return erro("Informe um WhatsApp com DDD. Ex.: (81) 99876-5432");
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return erro("Informe um e-mail válido.");
-
-  let cnpj = "";
-  if (interesse === "revendedor") {
-    if (valores.cidade.length < 2) return erro("Informe sua cidade.");
-    if (!(UFS as readonly string[]).includes(valores.uf)) return erro("Escolha o estado (UF).");
-    if (nichos.length === 0) return erro("Escolha pelo menos um nicho de interesse.");
-  } else {
-    if (valores.empresa.length < 2) return erro("Informe o nome da empresa ou marca.");
-    cnpj = normalizarCnpj(valores.cnpj);
-    if (cnpj && cnpj.length !== 14) return erro("CNPJ incompleto. Se ainda não tiver, deixe em branco.");
-    if (!TIPOS_PRODUTO.some((t) => t.valor === valores.tipo_produto)) return erro("Escolha se vende produto físico, digital ou os dois.");
-    if (valores.o_que_vende.length < 2) return erro("Conte em poucas palavras o que você vende.");
-  }
-
-  // LGPD: consentimento não vem marcado; precisa ser marcado pela pessoa
-  if (formData.get("consentimento") !== "sim") {
-    return erro("Para entrar na lista, marque que concorda com a Política de Privacidade.");
-  }
-
-  const ref = texto(formData, "ref");
   const dados = {
-    interesse,
-    nome,
-    email,
-    whatsapp,
+    interesse: d.perfil,
+    nome: d.nome,
+    email: d.email,
+    whatsapp: d.whatsapp ?? "",
     consentimento_versao: TERMOS_VERSAO,
-    ref: codigoValido(ref) ? ref : "",
-    ...(interesse === "revendedor"
-      ? { cidade: valores.cidade, uf: valores.uf, nichos }
-      : { empresa: valores.empresa, cnpj, tipo_produto: valores.tipo_produto, o_que_vende: valores.o_que_vende }),
+    ref: d.ref,
+    ...(d.perfil === "afiliado" ? { cidade: d.cidade, uf: d.uf, nichos: d.nichos } : {}),
+    ...(d.perfil === "loja"
+      ? { empresa: d.empresa, cnpj: d.cnpj, tipo_produto: d.tipo_produto, o_que_vende: d.o_que_vende }
+      : {}),
+    ...(d.perfil === "vendedor" ? { empresa: d.empresa } : {}),
   };
 
+  // 4. Gravação (limite por IP e duplicidade ficam no banco)
   const supabase = criarClienteAdmin();
-  const { data: codigo, error } = await supabase.rpc("inscrever_na_lista", {
-    p: dados,
-    p_ip_hash: await hashDoIp(),
-  });
+  const { data, error } = await supabase
+    .rpc("inscrever_na_lista", { p: dados, p_ip_hash: await hashDoIp() })
+    .single<{ codigo: string; novo: boolean; reenviar: boolean }>();
 
-  if (error) {
-    if (error.message.includes("limite_por_ip")) {
-      return erro("Muitas inscrições a partir desta conexão. Tente de novo mais tarde.");
-    }
-    if (error.code === "23505") return erro("Este e-mail já está na lista de espera.");
-    if (error.message.includes("waitlist_cnpj_check")) return erro("CNPJ inválido. Confira os números ou deixe em branco.");
-    if (error.code === "23514") return erro("Confira os dados preenchidos.");
-    return erro("Não foi possível concluir agora. Tente novamente em instantes.");
+  if (error || !data) {
+    const msg = error?.message ?? "";
+    if (msg.includes("limite_por_ip")) return { erro: "Muitas inscrições a partir desta conexão. Tente de novo mais tarde." };
+    if (msg.includes("waitlist_cnpj_check")) return { erro: "CNPJ inválido. Confira os números ou deixe em branco." };
+    if (error?.code === "23514") return { erro: "Confira os dados preenchidos." };
+    return { erro: "Não foi possível concluir agora. Tente novamente em instantes." };
   }
 
-  redirect(`/lista/${codigo}`);
+  const link = `${urlDoSite()}/lista/${data.codigo}`;
+
+  if (data.novo) {
+    // e-mail de confirmação (só se o Resend estiver configurado; falha não derruba a inscrição)
+    await enviarEmail({ para: d.email, ...emailDaLista({ nome: d.nome, link, reenvio: false }) });
+    redirect(`/lista/${data.codigo}`);
+  }
+
+  // E-mail repetido: mensagem neutra, sem posição nem dados de quem já está na lista
+  const ja = "Este e-mail já está na lista de espera.";
+  if (!emailAtivo()) return { sucesso: `${ja} No momento não conseguimos reenviar o link da sua posição.` };
+  if (!data.reenviar) return { sucesso: `${ja} Enviamos o link da sua posição há pouco: confira a caixa de entrada e o spam.` };
+  const envio = await enviarEmail({ para: d.email, ...emailDaLista({ link, reenvio: true }) });
+  return {
+    sucesso:
+      envio === "enviado"
+        ? `${ja} Enviamos o link da sua posição para ele: confira a caixa de entrada e o spam.`
+        : `${ja} Não conseguimos reenviar o link agora. Tente de novo em alguns minutos.`,
+  };
 }

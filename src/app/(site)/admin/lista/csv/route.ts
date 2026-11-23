@@ -2,7 +2,7 @@
 // Formato brasileiro: separador ";" e BOM UTF-8 (para acentos abrirem certo no Excel).
 import { NextResponse, type NextRequest } from "next/server";
 import { montarCsv } from "@/lib/csv";
-import { ROTULO_NICHO } from "@/lib/lista";
+import { ROTULO_NICHO, ROTULO_PERFIL } from "@/lib/lista";
 import { usuarioAtual } from "@/lib/papeis";
 import { buscarInscritos, lerFiltros } from "../consulta";
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   ];
   const linhas = inscritos.map((i) => [
     dataBr(i.criado_em),
-    i.interesse, i.nome, i.email, i.whatsapp, i.cidade, i.uf,
+    ROTULO_PERFIL[i.interesse] ?? i.interesse, i.nome, i.email, i.whatsapp, i.cidade, i.uf,
     i.nichos.map((n) => ROTULO_NICHO[n] ?? n).join(", "),
     i.empresa, i.cnpj, i.tipo_produto, i.o_que_vende, i.indicacoes,
     i.status_contato, i.codigo_indicacao, i.consentimento_versao,

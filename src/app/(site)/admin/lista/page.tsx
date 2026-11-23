@@ -1,7 +1,7 @@
 // /admin/lista — inscritos da lista de espera.
 // Filtros por tipo, cidade e nicho; contadores; status do contato; CSV.
 import Link from "next/link";
-import { NICHOS, ROTULO_NICHO, STATUS_CONTATO, TIPOS_PRODUTO } from "@/lib/lista";
+import { NICHOS, PERFIS, ROTULO_NICHO, ROTULO_PERFIL, STATUS_CONTATO, TIPOS_PRODUTO } from "@/lib/lista";
 import { exigirPapel } from "@/lib/papeis";
 import { atualizarStatusContato } from "./acoes";
 import { LIMITE, buscarInscritos, contarInscritos, lerFiltros } from "./consulta";
@@ -34,12 +34,8 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
       <h1 className="mt-2 text-3xl">Lista de espera</h1>
 
       {/* Contadores */}
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        {[
-          ["Total", contagem.total],
-          ["Revendedores", contagem.revendedores],
-          ["Produtores", contagem.produtores],
-        ].map(([rotulo, valor]) => (
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[["Total", contagem.total], ...contagem.porPerfil.map((p) => [p.rotulo, p.n])].map(([rotulo, valor]) => (
           <div key={rotulo} className="rounded-2xl bg-petroleo p-4 text-gelo">
             <p className="text-3xl font-extrabold text-ciano">{valor}</p>
             <p className="text-xs text-gelo/85 sm:text-sm">{rotulo}</p>
@@ -50,9 +46,12 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
       {/* Filtros (GET: o endereço guarda a busca) */}
       <form className="mt-6 grid gap-3 rounded-2xl bg-branco p-4 sm:grid-cols-4" method="get">
         <select name="tipo" defaultValue={filtros.tipo ?? ""} className={estiloCampo} aria-label="Tipo">
-          <option value="">Todos os tipos</option>
-          <option value="revendedor">Revendedores</option>
-          <option value="produtor">Produtores</option>
+          <option value="">Todos os perfis</option>
+          {PERFIS.map((p) => (
+            <option key={p.valor} value={p.valor}>
+              {p.rotulo}
+            </option>
+          ))}
         </select>
         <input name="cidade" defaultValue={filtros.cidade ?? ""} placeholder="Cidade" className={estiloCampo} aria-label="Cidade" />
         <select name="nicho" defaultValue={filtros.nicho ?? ""} className={estiloCampo} aria-label="Nicho">
@@ -87,7 +86,7 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
               <p className="font-medium">
                 {i.nome}{" "}
                 <span className="rounded-full bg-gelo px-2 py-0.5 text-xs">
-                  {i.interesse === "produtor" ? "Produtor" : "Revendedor"}
+                  {ROTULO_PERFIL[i.interesse] ?? i.interesse}
                 </span>
               </p>
               <p className="text-xs text-petroleo/70">
@@ -97,10 +96,12 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
               </p>
             </div>
             <p className="mt-1 text-sm break-all text-petroleo/85">
-              {i.email} · {i.whatsapp}
+              {i.email}
+              {i.whatsapp && ` · ${i.whatsapp}`}
             </p>
 
-            {i.interesse === "produtor" ? (
+            {i.interesse === "vendedor" && <p className="mt-1 text-sm">Loja onde trabalha: {i.empresa}</p>}
+            {i.interesse === "loja" && (
               <>
                 <p className="mt-1 text-sm">
                   {i.empresa}
@@ -108,7 +109,7 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
                   {i.tipo_produto && ` · ${ROTULO_TIPO_PRODUTO[i.tipo_produto]}`}
                 </p>
                 <p className="text-sm text-petroleo/80">{i.o_que_vende}</p>
-                {/* Andamento do contato com o produtor */}
+                {/* Andamento do contato com a loja */}
                 <form action={atualizarStatusContato} className="mt-3 flex gap-2">
                   <input type="hidden" name="id" value={i.id} />
                   <select
@@ -126,7 +127,8 @@ export default async function AdminLista({ searchParams }: PageProps<"/admin/lis
                   <button className="rounded-xl bg-petroleo px-4 py-2 text-sm font-medium text-branco">Salvar</button>
                 </form>
               </>
-            ) : (
+            )}
+            {i.interesse === "afiliado" && (
               <p className="mt-1 text-sm">
                 {i.cidade}/{i.uf} · {i.nichos.map((n) => ROTULO_NICHO[n] ?? n).join(", ")}
               </p>

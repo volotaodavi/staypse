@@ -32,7 +32,7 @@ if (!local && process.env.SEED_PERMITIR_REMOTO !== "1") {
 }
 const SENHA = process.env.SEED_SENHA || "SenhaDemo123";
 const DOMINIO = "@demo.staypse.invalid";
-const TERMOS_VERSAO = "2026-11-23.1";
+const TERMOS_VERSAO = "2026-12-02.1";
 const CONTRATO_VERSAO = "2026-11-18.3";
 
 const opcoes = { auth: { persistSession: false, autoRefreshToken: false } };

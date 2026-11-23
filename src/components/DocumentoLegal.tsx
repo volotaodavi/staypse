@@ -20,7 +20,7 @@ export function DocumentoLegal({
 }) {
   return (
     <>
-      <Cabecalho />
+      <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:py-14">
         <h1 className="text-3xl sm:text-4xl">{titulo}</h1>
         <p className="mt-2 text-sm text-petroleo/75">Versão {versao}</p>

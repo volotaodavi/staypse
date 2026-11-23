@@ -1,6 +1,29 @@
 // Dados e funções da lista de espera usados no navegador E no servidor.
 
-export type TipoInscricao = "revendedor" | "produtor";
+// Os 4 perfis da lista de espera. O "valor" é o que vai para o banco
+// (waitlist.interesse); o "rotulo" é o texto exato mostrado às pessoas.
+// Perfis antigos do banco: revendedor → afiliado, produtor → loja (migração
+// 20261202000001_lista_perfis.sql).
+export const PERFIS = [
+  { valor: "loja", rotulo: "Tenho loja/fábrica" },
+  { valor: "vendedor", rotulo: "Trabalho em loja" },
+  { valor: "afiliado", rotulo: "Quero ser afiliado" },
+  { valor: "comprador", rotulo: "Quero comprar" },
+] as const;
+
+export type Perfil = (typeof PERFIS)[number]["valor"];
+
+export const ROTULO_PERFIL: Record<string, string> = Object.fromEntries(
+  PERFIS.map((p) => [p.valor, p.rotulo]),
+);
+
+// Rótulo curto da fila na página de confirmação ("fila de lojas").
+export const FILA_DO_PERFIL: Record<Perfil, string> = {
+  loja: "lojas e fábricas",
+  vendedor: "quem trabalha em loja",
+  afiliado: "afiliados",
+  comprador: "compradores",
+};
 
 // Nichos do revendedor. O "valor" é o que vai para o banco (lista fechada lá
 // também — ao incluir um nicho aqui, inclua na migração).

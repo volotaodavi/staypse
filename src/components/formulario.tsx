@@ -17,16 +17,30 @@ export type EstadoFormulario =
 export function Campo({
   rotulo,
   dica,
+  erro,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & { rotulo: string; dica?: string; erro?: string }) {
+  // erro: mensagem do campo (validação no navegador). Ligada ao campo por
+  // aria-describedby para o leitor de tela ler junto com o rótulo.
+  const idErro = props.name ? `erro-${props.name}` : undefined;
   return (
     <label className="flex min-w-0 flex-col gap-1 text-sm font-medium">
       {rotulo}
       <input
         {...props}
-        className="w-full min-w-0 rounded-xl border border-petroleo/60 bg-branco px-4 py-3 text-base font-normal outline-none focus:border-petroleo focus:ring-2 focus:ring-ciano"
+        aria-invalid={erro ? true : undefined}
+        aria-describedby={erro ? idErro : undefined}
+        className={`w-full min-w-0 rounded-xl border bg-branco px-4 py-3 text-base font-normal outline-none focus:ring-2 focus:ring-ciano ${
+          erro ? "border-red-800" : "border-petroleo/60 focus:border-petroleo"
+        }`}
       />
-      {dica && <span className="text-xs font-normal text-petroleo/70">{dica}</span>}
+      {erro ? (
+        <span id={idErro} className="text-sm font-normal text-red-800">
+          {erro}
+        </span>
+      ) : (
+        dica && <span className="text-xs font-normal text-petroleo/70">{dica}</span>
+      )}
     </label>
   );
 }

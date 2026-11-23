@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Cabecalho } from "@/components/Cabecalho";
-import { codigoValido, linkDeIndicacao } from "@/lib/lista";
+import { FILA_DO_PERFIL, codigoValido, linkDeIndicacao, type Perfil } from "@/lib/lista";
 import { supabaseChavePublica, supabaseUrl, urlDoSite } from "@/lib/supabase/env";
 import { Compartilhar } from "./Compartilhar";
 
@@ -33,7 +33,7 @@ export default async function Obrigado({ params }: PageProps<"/lista/[codigo]">)
   }>();
   if (!data) notFound();
 
-  const fila = data.interesse === "produtor" ? "produtores" : "revendedores";
+  const fila = FILA_DO_PERFIL[data.interesse as Perfil] ?? "inscritos";
   const link = linkDeIndicacao(urlDoSite(), codigo);
 
   return (

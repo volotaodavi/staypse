@@ -71,7 +71,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
 
   return (
     <>
-      <Cabecalho />
+      <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 justify-center bg-gelo px-4 py-10">
         <div className="flex w-full max-w-2xl flex-col gap-5">
           {novo && (

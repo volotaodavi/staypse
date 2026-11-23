@@ -4,7 +4,8 @@ import { Cabecalho } from "@/components/Cabecalho";
 import { proximoSeguro } from "@/lib/redirecionamento";
 import { FormCadastro } from "./FormCadastro";
 
-export const metadata: Metadata = { title: "Criar conta" };
+// Fora do Google: no pré-lançamento só entra quem recebeu o link.
+export const metadata: Metadata = { title: "Criar conta", robots: { index: false } };
 // lê ?proximo= (ex.: vindo de um convite de vendedor)
 export const instant = false;
 

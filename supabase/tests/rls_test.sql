@@ -428,11 +428,11 @@ select teste.ok(true, 'usuário registra novo aceite');
 
 :comoAnon
 -- Etapa 2: visitante não grava direto; inscrição só pelo servidor (seção 10)
-select teste.bloqueia($$insert into public.waitlist (email, interesse) values ('visitante@teste.com', 'revendedor')$$,
+select teste.bloqueia($$insert into public.waitlist (email, interesse) values ('visitante@teste.com', 'afiliado')$$,
                       'visitante não grava direto na lista de espera');
 :comoServidor
 select public.inscrever_na_lista(
-  '{"email":"visitante@teste.com","nome":"Visitante","interesse":"revendedor","whatsapp":"11987654321",
+  '{"email":"visitante@teste.com","nome":"Visitante","interesse":"afiliado","whatsapp":"11987654321",
     "cidade":"Recife","uf":"PE","nichos":["beleza"],"consentimento_versao":"2026-11-16"}', 'ip-visitante');
 :comoAnon
 select teste.bloqueia($$select * from public.waitlist$$, 'visitante não lê a lista de espera');
@@ -460,8 +460,8 @@ select teste.bloqueia($$insert into storage.objects (bucket_id, name)
 -- =========================================================================
 -- 10. Lista de espera com indicação (Etapa 2)
 -- =========================================================================
-\set REV '{"interesse":"revendedor","whatsapp":"81998765432","cidade":"Recife","uf":"PE","nichos":["beleza","moda"],"consentimento_versao":"2026-11-16"'
-\set PROD '{"interesse":"produtor","whatsapp":"1133334444","empresa":"Doces da Vó","tipo_produto":"fisico","o_que_vende":"Doces caseiros","consentimento_versao":"2026-11-16"'
+\set REV '{"interesse":"afiliado","whatsapp":"81998765432","cidade":"Recife","uf":"PE","nichos":["beleza","moda"],"consentimento_versao":"2026-11-16"'
+\set PROD '{"interesse":"loja","whatsapp":"1133334444","empresa":"Doces da Vó","tipo_produto":"fisico","o_que_vende":"Doces caseiros","consentimento_versao":"2026-11-16"'
 
 -- inscrição que DEVE ser recusada (mostra o motivo, para conferir que é o certo)
 reset role;
@@ -486,7 +486,7 @@ select teste.bloqueia($$select * from public.waitlist_com_indicacoes$$, 'visitan
 -- inscrições válidas
 create temp table codigos (quem text, codigo text);
 grant all on codigos to anon, authenticated, service_role;
-insert into codigos select 'rita', public.inscrever_na_lista((:'REV' || ',"email":"Rita@Teste.com ","nome":"Rita"}')::jsonb, 'ip-rita');
+insert into codigos select 'rita', codigo from public.inscrever_na_lista((:'REV' || ',"email":"Rita@Teste.com ","nome":"Rita"}')::jsonb, 'ip-rita');
 select teste.ok((select email from public.waitlist where nome = 'Rita') = 'rita@teste.com', 'e-mail salvo em minúsculas e sem espaços');
 select teste.ok((select codigo ~ '^[0-9a-f]{8}$' from codigos where quem = 'rita'), 'inscrito recebe código de indicação de 8 caracteres');
 select teste.ok((select consentimento_versao = '2026-11-16' and consentimento_em is not null
@@ -496,19 +496,22 @@ select teste.ok((select consentimento_versao = '2026-11-16' and consentimento_em
 select teste.inscricao_recusada((:'REV' || ',"email":"x1@teste.com","nome":"Xis"}')::jsonb || '{"consentimento_versao":""}', 'ip-x',
                                 'sem consentimento LGPD não inscreve');
 select teste.inscricao_recusada((:'REV' || ',"email":"x2@teste.com","nome":"Xis"}')::jsonb || '{"nichos":[]}', 'ip-x',
-                                'revendedor sem nicho não inscreve');
+                                'afiliado sem nicho não inscreve');
 select teste.inscricao_recusada((:'REV' || ',"email":"x3@teste.com","nome":"Xis"}')::jsonb || '{"nichos":["armas"]}', 'ip-x',
                                 'nicho fora da lista recusado');
 select teste.inscricao_recusada((:'REV' || ',"email":"x4@teste.com","nome":"Xis"}')::jsonb || '{"whatsapp":"123"}', 'ip-x',
                                 'WhatsApp inválido recusado');
 select teste.inscricao_recusada((:'PROD' || ',"email":"x5@teste.com","nome":"Xis"}')::jsonb || '{"empresa":""}', 'ip-x',
-                                'produtor sem empresa não inscreve');
+                                'loja sem empresa não inscreve');
 select teste.inscricao_recusada((:'PROD' || ',"email":"x6@teste.com","nome":"Xis"}')::jsonb || '{"cnpj":"11222333000182"}', 'ip-x',
                                 'CNPJ informado precisa ser válido');
-select teste.inscricao_recusada((:'REV' || ',"email":"rita@teste.com","nome":"Rita Dois"}')::jsonb, 'ip-x',
-                                'e-mail repetido não inscreve de novo');
-insert into codigos select 'doces', public.inscrever_na_lista((:'PROD' || ',"email":"doces@teste.com","nome":"Dona Ana"}')::jsonb, 'ip-doces');
-select teste.ok(true, 'produtor sem CNPJ inscreve (CNPJ opcional nesta fase)');
+-- e-mail repetido: não cria outra linha e devolve o código existente (sem dados de ninguém)
+select teste.ok((select not novo and not reenviar and codigo = (select codigo from codigos where quem = 'rita')
+                 from public.inscrever_na_lista((:'REV' || ',"email":"RITA@teste.com","nome":"Rita Dois"}')::jsonb, 'ip-x')),
+                'e-mail repetido não inscreve de novo (devolve o código existente; reenvio só após 10 min)');
+select teste.ok((select count(*) from public.waitlist where email = 'rita@teste.com') = 1, 'e-mail repetido não cria outra linha');
+insert into codigos select 'doces', codigo from public.inscrever_na_lista((:'PROD' || ',"email":"doces@teste.com","nome":"Dona Ana"}')::jsonb, 'ip-doces');
+select teste.ok(true, 'loja sem CNPJ inscreve (CNPJ opcional nesta fase)');
 
 -- indicação: Rita indica duas pessoas de outros IPs e "se indica" uma vez do próprio IP
 select public.inscrever_na_lista((:'REV' || ',"email":"amiga1@teste.com","nome":"Amiga Um","ref":"' || (select codigo from codigos where quem = 'rita') || '"}')::jsonb, 'ip-amiga1');
@@ -525,10 +528,10 @@ select teste.ok((select indicacoes from public.posicao_na_lista((select codigo f
 select teste.ok((select posicao from public.posicao_na_lista((select codigo from codigos where quem = 'rita'))) = 1,
                 'quem indica mais fica na frente da fila (Rita passa o visitante que chegou antes)');
 select teste.ok((select total from public.posicao_na_lista((select codigo from codigos where quem = 'rita'))) = 6,
-                'fila separada por tipo: 6 revendedores');
-select teste.ok((select posicao = 1 and total = 1 and interesse = 'produtor'
+                'fila separada por perfil: 6 afiliados');
+select teste.ok((select posicao = 1 and total = 1 and interesse = 'loja'
                  from public.posicao_na_lista((select codigo from codigos where quem = 'doces'))),
-                'produtor tem a própria fila');
+                'loja tem a própria fila');
 select teste.ok((select count(*) from public.posicao_na_lista('naoexiste')) = 0, 'código inexistente não devolve nada');
 
 -- limite por IP: 5 por hora
@@ -545,13 +548,123 @@ select teste.ok(teste.linhas($$update public.waitlist set status_contato = 'apro
 select teste.ok((select count(*) from public.waitlist_com_indicacoes) = 0, 'usuário comum não lê a visão com indicações');
 :comoC
 select teste.ok(teste.linhas($$update public.waitlist set status_contato = 'contatado' where email = 'doces@teste.com'$$) = 1,
-                'admin marca produtor como contatado');
+                'admin marca loja como contatada');
 select teste.bloqueia($$update public.waitlist set status_contato = 'vip' where email = 'doces@teste.com'$$,
                       'status de contato fora da lista recusado');
 select teste.bloqueia($$update public.waitlist set email = 'outro@teste.com' where email = 'doces@teste.com'$$,
                       'admin não altera e-mail do inscrito pelo site');
 select teste.ok((select indicacoes from public.waitlist_com_indicacoes where nome = 'Rita') = 2,
                 'admin vê o número de indicações válidas');
+
+
+-- =========================================================================
+-- 10b. Lista de espera: os 4 perfis do pré-lançamento (Etapa 6)
+-- =========================================================================
+-- Perfis: loja | vendedor | afiliado | comprador. Os antigos (produtor,
+-- revendedor) são convertidos pela migração 20261202000001.
+reset role;
+
+-- a tradução dos perfis antigos
+select teste.ok(public.perfil_lista_novo('revendedor') = 'afiliado'
+                and public.perfil_lista_novo('produtor') = 'loja'
+                and public.perfil_lista_novo('comprador') = 'comprador',
+                'tradução dos perfis antigos: revendedor→afiliado, produtor→loja, comprador igual');
+
+-- inscrições ANTIGAS são preservadas e convertidas (simula o banco de antes da migração)
+alter table public.waitlist drop constraint waitlist_interesse_check;
+alter table public.waitlist drop constraint waitlist_campos_obrigatorios;
+insert into public.waitlist (email, nome, interesse, whatsapp, cidade, uf, nichos, consentimento_versao)
+  values ('antigo.rev@teste.com', 'Antigo Rev', 'revendedor', '81998765432', 'Recife', 'PE', '{beleza}', '2026-11-16');
+insert into public.waitlist (email, nome, interesse, whatsapp, empresa, tipo_produto, o_que_vende, consentimento_versao)
+  values ('antigo.prod@teste.com', 'Antigo Prod', 'produtor', '1133334444', 'Fábrica Antiga', 'fisico', 'Móveis', '2026-11-16');
+insert into public.waitlist (email, nome, interesse) values ('antigo.comp@teste.com', 'Antigo Comp', 'comprador');
+update public.waitlist set interesse = public.perfil_lista_novo(interesse) where interesse in ('revendedor', 'produtor');
+alter table public.waitlist add constraint waitlist_interesse_check
+  check (interesse in ('loja', 'vendedor', 'afiliado', 'comprador'));
+select teste.ok((select interesse from public.waitlist where email = 'antigo.rev@teste.com') = 'afiliado'
+                and (select interesse from public.waitlist where email = 'antigo.prod@teste.com') = 'loja'
+                and (select interesse from public.waitlist where email = 'antigo.comp@teste.com') = 'comprador',
+                'inscrições antigas migradas para os perfis novos');
+select teste.ok((select empresa = 'Fábrica Antiga' and whatsapp = '1133334444' from public.waitlist where email = 'antigo.prod@teste.com')
+                and (select cidade = 'Recife' and nichos = '{beleza}' from public.waitlist where email = 'antigo.rev@teste.com'),
+                'migração preserva os dados das inscrições antigas');
+select teste.ok(not exists (select 1 from public.waitlist where interesse in ('revendedor', 'produtor')),
+                'nenhum perfil antigo sobra no banco');
+-- as linhas de teste antigas saem de cena para não alterar as contagens das filas
+delete from public.waitlist where email like 'antigo.%@teste.com';
+-- o constraint de campos obrigatórios volta, como na migração
+alter table public.waitlist add constraint waitlist_campos_obrigatorios check (
+  consentimento_versao is not null
+  and nome is not null and char_length(nome) >= 2
+  and (interesse in ('vendedor', 'comprador') or whatsapp is not null)
+  and (interesse <> 'afiliado'
+       or (cidade is not null and uf is not null and cardinality(nichos) >= 1))
+  and (interesse <> 'loja'
+       or (empresa is not null and tipo_produto is not null and o_que_vende is not null))
+  and (interesse <> 'vendedor' or empresa is not null)
+) not valid;
+
+-- o constraint aceita os 4 perfis e rejeita qualquer outro
+select teste.bloqueia($$insert into public.waitlist (email, nome, interesse, whatsapp, consentimento_versao)
+                        values ('p1@teste.com', 'Perfil Um', 'revendedor', '81998765432', 'v')$$, 'perfil antigo "revendedor" é rejeitado');
+select teste.bloqueia($$insert into public.waitlist (email, nome, interesse, whatsapp, consentimento_versao)
+                        values ('p2@teste.com', 'Perfil Dois', 'produtor', '81998765432', 'v')$$, 'perfil antigo "produtor" é rejeitado');
+select teste.bloqueia($$insert into public.waitlist (email, nome, interesse, whatsapp, consentimento_versao)
+                        values ('p3@teste.com', 'Perfil Três', 'admin', '81998765432', 'v')$$, 'perfil inventado é rejeitado');
+select teste.ok(teste.linhas($$insert into public.waitlist (email, nome, interesse, whatsapp, empresa, tipo_produto, o_que_vende, consentimento_versao)
+                              values ('ok-loja@teste.com', 'Ok Loja', 'loja', '1133334444', 'Loja X', 'digital', 'Cursos', 'v')$$) = 1, 'constraint aceita "loja"');
+select teste.ok(teste.linhas($$insert into public.waitlist (email, nome, interesse, empresa, consentimento_versao)
+                              values ('ok-vend@teste.com', 'Ok Vendedor', 'vendedor', 'Loja X', 'v')$$) = 1, 'constraint aceita "vendedor"');
+select teste.ok(teste.linhas($$insert into public.waitlist (email, nome, interesse, whatsapp, cidade, uf, nichos, consentimento_versao)
+                              values ('ok-afil@teste.com', 'Ok Afiliado', 'afiliado', '81998765432', 'Recife', 'PE', '{moda}', 'v')$$) = 1, 'constraint aceita "afiliado"');
+select teste.ok(teste.linhas($$insert into public.waitlist (email, nome, interesse, consentimento_versao)
+                              values ('ok-comp@teste.com', 'Ok Comprador', 'comprador', 'v')$$) = 1, 'constraint aceita "comprador"');
+delete from public.waitlist where email like 'ok-%@teste.com';
+
+-- regras por perfil, pela função de inscrição (o caminho real do site)
+:comoServidor
+select teste.inscricao_recusada('{"interesse":"vendedor","email":"v1@teste.com","nome":"Vendedor Um","consentimento_versao":"v"}', 'ip-perfis',
+                                'vendedor sem a loja onde trabalha não inscreve');
+select teste.inscricao_recusada('{"interesse":"loja","email":"l1@teste.com","nome":"Loja Um","empresa":"X Ltda","tipo_produto":"fisico","o_que_vende":"Doces","consentimento_versao":"v"}', 'ip-perfis',
+                                'loja sem WhatsApp não inscreve');
+select teste.inscricao_recusada('{"interesse":"revendedor","email":"r1@teste.com","nome":"Antigo Perfil","whatsapp":"81998765432","cidade":"Recife","uf":"PE","nichos":["moda"],"consentimento_versao":"v"}', 'ip-perfis',
+                                'perfil antigo "revendedor" não inscreve pela função');
+select teste.inscricao_recusada('{"interesse":"produtor","email":"p4@teste.com","nome":"Antigo Perfil","whatsapp":"1133334444","empresa":"X","tipo_produto":"fisico","o_que_vende":"Doces","consentimento_versao":"v"}', 'ip-perfis',
+                                'perfil antigo "produtor" não inscreve pela função');
+create temp table codigos2 (quem text, codigo text, novo boolean, reenviar boolean);
+grant all on codigos2 to anon, authenticated, service_role;
+insert into codigos2 select 'vend', * from public.inscrever_na_lista('{"interesse":"vendedor","email":"vend@teste.com","nome":"Vera Vendedora","empresa":"Loja da Esquina","consentimento_versao":"v"}', 'ip-perfis');
+insert into codigos2 select 'comp', * from public.inscrever_na_lista('{"interesse":"comprador","email":"comp@teste.com","nome":"Caio Comprador","consentimento_versao":"v"}', 'ip-perfis');
+select teste.ok((select novo and reenviar from codigos2 where quem = 'vend') and (select novo from codigos2 where quem = 'comp'),
+                'vendedor (sem WhatsApp) e comprador (só nome e e-mail) inscrevem');
+select teste.ok((select empresa = 'Loja da Esquina' and whatsapp is null from public.waitlist where email = 'vend@teste.com'),
+                'vendedor grava a loja onde trabalha');
+
+-- e-mail repetido: devolve o mesmo código; reenvio liberado só depois de 10 minutos
+select teste.ok((select not novo and not reenviar and codigo = (select codigo from codigos2 where quem = 'comp')
+                 from public.inscrever_na_lista('{"interesse":"comprador","email":"comp@teste.com","nome":"Outro Nome","consentimento_versao":"v"}', 'ip-outro')),
+                'repetido logo depois: mesmo código, sem novo envio');
+reset role;
+update public.waitlist set ultimo_envio_em = now() - interval '11 minutes' where email = 'comp@teste.com';
+:comoServidor
+select teste.ok((select not novo and reenviar from public.inscrever_na_lista('{"interesse":"comprador","email":"comp@teste.com","nome":"Outro Nome","consentimento_versao":"v"}', 'ip-outro')),
+                'repetido depois de 10 minutos: libera o reenvio do link');
+select teste.ok((select count(*) from public.waitlist where email = 'comp@teste.com') = 1, 'repetido nunca cria segunda inscrição');
+select teste.ok((select nome = 'Caio Comprador' from public.waitlist where email = 'comp@teste.com'), 'repetido não altera os dados de quem já estava na lista');
+
+-- filas separadas e admin
+:comoAnon
+select teste.ok((select posicao = 1 and total = 1 and interesse = 'vendedor'
+                 from public.posicao_na_lista((select codigo from codigos2 where quem = 'vend'))),
+                'vendedor de loja tem a própria fila');
+:comoC
+select teste.ok((select (r ->> 'total')::int > 0 and r -> 'por_dia' -> 0 ? 'vendedor' and r -> 'por_dia' -> 0 ? 'afiliado'
+                 from (select public.admin_lista_espera_resumo(now() - interval '1 day', now() + interval '1 day') as r) x),
+                'resumo do admin usa os perfis novos (loja, vendedor, afiliado, comprador)');
+select teste.ok((select count(*) = 1 from jsonb_array_elements(public.admin_lista_espera_resumo(now() - interval '1 day', now() + interval '1 day') -> 'por_perfil') e
+                 where e ->> 'perfil' = 'vendedor'), 'resumo por perfil lista o vendedor');
+reset role;
+delete from public.waitlist where email in ('vend@teste.com', 'comp@teste.com');
 
 -- vitrine não pode usar as rotas novas
 :comoA

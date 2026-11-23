@@ -10,7 +10,7 @@ export default async function EncontrarPedido({ searchParams }: PageProps<"/pedi
   const { invalido } = await searchParams;
   return (
     <>
-      <Cabecalho />
+      <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 items-start justify-center bg-gelo px-4 py-12">
         <section className="flex w-full max-w-md flex-col gap-4 rounded-3xl bg-branco p-6 sm:p-8">
           <h1 className="text-3xl">Encontrar meu pedido</h1>

@@ -1,4 +1,5 @@
 // Resumo da lista de espera (tela e CSV usam a mesma consulta).
+import { ROTULO_PERFIL } from "@/lib/lista";
 import type { Periodo } from "@/lib/periodo";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -6,11 +7,12 @@ export type Resumo = {
   total: number;
   no_periodo: number;
   por_perfil: { perfil: string; total: number }[];
-  por_dia: { dia: string; revendedor: number; produtor: number; comprador: number; total: number }[];
+  por_dia: { dia: string; loja: number; vendedor: number; afiliado: number; comprador: number; total: number }[];
   top_indicadores: { nome: string | null; codigo: string; perfil: string; indicacoes: number }[];
 };
 
-export const ROTULO_PERFIL: Record<string, string> = { revendedor: "Afiliado", produtor: "Loja", comprador: "Comprador" };
+// Rótulos dos perfis (os mesmos do formulário da lista)
+export { ROTULO_PERFIL };
 
 export async function buscarResumo(periodo: Periodo): Promise<Resumo> {
   const supabase = await criarClienteServidor();
