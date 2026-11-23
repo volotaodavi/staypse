@@ -36,6 +36,7 @@ function Enviar({ children, intencao }: { children: React.ReactNode; intencao: s
 
 // Qual campo o erro do servidor fala a respeito (para focar nele e marcar como inválido)
 const CAMPOS_ERRO: [RegExp, string][] = [
+  [/código/i, "codigo"],
   [/quantidade/i, "quantidade"],
   [/CEP/, "cep"],
   [/Endereço/, "logradouro"],
@@ -250,7 +251,8 @@ export function FormCompra({
             </Bloco>
             {estado.indicadoPor && (
               <Bloco titulo="Indicação">
-                Indicado por @{estado.indicadoPor}. Quem indicou recebe uma comissão; o preço é o mesmo.
+                Indicado por @{estado.indicadoPor}
+                {estado.indicadoPorCodigo ? " (código que você digitou)" : ""}. Quem indicou recebe uma comissão; o preço é o mesmo.
               </Bloco>
             )}
             <Bloco titulo="Pagamento">
@@ -453,6 +455,28 @@ export function FormCompra({
         <label className={rotulo}>
           Celular com DDD (opcional)
           <input name="telefone" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={20} defaultValue={v.telefone} className={campo} />
+        </label>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="mb-2 text-lg font-semibold">Indicação (opcional)</legend>
+        <label className={rotulo}>
+          Código de quem indicou (opcional)
+          <input
+            name="codigo"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={41}
+            placeholder="@nome"
+            defaultValue={v.codigo}
+            className={`${campo} max-w-64`}
+            {...invalido("codigo", "dica-codigo")}
+          />
+          <span id="dica-codigo" className="text-xs font-normal text-neutral-700">
+            Se alguém indicou este produto, digite o @ dela(e). Útil se você abriu o link em outro aparelho. Não é cupom: o preço é o
+            mesmo. Se você veio por um link de indicação, não precisa digitar. Se digitar um código, ele vale no lugar do link.
+          </span>
         </label>
       </fieldset>
 

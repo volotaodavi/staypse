@@ -3,7 +3,9 @@
 // Regra "último clique vence" POR PRODUTO: um clique novo no mesmo item troca o
 // afiliado; itens diferentes guardam indicações diferentes.
 // O valor é assinado (HMAC): ninguém consegue forjar uma indicação no navegador.
-// A Etapa 6 (checkout) lê este cookie para montar o split.
+// A Etapa 6 (checkout) lê este cookie para montar o split. Quem compra em outro aparelho
+// pode digitar o CÓDIGO de indicação (@ do afiliado); o código digitado vence o cookie
+// (ver docs/estrategia-lojas-vitrines-links.md, seção 5b).
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { segredoDerivado } from "./ip";

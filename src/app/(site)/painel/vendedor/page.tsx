@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";
 import { GraficoBarras } from "@/components/painel/GraficoBarras";
+import { CodigoIndicacao } from "@/components/painel/CodigoIndicacao";
 import { NotaPagamentos, Numeros, inteiro } from "@/components/painel/Numeros";
 import { Recebimento } from "@/components/painel/Recebimento";
 import { TabelaVendas } from "@/components/painel/TabelaVendas";
@@ -130,6 +131,8 @@ export default async function PainelVendedor({ searchParams }: PageProps<"/paine
         formatar={inteiro}
         pontos={ind.serie.map((d) => ({ rotulo: diaCurto(d.dia), valor: d.vendas, detalhe: `${formatarDia(d.dia)}: ${d.vendas} vendas` }))}
       />
+
+      {vitrine && vinculos.some((v) => v.status === "ativo") && <CodigoIndicacao slug={vitrine.slug} />}
 
       {/* links de cada produto da loja para compartilhar */}
       <section aria-labelledby="t-links" className="flex flex-col gap-3 rounded-2xl bg-branco p-5">

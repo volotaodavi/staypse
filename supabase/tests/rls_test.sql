@@ -1823,6 +1823,134 @@ update public.items set preco_centavos = 11990 where slug = 'serum-facial';
 select teste.ok((select count(*) from public.itens_da_vitrine('loja-da-bia') where id = :'org_serum') = 0, 'item que saiu do ar não aparece, mesmo na organização');
 
 -- =========================================================================
+-- 8b. Código de indicação: atribuição por código digitado no checkout
+-- =========================================================================
+-- Código = @ (slug da vitrine). Afiliado aprovado e vendedor próprio da loja valem;
+-- o código digitado vence o cookie; a origem (link/codigo) fica no pedido.
+reset role;
+-- a loja do Davi publica um produto (para testar "código de OUTRA loja")
+select public.aplicar_status_recebedor('mock', 'rec_d', 'aprovado', null, '12ABC34501DE35');
+update public.producers set status_verificacao = 'aprovado' where cnpj = '12ABC34501DE35';
+update public.items set status_aprovacao = 'aprovado', aprovado_em = now() where nome = 'Produto do Davi';
+select id as ci_davi from public.items where nome = 'Produto do Davi' \gset
+-- Fabi (afiliada de catálogo, recebedor aprovado) com afiliação APROVADA ao Aff Auto e PENDENTE ao Aff Manual
+:comoF
+select public.afiliar_se(:'aff_auto');
+:comoServidor
+select teste.ok((select vitrine_slug = 'loja-da-fabi' from public.validar_codigo_indicacao(:'aff_auto', '@Loja-Da-Fabi', 'ip-ci-0')),
+                'código: afiliado aprovado vale (sem diferenciar maiúsculas, "@" opcional)');
+select codigo as ci_p1 from public.criar_pedido(:'aff_auto', 1, 'digital', null, null,
+  'Hugo', 'hugo@teste.com', '52998224725', null, null, '2026-11-18', 'Loja-da-Fabi') \gset
+reset role;
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000f' and o.atribuicao_origem = 'codigo'
+                        and o.vendedor_id is null and oi.comissao_percentual = 30
+                 from public.orders o join public.order_items oi on oi.order_id = o.id where o.codigo = :'ci_p1'),
+                'código de afiliado aprovado atribui o pedido e registra a origem "codigo"');
+
+-- não vale: afiliação pendente, afiliado bloqueado, sem recebedor aprovado
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'aff_manual', 'digital', 'Ivo', 'ivo@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                      'código de afiliado com afiliação pendente não atribui');
+select teste.ok((select not valido and not limitado from public.validar_codigo_indicacao(:'aff_manual', 'loja-da-fabi', 'ip-ci-1')),
+                'validar: afiliação pendente = código não vale');
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000f', true);
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'aff_auto', 'digital', 'Ivo', 'ivo@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                      'código de afiliado bloqueado pela loja não atribui');
+:comoA
+select public.bloquear_afiliado('00000000-0000-0000-0000-00000000000f', false);
+:comoF
+select public.afiliar_se(:'aff_auto');
+:comoServidor
+select public.aplicar_status_recebedor('mock', 'rec_f', 'em_analise', null, null);
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'aff_auto', 'digital', 'Ivo', 'ivo@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                      'código de afiliado sem recebedor aprovado não atribui');
+select public.aplicar_status_recebedor('mock', 'rec_f', 'aprovado', null, null);
+
+-- vendedor próprio da loja: split direto (Bia) e folha (Davi) atribuem
+select codigo as ci_p2 from public.criar_pedido(:'kit', 1, 'retirada', null, null,
+  'Jana', 'jana@teste.com', '52998224725', null, null, '2026-11-18', 'loja-da-bia') \gset
+select codigo as ci_p3 from public.criar_pedido(:'kit', 1, 'retirada', null, null,
+  'Kleber', 'kleber@teste.com', '52998224725', null, null, '2026-11-18', 'davi-vendas') \gset
+reset role;
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000b' and o.vendedor_id is not null and o.atribuicao_origem = 'codigo'
+                 from public.orders o where o.codigo = :'ci_p2'),
+                'código de vendedor próprio (split direto) da loja atribui');
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000d' and o.vendedor_id is not null and o.atribuicao_origem = 'codigo'
+                 from public.orders o where o.codigo = :'ci_p3'),
+                'código de vendedor próprio na folha também atribui (conta para o relatório)');
+
+-- vendedor de OUTRA loja não atribui (Bia e Davi são vendedores da loja da Ana, não da loja do Davi)
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'ci_davi', 'digital', 'Lia', 'lia@teste.com', '52998224725', '2026-11-18', 'loja-da-bia'),
+                      'código de vendedor de OUTRA loja não atribui');
+select teste.ok((select not valido from public.validar_codigo_indicacao(:'ci_davi', 'loja-da-bia', 'ip-ci-2')),
+                'validar: vendedor de outra loja = código não vale (mesmo resultado de código inexistente)');
+select teste.ok((select not valido from public.validar_codigo_indicacao(:'kit', 'nao-existe-xyz', 'ip-ci-2')),
+                'validar: código inexistente = código não vale');
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'kit', 'retirada', 'Mel', 'mel@teste.com', '52998224725', '2026-11-18', 'x'),
+                      'código fora do formato não atribui');
+
+-- o código digitado VENCE o cookie; sem código, o cookie vale e a origem é "link"
+select codigo as ci_p4 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000b', null,
+  'Nando', 'nando@teste.com', '52998224725', null, null, '2026-11-18', 'davi-vendas') \gset
+select codigo as ci_p5 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000b', null,
+  'Olga', 'olga@teste.com', '52998224725', null, null, '2026-11-18') \gset
+reset role;
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000d' and o.atribuicao_origem = 'codigo'
+                 from public.orders o where o.codigo = :'ci_p4'),
+                'cookie da Bia + código do Davi: o código digitado vence');
+select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000b' and o.atribuicao_origem = 'link'
+                 from public.orders o where o.codigo = :'ci_p5'),
+                'só cookie: a atribuição segue pelo link e a origem é "link"');
+select teste.ok((select atribuicao_origem is null and revendedor_id is null from public.orders where codigo = :'ped3'),
+                'pedido sem indicação fica sem origem');
+
+-- o dono da loja não se auto-atribui (nem por código, nem por cookie)
+alter table public.afiliacoes disable trigger afiliacoes_y_recebedor;
+insert into public.storefronts (revendedor_id, slug, nicho) values ('00000000-0000-0000-0000-00000000000a', 'ana-indica', 'beleza');
+insert into public.afiliacoes (afiliado_id, storefront_id, item_id, status, decidido_em)
+  select '00000000-0000-0000-0000-00000000000a', id, :'kit', 'aprovada', now() from public.storefronts where slug = 'ana-indica';
+alter table public.afiliacoes enable trigger afiliacoes_y_recebedor;
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
+                             :'kit', 'retirada', 'Pia', 'pia@teste.com', '52998224725', '2026-11-18', 'ana-indica'),
+                      'dono da loja não se auto-atribui por código');
+select codigo as ci_p6 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000a', null,
+  'Rui', 'rui@teste.com', '52998224725', null, null, '2026-11-18') \gset
+reset role;
+select teste.ok((select revendedor_id is null and atribuicao_origem is null from public.orders where codigo = :'ci_p6'),
+                'dono da loja não se auto-atribui nem pelo cookie');
+-- comprador logado também não se indica por código
+:comoServidor
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, %L, %L, %L, %L, null, null, %L, %L)',
+                             :'aff_auto', 'digital', '00000000-0000-0000-0000-00000000000f', 'Fabi', 'fabi@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                      'comprador não se indica pelo próprio código');
+
+-- antifraude: 8 tentativas inválidas por hora por IP; depois disso, nem o código certo passa por aquele IP
+select count(*) from (select public.validar_codigo_indicacao(:'kit', 'palpite-' || n, 'ip-forca-bruta') from generate_series(1, 8) n) t;
+select teste.ok((select limitado and not valido from public.validar_codigo_indicacao(:'aff_auto', 'loja-da-fabi', 'ip-forca-bruta')),
+                'limite de tentativas inválidas por IP (hash): a nona é barrada');
+select teste.ok((select valido from public.validar_codigo_indicacao(:'aff_auto', 'loja-da-fabi', 'ip-outro')),
+                'o limite é por IP: outro IP segue normal');
+:comoAnon
+select teste.bloqueia($$select * from public.validar_codigo_indicacao(gen_random_uuid(), 'x', 'ip')$$, 'visitante não chama a validação direto');
+select teste.bloqueia($$select * from public.codigo_indicacao_tentativas$$, 'visitante não lê as tentativas');
+:comoB
+select teste.bloqueia($$select * from public.resolver_codigo_indicacao(gen_random_uuid(), 'loja-da-bia', null)$$, 'logado também não chama a resolução direto');
+select teste.ok((select count(*) from public.minhas_comissoes('vendedor', now() - interval '1 day', now() + interval '1 day')
+                 where origem_atribuicao = 'codigo') = 1,
+                'vendedor vê a origem "codigo" em "minhas vendas" (sem dados do comprador)');
+select teste.ok((select count(*) from public.minhas_comissoes('vendedor', now() - interval '1 day', now() + interval '1 day')
+                 where origem_atribuicao = 'link') >= 1, 'e a origem "link" nas vendas pelo link');
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

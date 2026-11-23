@@ -2,7 +2,7 @@
 // Nenhum dado do comprador. ?papel=vendedor para o painel do vendedor próprio.
 import { montarCsv } from "@/lib/csv";
 import { exigirPapel } from "@/lib/papeis";
-import { dataHora } from "@/lib/pedidos";
+import { ROTULO_ORIGEM_ATRIBUICAO, dataHora } from "@/lib/pedidos";
 import { lerPeriodo } from "@/lib/periodo";
 import { SITUACAO_COMISSAO, lerComissoes } from "../../consulta";
 
@@ -15,12 +15,13 @@ export async function GET(request: Request) {
   const periodo = lerPeriodo(sp);
   const vendas = await lerComissoes(papel, periodo);
   const csv = montarCsv(
-    ["Data", "Produto", "Quantidade", "Loja", "Valor da venda (R$)", "Comissão (R$)", "Situação"],
+    ["Data", "Produto", "Quantidade", "Loja", "Origem", "Valor da venda (R$)", "Comissão (R$)", "Situação"],
     vendas.map((v) => [
       dataHora(v.data),
       v.produto,
       v.quantidade,
       v.loja,
+      ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "",
       reais(v.valor_centavos),
       reais(v.comissao_centavos),
       SITUACAO_COMISSAO[v.situacao] ?? v.situacao,

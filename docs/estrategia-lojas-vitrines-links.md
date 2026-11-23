@@ -63,7 +63,21 @@ O lugar continua o mesmo: **Catálogo** (`/painel/revendedor/catalogo`). As melh
 O caminho continua o **convite da loja** (aba Vendedores → link de convite → o vendedor cria a conta). Ele vira um "afiliado restrito à própria loja", que é o padrão dos apps da Nuvemshop. O que acrescentar:
 
 - os **dois links** (página e checkout) para cada produto, no painel do vendedor;
-- um **cupom do vendedor**, opcional e para depois, que atribui a venda mesmo sem link (útil na loja física e no WhatsApp).
+- o **código de indicação** (seção 5b), que atribui a venda mesmo sem link (útil na loja física e no WhatsApp).
+
+### 5b. Código de indicação (atribuição sem cookie)
+
+Quem clica no celular e compra no computador perde o cookie. No checkout há o campo opcional **"Código de quem indicou (opcional)"**. **Não é desconto**: o preço é o mesmo e o campo só diz quem indicou.
+
+- **Qual é o código:** o próprio `@` (slug da vitrine) do afiliado ou do vendedor próprio. Não existe outro identificador. Não diferencia maiúsculas, e o `@` inicial é opcional.
+- **Quando vale (decidido só no banco, em `resolver_codigo_indicacao`):**
+  - afiliado de catálogo com afiliação **aprovada** ao item e recebedor aprovado na Lytex;
+  - vendedor próprio **ativo** da loja do item; `split_direto` exige recebedor aprovado, `folha` também vale (conta para o relatório, e a parte dele fica com a loja);
+  - nunca vale para quem a loja bloqueou, para o dono da loja (a loja não se indica) nem para o próprio comprador logado.
+- **Precedência: o código digitado vence o cookie.** Se há cookie de clique para o item **e** código digitado, vale o código, porque é a intenção explícita do comprador. Sem código, vale o cookie (último clique por produto), como antes. A origem fica em `orders.atribuicao_origem` (`link`, `codigo` ou nulo para venda direta) e aparece no painel da loja (pedidos) e no "Minhas vendas" do afiliado e do vendedor, sem dados do comprador.
+- **Código inválido** não cria o pedido: a tela mostra "Este código não vale para este produto" e a pessoa pode apagar o campo para comprar sem indicação. A mensagem é a mesma para código inexistente, de outro produto ou de outra loja, para não revelar se o código existe.
+- **Antifraude:** no máximo 8 tentativas inválidas por hora por IP (só o hash, mesma ideia dos cliques e da lista de espera). O servidor confere o código nas duas etapas (revisão e confirmação) e o banco confere de novo ao criar o pedido.
+- **Onde aparece:** painel do afiliado e do vendedor ("Seu código de indicação", com botão copiar) e, de forma discreta, na vitrine pública.
 
 ## 6. Anúncios
 
@@ -84,7 +98,7 @@ O caminho continua o **convite da loja** (aba Vendedores → link de convite →
 
 ## O que a pesquisa avisa (armadilhas)
 
-- Atribuição por cookie se perde quando a compra é feita em outro aparelho. O cupom do vendedor ajuda.
+- Atribuição por cookie se perde quando a compra é feita em outro aparelho. O código de indicação (seção 5b) resolve.
 - Venda feita antes da aprovação da afiliação não comissiona (Eduzz): a tela precisa deixar isso claro.
 - Mudar o endereço do checkout quebra links antigos: os links da Staypse são curtos e estáveis, e o destino é resolvido no clique.
 - Cookie curto derruba conversão: a Staypse usa 30 dias.

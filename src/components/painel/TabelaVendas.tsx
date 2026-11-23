@@ -3,7 +3,7 @@
 import { LinkCsv } from "@/components/painel/FiltroPeriodo";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { SITUACAO_COMISSAO, type Comissao } from "@/app/(site)/painel/afiliado/consulta";
-import { data, dataHora } from "@/lib/pedidos";
+import { ROTULO_ORIGEM_ATRIBUICAO, data, dataHora } from "@/lib/pedidos";
 import type { Periodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
 
@@ -34,6 +34,7 @@ export function TabelaVendas({
           { titulo: "Produto", principal: true },
           { titulo: "Data" },
           { titulo: "Loja" },
+          { titulo: "Origem" },
           { titulo: "Venda", numero: true },
           { titulo: "Comissão", numero: true },
           { titulo: "Situação" },
@@ -46,6 +47,7 @@ export function TabelaVendas({
             </span>,
             dataHora(v.data),
             v.loja,
+            <span key="o" data-origem={v.origem_atribuicao ?? ""}>{ROTULO_ORIGEM_ATRIBUICAO[v.origem_atribuicao ?? ""] ?? "—"}</span>,
             formatarPreco(Number(v.valor_centavos)),
             formatarPreco(Number(v.comissao_centavos)),
             <span key="s" data-situacao={v.situacao}>

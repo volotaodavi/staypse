@@ -64,6 +64,7 @@ export const ERROS_PEDIDO: Record<string, string> = {
   endereco_invalido: "Endereço incompleto. Confira CEP, rua, número, bairro, cidade e UF.",
   pedido_indisponivel: "Não encontramos este pedido. Use o link que você recebeu.",
   prazo_encerrado: "O prazo de 7 dias para desistir terminou. Se o produto tem defeito, abra um atendimento.",
+  codigo_indicacao_invalido: "Este código não vale para este produto. Confira o código ou apague o campo para comprar sem indicação.",
   nada_enviado: "A loja ainda não registrou o envio deste pedido.",
 };
 
@@ -165,3 +166,6 @@ export type PedidoComprador = {
     acesso: { link: string | null; instrucoes: string | null; arquivo_path: string | null } | null;
   }[];
 };
+
+// Como a indicação chegou ao pedido (orders.atribuicao_origem): link curto ou código digitado
+export const ROTULO_ORIGEM_ATRIBUICAO: Record<string, string> = { link: "Link", codigo: "Código digitado" };

@@ -114,6 +114,11 @@ export default async function Vitrine({ params }: PageProps<"/v/[slug]">) {
           <p className="max-w-2xl text-sm text-neutral-600">
             Publicidade: esta vitrine reúne indicações e @{slug} recebe comissão pelas vendas feitas por aqui, sem custo extra para você.
           </p>
+          {/* discreto: ajuda quem abre o link num aparelho e compra em outro */}
+          <p className="max-w-2xl text-xs text-neutral-600">
+            Vai comprar em outro aparelho? Digite o código <strong className="font-semibold">@{slug}</strong> no checkout para a
+            indicação valer. Não é cupom: o preço é o mesmo.
+          </p>
           <div className="flex flex-wrap gap-2">
             <a
               href={linkWhatsapp(`Olha a minha vitrine: ${nome}\n${url}`)}

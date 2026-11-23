@@ -2,12 +2,18 @@
 // Checkout em duas etapas:
 //  1. "revisar": confere os dados e pede ao BANCO o preço, o frete e o total;
 //  2. "confirmar": com o resumo aceito (regra 4), o SERVIDOR cria o pedido.
-// A indicação (afiliado) vem do cookie assinado, conferido aqui — nunca do formulário.
+// A indicação (afiliado) vem de duas fontes, ambas conferidas pelo BANCO:
+//  * o cookie assinado do link curto (origem "link");
+//  * o CÓDIGO de indicação digitado pelo comprador (origem "codigo") — para quem clicou
+//    no celular e compra no computador. O código digitado VENCE o cookie (intenção explícita).
+// Código não é desconto: o preço é o mesmo. Código inválido barra o avanço, com mensagem
+// neutra, e a pessoa pode apagar o campo para comprar sem indicação.
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { TERMOS_VERSAO } from "@/config/empresa";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
 import { comprasAbertas, cpfValido, mensagemDeErro, type ModoEntrega } from "@/lib/pedidos";
+import { hashDoIp } from "@/lib/ip";
 import { registrarAcesso } from "@/lib/acesso";
 import { usuarioAtual } from "@/lib/papeis";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
@@ -29,12 +35,12 @@ export type Resumo = {
 };
 
 export type EstadoCompra =
-  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; valores: Record<string, string> }
+  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; indicadoPorCodigo?: boolean; valores: Record<string, string> }
   | undefined;
 
 const CAMPOS = [
   "item", "loja", "produto", "quantidade", "entrega", "nome", "email", "cpf", "telefone",
-  "cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf",
+  "cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf", "codigo",
 ] as const;
 
 const texto = (f: FormData, nome: string) => String(f.get(nome) ?? "").trim();
@@ -47,6 +53,8 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   const valores: Record<string, string> = {};
   for (const c of CAMPOS) valores[c] = texto(f, c);
   valores.uf = valores.uf.toUpperCase();
+  // código de indicação: minúsculas, sem "@" nem espaços (o banco confere de novo)
+  valores.codigo = valores.codigo.replace(/^@+/, "").trim().toLowerCase().slice(0, 40);
   const intencao = texto(f, "intencao");
   const dados = (erro: string) => ({ etapa: "dados" as const, erro, valores });
 
@@ -76,14 +84,32 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
 
   const jar = await cookies();
   const indicacao = atribuicaoDoItem(jar.get(COOKIE_ATRIBUICAO)?.value, valores.item);
-  const resumo = (erro?: string) => ({ etapa: "resumo" as const, resumo: cotacao, indicadoPor: indicacao?.h ?? null, valores, erro });
+  const usuario = await usuarioAtual();
+
+  // código digitado: conferido no banco (que também limita tentativas inválidas por IP).
+  // A mensagem é a mesma para "não existe" e "não vale para este produto".
+  let indicadoPor = indicacao?.h ?? null;
+  if (valores.codigo) {
+    const { data: conferido, error: erroCodigo } = await criarClienteAdmin()
+      .rpc("validar_codigo_indicacao", {
+        p_item: valores.item,
+        p_codigo: valores.codigo,
+        p_ip_hash: await hashDoIp(),
+        p_comprador: usuario?.id ?? null,
+      })
+      .maybeSingle<{ valido: boolean; limitado: boolean; vitrine_slug: string | null }>();
+    if (erroCodigo) console.error("validar_codigo_indicacao:", erroCodigo.message);
+    if (conferido?.limitado) return dados("Muitas tentativas com código de indicação. Aguarde um pouco ou apague o campo para comprar sem indicação.");
+    if (!conferido?.valido) return dados(mensagemDeErro({ message: "codigo_indicacao_invalido" }, "Este código não vale para este produto."));
+    indicadoPor = conferido.vitrine_slug;
+  }
+  const resumo = (erro?: string) => ({ etapa: "resumo" as const, resumo: cotacao, indicadoPor, indicadoPorCodigo: Boolean(valores.codigo), valores, erro });
 
   if (intencao !== "confirmar") return resumo();
 
   // REGRA 4: só cria o pedido com o resumo aceito
   if (f.get("aceite") !== "sim") return resumo("Marque que leu o resumo do pedido.");
 
-  const usuario = await usuarioAtual();
   const { data: pedido, error } = await criarClienteAdmin()
     .rpc("criar_pedido", {
       p_item: valores.item,
@@ -108,6 +134,7 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
             }
           : null,
       p_termos_versao: TERMOS_VERSAO,
+      p_codigo: valores.codigo || null,
     })
     .maybeSingle<{ id: string; codigo: string; token: string }>();
   if (error || !pedido) return resumo(mensagemDeErro(error, "Não foi possível criar o pedido. Tente de novo."));

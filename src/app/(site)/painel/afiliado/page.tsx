@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";
 import { GraficoBarras } from "@/components/painel/GraficoBarras";
+import { CodigoIndicacao } from "@/components/painel/CodigoIndicacao";
 import { NotaPagamentos, Numeros, inteiro, percentual } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { TabelaVendas } from "@/components/painel/TabelaVendas";
@@ -167,6 +168,8 @@ export default async function PainelAfiliado({ searchParams }: PageProps<"/paine
               vazio={{ texto: "Você ainda não se afiliou a nenhum produto.", acao: { href: "/painel/revendedor/catalogo", rotulo: "Ver catálogo" } }}
             />
           </section>
+
+          <CodigoIndicacao slug={vitrine.slug} />
 
           <TabelaVendas
             vendas={vendas}

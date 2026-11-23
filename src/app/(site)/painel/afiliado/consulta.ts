@@ -25,6 +25,8 @@ export type Comissao = {
   status_pedido: string;
   situacao: string;
   previsao: string | null;
+  // como a venda chegou até você: "link" (link curto) ou "codigo" (digitado no checkout)
+  origem_atribuicao: "link" | "codigo" | null;
 };
 
 export const SITUACAO_COMISSAO: Record<string, string> = {

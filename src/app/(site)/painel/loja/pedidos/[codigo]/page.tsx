@@ -2,7 +2,7 @@
 // nota fiscal, rastreio, "Marcar como enviado" e prazo de arrependimento.
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ROTULO_ENTREGA, STATUS_ENTREGA, data, dataHora, enderecoEmLinha, formatarCpf, type Endereco, type ModoEntrega } from "@/lib/pedidos";
+import { ROTULO_ENTREGA, ROTULO_ORIGEM_ATRIBUICAO, STATUS_ENTREGA, data, dataHora, enderecoEmLinha, formatarCpf, type Endereco, type ModoEntrega } from "@/lib/pedidos";
 import { formatarPreco } from "@/lib/produtor";
 import { STATUS_EXIBICAO, minhaLoja, statusExibicao } from "../../dados";
 import { registrarEnvio } from "../acoes";
@@ -48,10 +48,16 @@ type Pedido = {
   total_centavos: number;
   revendedor_id: string | null;
   vendedor_id: string | null;
+  atribuicao_origem: "link" | "codigo" | null;
   storefronts: { slug: string; nome_exibicao: string | null } | null;
   loja_vendedores: { email: string } | null;
   order_items: Item[];
 };
+
+// "(código digitado)" / "(link)": como a indicação chegou ao pedido
+function origemTexto(origem: "link" | "codigo" | null) {
+  return origem ? ` (${ROTULO_ORIGEM_ATRIBUICAO[origem].toLowerCase()})` : "";
+}
 
 export default async function DetalhePedido({ params, searchParams }: PageProps<"/painel/loja/pedidos/[codigo]">) {
   const { codigo } = await params;
@@ -61,7 +67,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
   const { data: bruto } = await supabase
     .from("orders")
     .select(
-      "id, codigo, status, criado_em, pago_em, entregue_em, arrependimento_ate, arrependimento_motivo, comprador_nome, comprador_email, comprador_documento, comprador_telefone, endereco_entrega, entrega_modo, subtotal_centavos, frete_centavos, total_centavos, revendedor_id, vendedor_id, storefronts(slug, nome_exibicao), loja_vendedores(email), order_items(id, nome_item, tipo_item, quantidade, preco_unitario_centavos, comissao_percentual, status_entrega, codigo_rastreio, nota_fiscal_numero, nota_fiscal_chave, nota_fiscal_url, enviado_em)",
+      "id, codigo, status, criado_em, pago_em, entregue_em, arrependimento_ate, arrependimento_motivo, comprador_nome, comprador_email, comprador_documento, comprador_telefone, endereco_entrega, entrega_modo, subtotal_centavos, frete_centavos, total_centavos, revendedor_id, vendedor_id, atribuicao_origem, storefronts(slug, nome_exibicao), loja_vendedores(email), order_items(id, nome_item, tipo_item, quantidade, preco_unitario_centavos, comissao_percentual, status_entrega, codigo_rastreio, nota_fiscal_numero, nota_fiscal_chave, nota_fiscal_url, enviado_em)",
     )
     .eq("producer_id", loja.id)
     .eq("codigo", codigo)
@@ -204,7 +210,10 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
           <section className="flex flex-col gap-1 rounded-2xl bg-branco p-5">
             <h2 className="text-base font-medium">Quem indicou</h2>
             {p.vendedor_id ? (
-              <p data-indicou>Vendedor próprio · {p.loja_vendedores?.email ?? "—"}</p>
+              <p data-indicou>
+                Vendedor próprio · {p.loja_vendedores?.email ?? "—"}
+                {origemTexto(p.atribuicao_origem)}
+              </p>
             ) : p.revendedor_id ? (
               <p data-indicou>
                 Afiliado ·{" "}
@@ -215,6 +224,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
                 ) : (
                   "vitrine não publicada"
                 )}
+                {origemTexto(p.atribuicao_origem)}
               </p>
             ) : (
               <p data-indicou>Venda direta na loja (sem indicação)</p>
