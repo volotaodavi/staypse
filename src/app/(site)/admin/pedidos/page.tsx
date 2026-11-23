@@ -16,12 +16,16 @@ export default async function AdminPedidos({ searchParams }: PageProps<"/admin/p
   const sp = await searchParams;
   const status = Object.hasOwn(STATUS_PEDIDO, um(sp.status) ?? "") ? um(sp.status)! : "";
   const supabase = await criarClienteServidor();
+  // fila "sem nota fiscal": pagos há mais de X dias (configuração prazo_nf_dias) com item sem NF
+  const semNf = um(sp.fila) === "sem_nf";
+  const idsSemNf = semNf ? ((await supabase.rpc("admin_pedidos_sem_nf")).data as string[] | null) ?? [] : [];
   let consulta = supabase
     .from("orders")
     .select("id, codigo, status, criado_em, total_centavos, arrependimento_solicitado_em, arrependimento_motivo, producers(razao_social)")
     .order("criado_em", { ascending: false })
     .limit(200);
   if (status) consulta = consulta.eq("status", status);
+  if (semNf) consulta = consulta.in("id", idsSemNf);
   const { data, error } = await consulta;
   if (error) throw new Error(`Pedidos indisponíveis: ${error.message}`);
   const pedidos = (data ?? []) as unknown as {
@@ -49,6 +53,14 @@ export default async function AdminPedidos({ searchParams }: PageProps<"/admin/p
       {um(sp.erro) && (
         <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
           {um(sp.erro)}
+        </p>
+      )}
+      {semNf && (
+        <p className="rounded-xl bg-branco px-4 py-3 text-sm">
+          Fila: pedidos pagos há mais tempo que o prazo de nota fiscal e ainda sem nota.{" "}
+          <Link href="/admin/pedidos" className="inline-flex min-h-11 items-center font-medium underline">
+            Ver todos os pedidos
+          </Link>
         </p>
       )}
       <nav aria-label="Filtrar por situação" className="flex flex-wrap gap-2 text-sm">

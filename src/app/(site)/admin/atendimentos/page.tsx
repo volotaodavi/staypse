@@ -14,6 +14,7 @@ export default async function AdminAtendimentos({ searchParams }: PageProps<"/ad
   await exigirPapel("admin");
   const sp = await searchParams;
   const todos = um(sp.todos) === "1";
+  const vencidos = um(sp.vencidos) === "1";
   const supabase = await criarClienteServidor();
   let consulta = supabase
     .from("atendimentos")
@@ -21,6 +22,8 @@ export default async function AdminAtendimentos({ searchParams }: PageProps<"/ad
     .order("prazo_ate")
     .limit(200);
   if (!todos) consulta = consulta.neq("status", "encerrado");
+  // fila "vencidos": ainda abertos depois do prazo de resposta
+  if (vencidos) consulta = consulta.eq("status", "aberto").lt("prazo_ate", new Date().toISOString());
   const { data: lista, error } = await consulta;
   if (error) throw new Error(`Atendimentos indisponíveis: ${error.message}`);
   const agora = new Date().toISOString();
@@ -36,6 +39,14 @@ export default async function AdminAtendimentos({ searchParams }: PageProps<"/ad
           {todos ? "Só os abertos" : "Ver também os encerrados"}
         </Link>
       </div>
+      {vencidos && (
+        <p className="rounded-xl bg-branco px-4 py-3 text-sm">
+          Fila: atendimentos abertos com o prazo de resposta vencido.{" "}
+          <Link href="/admin/atendimentos" className="inline-flex min-h-11 items-center font-medium underline">
+            Ver todos
+          </Link>
+        </p>
+      )}
       <p className="text-sm text-petroleo/80">
         Prazo: 5 dias para responder (Decreto 7.962/2013). Pedidos sobre dados pessoais: até 15 dias (LGPD).
       </p>
