@@ -10,7 +10,8 @@ export function SininhoNotificacoes({ naoLidas }: { naoLidas: number | null }) {
   return (
     <Link
       href="/painel/notificacoes"
-      aria-label={`Notificações, ${n} ${n === 1 ? "não lida" : "não lidas"}`}
+      // enquanto o número carrega, o nome não promete uma contagem que ainda não existe
+      aria-label={naoLidas === null ? "Notificações" : `Notificações, ${n} ${n === 1 ? "não lida" : "não lidas"}`}
       className="relative inline-flex size-11 items-center justify-center rounded-full border border-petroleo/30 text-petroleo hover:bg-gelo"
     >
       <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 fill-none stroke-current" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
