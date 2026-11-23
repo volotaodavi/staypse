@@ -2,7 +2,7 @@
 // Galeria de modelos: cada miniatura é o PRÓPRIO modelo renderizado (o mesmo motor da
 // loja) com o nome, o logo e os produtos da loja, reduzido a 41% do tamanho de um celular.
 import type { CSSProperties } from "react";
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AnuncioLoja, CabecalhoLoja, itensDoMenu } from "@/components/loja";
 import { SecoesLoja, type DadosSobre } from "@/components/loja-secoes";
 import type { ItemLoja } from "@/lib/publico";
@@ -10,14 +10,26 @@ import { montarTema } from "@/lib/tema";
 import { LISTA_MODELOS, MODELOS_LOJA, restaurarModelo, varsDoModelo, type ModeloLoja, type TemaLoja } from "@/lib/tema-loja";
 
 const LARGURA = 390;
-const ESCALA = 0.41;
 
 function Miniatura({ modelo, tema, itens, sobre, logo, classesFontes }: { modelo: ModeloLoja; tema: TemaLoja; itens: ItemLoja[]; sobre: DadosSobre; logo: string | null; classesFontes: string }) {
   const cfg = MODELOS_LOJA[modelo];
   const t = restaurarModelo(tema, modelo);
   const visual = montarTema({ principal: cfg.principal, destaque: cfg.destaque, fonte: cfg.fonte });
+  // a miniatura ocupa a largura do cartão: mede e reduz o modelo (390 px) até caber
+  const quadro = useRef<HTMLDivElement>(null);
+  const [largura, setLargura] = useState(150);
+  useEffect(() => {
+    const el = quadro.current;
+    if (!el) return;
+    const medir = () => setLargura(el.clientWidth || 150);
+    medir();
+    const obs = new ResizeObserver(medir);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  const ESCALA = largura / LARGURA;
   return (
-    <div className="relative mx-auto h-60 overflow-hidden rounded-xl border border-petroleo/20 bg-white" style={{ width: LARGURA * ESCALA }} aria-hidden="true">
+    <div ref={quadro} className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-petroleo/20 bg-white" aria-hidden="true">
       <div
         inert
         data-miniatura={modelo}
@@ -43,7 +55,7 @@ export function GaleriaModelos(props: {
 }) {
   const nome = useId();
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {LISTA_MODELOS.map((m) => (
         <label
           key={m}
