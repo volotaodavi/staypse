@@ -6,7 +6,8 @@ import type { EstadoFormulario } from "@/components/formulario";
 import { exigirPapel } from "@/lib/papeis";
 import { ETIQUETA_VITRINES } from "@/lib/publico";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
-import { FONTES_LOJA, LAYOUTS_LOJA } from "@/lib/tema";
+import { FONTES_LOJA } from "@/lib/tema";
+import { layoutLegado, validarTemaLoja } from "@/lib/tema-loja";
 import { problemaNoSlug } from "@/lib/vitrine";
 
 const texto = (f: FormData, c: string) => String(f.get(c) ?? "").trim();
@@ -21,7 +22,7 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
     cor_principal: texto(f, "cor_principal").toLowerCase(),
     cor_destaque: texto(f, "cor_destaque").toLowerCase(),
     fonte: texto(f, "fonte"),
-    layout: texto(f, "layout"),
+    tema: texto(f, "tema"),
   };
   const volta = (erro: string) => ({ erro, valores });
 
@@ -31,7 +32,16 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
   if (valores.loja_descricao.length > 500) return volta("A descrição pode ter até 500 letras.");
   if (![valores.cor_principal, valores.cor_destaque].every((c) => /^#[0-9a-f]{6}$/.test(c))) return volta("Escolha as duas cores.");
   if (!Object.hasOwn(FONTES_LOJA, valores.fonte)) return volta("Escolha uma fonte da lista.");
-  if (!Object.hasOwn(LAYOUTS_LOJA, valores.layout)) return volta("Escolha um layout.");
+  // tema em JSON (modelo, seções, banner, destaques): conferido aqui e de novo no banco
+  let bruto: unknown;
+  try {
+    bruto = JSON.parse(valores.tema);
+  } catch {
+    return volta("Não foi possível ler as escolhas da loja. Recarregue a página e tente de novo.");
+  }
+  const conferido = validarTemaLoja(bruto);
+  if (!conferido.ok) return volta(conferido.erro);
+  const tema = conferido.tema;
 
   const supabase = await criarClienteServidor();
   // a função confere que o cadastro é do usuário e que a foto está na pasta dele
@@ -43,19 +53,25 @@ export async function salvarLoja(_a: EstadoFormulario, f: FormData): Promise<Est
     p_cor_principal: valores.cor_principal,
     p_cor_destaque: valores.cor_destaque,
     p_fonte: valores.fonte,
-    p_layout: valores.layout,
+    p_layout: layoutLegado(tema.modelo), // coluna antiga continua preenchida
+    p_tema: tema,
   });
   if (error) {
     if (error.code === "23505") return volta("Esse endereço já está em uso. Escolha outro.");
+    if (error.message.includes("destaque_de_outra_loja")) return volta("Os produtos em destaque e o do banner precisam ser da sua loja.");
+    if (error.message.includes("banner_fora_da_pasta")) return volta("Envie a imagem do banner de novo.");
     if (error.code === "23514") {
-      return volta(error.message.includes("loja_slug") ? "Esse endereço não é permitido. Escolha outro." : "Confira as cores, a fonte e o layout.");
+      if (error.message.includes("loja_slug")) return volta("Esse endereço não é permitido. Escolha outro.");
+      if (error.message.includes("tema")) return volta("Confira o modelo, as seções, o banner e os destaques.");
+      return volta("Confira as cores e a fonte.");
     }
     if (error.message.includes("cadastro_inexistente")) return volta("Cadastre sua empresa antes de montar a loja.");
     if (error.message.includes("foto_fora_da_pasta")) return volta("Envie a foto de novo.");
     return volta("Não foi possível salvar a loja. Tente novamente.");
   }
   updateTag(ETIQUETA_VITRINES);
-  redirect("/painel/produtor?loja=salva");
+  // fica na própria tela (a pessoa segue ajustando olhando a prévia) e confirma o que aconteceu
+  return { sucesso: "Loja salva. As mudanças já aparecem na sua loja pública.", valores };
 }
 
 // Aprovar/recusar um pedido de afiliação (itens com "aprovo manualmente")

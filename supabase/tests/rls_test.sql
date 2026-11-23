@@ -1572,6 +1572,71 @@ select teste.ok((select nome from public.catalogo_afiliados('vendidos') limit 1)
                 'venda com mais de 7 dias não conta no ranking');
 
 -- =========================================================================
+-- 22. Temas da loja (migração 15): modelo, seções, banner e destaques em JSON
+-- =========================================================================
+reset role;
+select id as item_davi from public.items where nome = 'Produto do Davi' \gset
+select id as item_ana from public.items where nome = 'Aff Auto' \gset
+select id as item_ana2 from public.items where nome = 'Aff Manual' \gset
+select user_id::text as uid_ana from public.producers where user_id = '00000000-0000-0000-0000-00000000000a' \gset
+
+select format('{"modelo":"vitrine","secoes":[{"tipo":"banner","visivel":true},{"tipo":"destaques","visivel":true},{"tipo":"todos_produtos","visivel":true},{"tipo":"sobre","visivel":false}],"destaques":["%s","%s"],"banner":{"imagem":"%s/banner.webp","frase":"Novidades da semana","produto":"%s"}}',
+              :'item_ana', :'item_ana2', :'uid_ana', :'item_ana') as tema_ok \gset
+
+-- formato: o banco recusa qualquer coisa fora do combinado
+select teste.ok(public.tema_loja_valido(:'tema_ok'::jsonb), 'tema bem formado é aceito');
+select teste.ok(public.tema_loja_valido(null), 'loja sem tema continua valendo');
+select teste.ok(not public.tema_loja_valido('{"modelo":"livre","secoes":[{"tipo":"banner","visivel":true}]}'), 'modelo fora dos 4 é recusado');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"html","visivel":true}]}'), 'tipo de seção inválido é recusado');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true},{"tipo":"banner","visivel":false}]}'), 'seção repetida é recusada');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":"sim"}]}'), 'visivel precisa ser verdadeiro ou falso');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[]}'), 'lista de seções vazia é recusada');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"css":"body{}"}'), 'chave extra (CSS livre) é recusada');
+select teste.ok(not public.tema_loja_valido(format('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"destaques":%s}',
+                  (select jsonb_agg(gen_random_uuid()) from generate_series(1, 9)))::jsonb), 'mais de 8 destaques são recusados');
+select teste.ok(not public.tema_loja_valido(format('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banner":{"frase":"%s"}}', repeat('x', 81))::jsonb), 'frase do banner com mais de 80 letras é recusada');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banner":{"imagem":"../x.png"}}'), 'caminho de imagem inseguro é recusado');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"destaques":["nao-e-id"]}'), 'destaque que não é id é recusado');
+
+-- só a dona grava, pela função
+:comoA
+select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null, null, null, null, null, :'tema_ok'::jsonb);
+select teste.ok((select loja_tema ->> 'modelo' from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 'vitrine', 'a dona salva o tema da própria loja');
+select teste.bloqueia($$update public.producers set loja_tema = '{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}]}'$$, 'ninguém grava o tema direto na tabela (só pela função)');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana', '{"modelo":"livre","secoes":[{"tipo":"banner","visivel":true}]}'), 'modelo inválido é recusado pela função');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  format('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"destaques":["%s"]}', :'item_davi')), 'destaque de item de outra loja é recusado');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  format('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banner":{"produto":"%s"}}', :'item_davi')), 'banner que aponta para produto de outra loja é recusado');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  '{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banner":{"imagem":"00000000-0000-0000-0000-00000000000b/x.webp"}}'), 'imagem do banner na pasta de outra pessoa é recusada');
+select teste.ok((select loja_tema ->> 'modelo' from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 'vitrine', 'tema recusado não apaga o tema salvo');
+
+:comoD
+select teste.bloqueia(format('update public.producers set loja_tema = %L::jsonb where user_id = %L', :'tema_ok', '00000000-0000-0000-0000-00000000000a'), 'outra loja não altera o tema da Ana');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'davi-me', 'Davi', :'tema_ok'),
+                      'a Davi não consegue usar destaques e banner da Ana no próprio tema');
+:comoAnon
+select teste.bloqueia($$select public.salvar_minha_loja('x', 'x', null, null, null, null, null, null, null)$$, 'visitante não salva tema');
+
+-- leitura pública: só de loja aprovada
+select teste.ok((select loja_tema ->> 'modelo' from public.loja_publica('ana-cosmeticos')) = 'vitrine', 'o público lê o tema de loja aprovada');
+select teste.ok((select count(*) from public.itens_da_loja('ana-cosmeticos') where id = :'item_ana') = 1, 'itens da loja trazem o id para os destaques');
+reset role;
+update public.producers set loja_slug = 'davi-me', status_verificacao = 'suspenso' where user_id = '00000000-0000-0000-0000-00000000000d';
+:comoAnon
+select teste.ok((select count(*) from public.loja_publica('davi-me')) = 0, 'loja não aprovada não aparece (nem o tema)');
+select teste.ok((select count(*) from information_schema.columns
+                 where table_name = 'itens_da_loja' or (table_schema = 'information_schema' and false)) = 0
+                and (select count(*) from information_schema.parameters p
+                     where p.specific_name like 'itens_da_loja%' and p.parameter_mode = 'OUT'
+                       and p.parameter_name ~ '(qtd|quant|total|venda)') = 0,
+                'a loja pública não devolve número de venda, só a posição');
+:comoServidor
+select teste.ok(public.tema_loja_valido(loja_tema), 'tema salvo continua válido') from public.producers where loja_tema is not null limit 1;
+reset role;
+
+-- =========================================================================
 -- 9. RLS ligado em TODAS as tabelas
 -- =========================================================================
 reset role;

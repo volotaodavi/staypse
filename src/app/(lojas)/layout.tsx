@@ -12,7 +12,8 @@ export default function LayoutLojas({ children }: { children: React.ReactNode })
       <div className="flex flex-1 flex-col bg-white text-neutral-900">{children}</div>
       <footer className="border-t border-neutral-200 bg-white text-neutral-600">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs leading-relaxed">
-          <p className="font-medium text-neutral-800">Pagamento processado via Staypse</p>
+          {/* regra de copy: quem processa o pagamento é a Lytex; a Staypse não recebe o dinheiro */}
+          <p className="font-medium text-neutral-800">Pagamentos processados pela Lytex · loja na Staypse</p>
           <p>
             {EMPRESA.nomeEmpresarial} · CNPJ {EMPRESA.cnpj} · {EMPRESA.endereco} · {EMPRESA.email} · {EMPRESA.whatsapp}
           </p>

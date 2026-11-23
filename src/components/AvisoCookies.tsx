@@ -7,7 +7,9 @@ import { useState, useSyncExternalStore } from "react";
 
 const CHAVE = "staypse_aviso_cookies";
 
-// lê o armazenamento local; no servidor (ou se não houver), finge "já visto"
+// lê o armazenamento local. No servidor o aviso já vem desenhado (quem nunca viu
+// o aviso não leva um "empurrão" no conteúdo quando a página carrega: CLS 0);
+// quem já clicou em "Entendi" tem o aviso removido logo após carregar.
 const lerVisto = () => {
   try {
     return localStorage.getItem(CHAVE);
@@ -21,7 +23,7 @@ const assinar = (avisar: () => void) => {
 };
 
 export function AvisoCookies() {
-  const visto = useSyncExternalStore(assinar, lerVisto, () => "servidor");
+  const visto = useSyncExternalStore(assinar, lerVisto, () => null);
   const [fechado, setFechado] = useState(false);
 
   if (visto || fechado) return null;

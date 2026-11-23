@@ -6,33 +6,53 @@ import { formatarPreco, urlFoto } from "@/lib/produtor";
 import { supabaseUrl } from "@/lib/supabase/env";
 
 // ---------- cabeçalho da loja ----------
+// Logo em qualquer proporção (paisagem, retrato ou quadrada): altura fixa de 40px,
+// largura proporcional (até 160px), sem cortar nada.
 export function CabecalhoLoja({
   href,
   nome,
   logo,
   centralizado = false,
+  previa = false,
 }: {
   href: string;
   nome: string;
   logo: string | null;
   centralizado?: boolean;
+  // na prévia do painel o cabeçalho não leva a lugar nenhum
+  previa?: boolean;
 }) {
+  const conteudo = (
+    <>
+      {logo ? (
+        <Image
+          src={urlFoto(supabaseUrl(), logo)}
+          alt=""
+          width={160}
+          height={40}
+          className="h-10 w-auto max-w-40 shrink-0 object-contain"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--loja-principal)] text-base font-semibold text-[var(--loja-principal-texto)]"
+        >
+          {nome.charAt(0).toUpperCase()}
+        </span>
+      )}
+      <span className="truncate text-base font-semibold">{nome}</span>
+    </>
+  );
   return (
     <header className="border-b border-neutral-200 bg-white">
-      <div className={`mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 ${centralizado ? "justify-center" : ""}`}>
-        <Link href={href} className="flex min-w-0 items-center gap-3">
-          {logo ? (
-            <Image src={urlFoto(supabaseUrl(), logo)} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-md object-cover" />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[var(--loja-principal)] text-base font-semibold text-[var(--loja-principal-texto)]"
-            >
-              {nome.charAt(0).toUpperCase()}
-            </span>
-          )}
-          <span className="truncate text-base font-semibold">{nome}</span>
-        </Link>
+      <div className={`mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 ${centralizado ? "justify-center" : ""}`}>
+        {previa ? (
+          <span className="flex min-w-0 items-center gap-3">{conteudo}</span>
+        ) : (
+          <Link href={href} className="flex min-h-11 min-w-0 items-center gap-3">
+            {conteudo}
+          </Link>
+        )}
       </div>
     </header>
   );

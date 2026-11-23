@@ -73,8 +73,20 @@ export type Loja = {
   cidade: string | null;
   uf: string | null;
   email_contato: string | null;
+  // tema em JSON (modelo, seções, banner, destaques); nulo = usa o "layout" antigo
+  loja_tema: unknown;
 };
-export type ItemLoja = { slug: string; nome: string; fotos: string[]; preco_centavos: number; tipo: string };
+export type ItemLoja = {
+  id: string;
+  slug: string;
+  nome: string;
+  fotos: string[];
+  preco_centavos: number;
+  tipo: string;
+  categoria: string | null;
+  // posição entre os mais vendidos (30 dias); nulo = sem venda. Nunca o número de vendas.
+  ordem_vendidos: number | null;
+};
 
 export async function buscarLoja(slug: string) {
   "use cache";

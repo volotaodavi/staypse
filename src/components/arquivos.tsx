@@ -21,6 +21,7 @@ export function EnviarArquivo({
   caminhoInicial,
   dica,
   tamanhoMaximoMb,
+  aoMudar,
 }: {
   bucket: "arquivos-digitais" | "fotos-itens";
   campo: string; // nome do campo escondido no formulário
@@ -31,6 +32,8 @@ export function EnviarArquivo({
   caminhoInicial?: string | null;
   dica?: string;
   tamanhoMaximoMb: number;
+  // avisa a tela do novo caminho (prévia ao vivo)
+  aoMudar?: (caminho: string) => void;
 }) {
   const [caminho, setCaminho] = useState(caminhoInicial ?? "");
   const [estado, setEstado] = useState<"" | "enviando" | "ok" | "erro">(caminhoInicial ? "ok" : "");
@@ -54,6 +57,7 @@ export function EnviarArquivo({
       return;
     }
     setCaminho(destino);
+    aoMudar?.(destino);
     setEstado("ok");
     setMensagem(arquivo.name);
   }
