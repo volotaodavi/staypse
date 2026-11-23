@@ -5,7 +5,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Cabecalho } from "@/components/Cabecalho";
+import { PagamentoPedido } from "@/components/PagamentoPedido";
 import { CopiarLink } from "@/components/rastreio";
+import type { Meio } from "@/lib/pagamentos/parcelas";
+import type { DadosPagamento } from "@/lib/pagamentos/tipos";
 import {
   ROTULO_ENTREGA,
   STATUS_ENTREGA,
@@ -60,10 +63,14 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
     ...(p.entrega_modo === "digital" ? [] : [{ nome: "Recebido", feito: Boolean(p.entregue_em), quando: p.entregue_em }]),
   ];
   const encerrado = ["cancelado", "em_reembolso", "reembolsado", "chargeback"].includes(p.status);
-  // página de pagamento do provedor (guardada só no servidor; nunca vem do navegador)
+  // dados do pagamento e tema da loja (guardados só no servidor; nunca vêm do navegador)
   const { data: cobranca } =
     p.status === "aguardando_pagamento"
-      ? await admin.from("orders").select("cobranca_url").eq("id", p.id).maybeSingle()
+      ? await admin
+          .from("orders")
+          .select("cobranca_url, cobranca_meio, cobranca_parcelas, cobranca_pagamento, producers(loja_nome, cor_principal, cor_destaque, fonte, layout)")
+          .eq("id", p.id)
+          .maybeSingle()
       : { data: null };
   const campos = (
     <>
@@ -132,31 +139,24 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             </section>
           )}
 
-          {p.status === "aguardando_pagamento" && (
-            <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6">
-              <h2 className="text-xl">Pagamento</h2>
-              <p className="text-petroleo/80">
-                O pagamento (Pix, boleto ou cartão) é feito pela instituição de pagamento parceira, que divide o valor
-                automaticamente entre a loja, quem indicou e a Staypse. Pedidos não pagos em 3 dias são cancelados sozinhos,
-                sem custo.
-              </p>
-              {cobranca?.cobranca_url ? (
-                <a href={cobranca.cobranca_url} className={`${botaoPrincipal} w-fit`} data-pagar>
-                  Pagar agora
-                </a>
-              ) : (
+          {p.status === "aguardando_pagamento" && cobranca && (
+            <PagamentoPedido
+              tema={cobranca.producers ?? { cor_principal: null, cor_destaque: null, fonte: null, layout: null, loja_nome: null }}
+              meio={(cobranca.cobranca_meio as Meio | null) ?? null}
+              parcelas={cobranca.cobranca_parcelas}
+              pagamento={(cobranca.cobranca_pagamento as DadosPagamento | null) ?? null}
+              urlPagamento={cobranca.cobranca_url}
+              totalCentavos={p.total_centavos}
+              simulado={Boolean(cobranca.cobranca_url?.startsWith("/simulador-pagamentos/"))}
+              carregandoPagar={
                 <form action={iniciarPagamento}>
                   {campos}
-                  <button className={botaoPrincipal} data-pagar>
+                  <button className={`${botaoPrincipal} w-full sm:w-fit`} data-pagar>
                     Pagar agora
                   </button>
                 </form>
-              )}
-              <p className="text-xs text-petroleo/75">
-                Você paga na página da instituição de pagamento. A Staypse não recebe nem guarda o seu dinheiro, e dados de
-                cartão nunca passam por aqui. Este pedido muda para &quot;Pago&quot; quando a instituição confirmar.
-              </p>
-            </section>
+              }
+            />
           )}
 
           <section className="flex flex-col gap-4 rounded-2xl bg-branco p-6">

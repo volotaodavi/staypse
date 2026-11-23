@@ -29,6 +29,8 @@ export type DadosCobranca = {
   // quando omitidos, quem paga escolhe o meio (e as parcelas) na página do provedor
   meio?: "pix" | "cartao" | "boleto";
   parcelas?: number;
+  // quem paga (a fatura da Lytex exige o cliente: InvoicesController_createInvoice_v2, campo client)
+  comprador?: { nome: string; documento: string; email?: string };
   split: ParteSplit[];
   descricao: string;
   // para onde a página do provedor devolve o comprador (o link do pedido)

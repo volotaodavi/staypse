@@ -18,6 +18,8 @@ import { hashDoIp } from "@/lib/ip";
 import { registrarAcesso } from "@/lib/acesso";
 import { usuarioAtual } from "@/lib/papeis";
 import { iniciarCobranca } from "@/lib/pagamentos/cobrancas";
+import { meiosAtivos } from "@/lib/pagamentos/meios";
+import { MEIOS, parcelasValidas, type Meio } from "@/lib/pagamentos/parcelas";
 import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/supabase/env";
@@ -39,12 +41,12 @@ export type Resumo = {
 };
 
 export type EstadoCompra =
-  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; indicadoPorCodigo?: boolean; valores: Record<string, string> }
+  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; indicadoPorCodigo?: boolean; meios?: Meio[]; valores: Record<string, string> }
   | undefined;
 
 const CAMPOS = [
   "item", "loja", "produto", "quantidade", "entrega", "nome", "email", "cpf", "telefone",
-  "cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf", "codigo",
+  "cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf", "codigo", "meio", "parcelas",
 ] as const;
 
 const texto = (f: FormData, nome: string) => String(f.get(nome) ?? "").trim();
@@ -107,9 +109,24 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     if (!conferido?.valido) return dados(mensagemDeErro({ message: "codigo_indicacao_invalido" }, "Este código não vale para este produto."));
     indicadoPor = conferido.vitrine_slug;
   }
-  const resumo = (erro?: string) => ({ etapa: "resumo" as const, resumo: cotacao, indicadoPor, indicadoPorCodigo: Boolean(valores.codigo), valores, erro });
+  const meiosLigados = await meiosAtivos();
+  const resumo = (erro?: string) => ({
+    etapa: "resumo" as const,
+    resumo: cotacao,
+    indicadoPor,
+    indicadoPorCodigo: Boolean(valores.codigo),
+    valores,
+    meios: MEIOS.filter((m) => meiosLigados[m]),
+    erro,
+  });
 
   if (intencao !== "confirmar") return resumo();
+
+  // meio e parcelas: escolhidos ANTES de criar a cobrança (a taxa da loja depende da modalidade)
+  const meio = valores.meio as Meio;
+  if (!MEIOS.includes(meio) || !meiosLigados[meio]) return resumo("Escolha como você quer pagar.");
+  const parcelas = meio === "cartao" ? Number(valores.parcelas || 1) : 1;
+  if (!parcelasValidas(cotacao.total_centavos, parcelas)) return resumo("Escolha um número de parcelas válido para este valor.");
 
   // REGRA 4: só cria o pedido com o resumo aceito
   if (f.get("aceite") !== "sim") return resumo("Marque que leu o resumo do pedido.");
@@ -151,8 +168,10 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   const caminho = `/pedido/${pedido.codigo}?t=${pedido.token}&novo=1`;
   let destino = caminho;
   try {
-    const { url } = await iniciarCobranca(pedido.id, `${urlDoSite()}${caminho}`);
-    if (url) destino = url;
+    const { url } = await iniciarCobranca(pedido.id, `${urlDoSite()}${caminho}`, { meio, parcelas });
+    // cartão: a pessoa digita o cartão na página da Lytex (linkCheckout). Pix e boleto: o código aparece
+    // na página do pedido, com o visual da loja.
+    if (url && meio === "cartao") destino = url;
   } catch (e) {
     console.error("iniciarCobranca:", e instanceof Error ? e.message : e);
     destino = `${caminho}&${new URLSearchParams({ erro: mensagemDePagamento(e) }).toString()}`;
