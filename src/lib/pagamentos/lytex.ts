@@ -1,33 +1,374 @@
-// Provedor Lytex. PROPOSITALMENTE vazio: só será implementado com a documentação
-// oficial em docs/lytex/ (perguntas abertas em docs/lytex/PERGUNTAS.md).
-// Regra do projeto: nunca inventar endpoint, campo ou formato. Sempre sandbox
-// até autorização expressa para produção.
-import "server-only";
-import { IntegracaoPendente, type PaymentProvider } from "./tipos";
+// Provedor Lytex, escrito SÓ com o que existe no OpenAPI oficial
+// docs/lytex/openapi-v2-sandbox.json (baixado de .../v2/open-api-v3-spec.json).
+// REGRA DO DONO: proibido inventar endpoint, campo ou formato; sempre sandbox até autorização.
+// Cada chamada cita o operationId/path do spec. O que o spec não responde vira
+// TODO + pergunta em docs/lytex/PERGUNTAS.md (seção "Respostas do spec").
+//
+// Sem `import "server-only"` de propósito: o arquivo precisa rodar nos testes unitários (tsx).
+// Ele só é importado por ./index.ts, que é server-only, então não vai para o navegador.
+import { IntegracaoPendente } from "./tipos";
+import type {
+  Cobranca,
+  DadosCobranca,
+  DadosRecebedor,
+  EventoPagamento,
+  PaymentProvider,
+  RecebedorNoProvedor,
+  StatusCobranca,
+  StatusRecebedor,
+} from "./tipos";
 
-export const lytex: PaymentProvider = {
-  nome: "lytex",
-  // TODO(lytex): criar recebedor/subconta e devolver o link de onboarding (docs/lytex)
-  async criarRecebedor() {
-    throw new IntegracaoPendente("criarRecebedor");
-  },
-  // TODO(lytex): consultar status, motivo e documento do recebedor
-  async consultarRecebedor() {
-    throw new IntegracaoPendente("consultarRecebedor");
-  },
-  // TODO(lytex): cobrança com split (checkout hospedado ou tokenização — sem cartão no nosso servidor)
-  async criarCobranca() {
-    throw new IntegracaoPendente("criarCobranca");
-  },
-  async consultarCobranca() {
-    throw new IntegracaoPendente("consultarCobranca");
-  },
-  // TODO(lytex): estorno total/parcial com desfazimento proporcional do split
-  async estornar() {
-    throw new IntegracaoPendente("estornar");
-  },
-  // TODO(lytex): validar assinatura do webhook (algoritmo/cabeçalho conforme a documentação)
-  async validarWebhook() {
-    throw new IntegracaoPendente("validarWebhook");
-  },
+// Sandbox por padrão; produção só se o dono configurar LYTEX_API_URL (servers[] do spec).
+export const URL_SANDBOX = "https://sandbox-api-pay.lytex.com.br";
+
+// A interface PaymentProvider (tipos.ts) ainda não carrega estes dados, mas a Lytex EXIGE:
+//  * subconta: celular e endereço (POST /v2/sub-accounts → required: type,name,cellphone,email,address)
+//  * fatura: cliente com type, name e cpfCnpj (POST /v2/invoices → required: _clientId OU client)
+// Quem chama deve preenchê-los; sem eles o provedor recusa em vez de inventar valores.
+export type EnderecoLytex = { rua: string; bairro: string; cidade: string; uf: string; cep: string; numero?: string; complemento?: string };
+export type DadosRecebedorLytex = DadosRecebedor & {
+  celular?: string; // 10 ou 11 dígitos
+  endereco?: EnderecoLytex;
+  nomeFantasia?: string; // exigido para pj (fantasyName)
+  tipoEmpresa?: "mei" | "others" | "ei" | "eireli" | "slu" | "ltda" | "ss" | "sa"; // companyType, exigido para pj
 };
+export type CompradorLytex = { nome: string; documento: string; email?: string };
+export type DadosCobrancaLytex = DadosCobranca & { comprador?: CompradorLytex };
+
+// Vencimento da fatura (dueDate é obrigatório). TODO(lytex): confirmar prazo ideal de Pix/boleto (PERGUNTAS 34).
+export const DIAS_VENCIMENTO = 3;
+
+type Opcoes = {
+  fetch?: typeof fetch;
+  env?: Record<string, string | undefined>;
+  agora?: () => number; // ms; injetável nos testes
+};
+
+type Token = { accessToken: string; refreshToken: string; expiraEm: number; refreshExpiraEm: number };
+
+// ---------------------------------------------------------------------------------------------
+// Mapas de status (só valores que o spec define)
+// ---------------------------------------------------------------------------------------------
+
+// Subconta. Campos do spec: GET /v2/sub-accounts/{id} e GET /v2/sub-accounts →
+//  status (conta): active | blocked | disabled | pending_exclusion
+//  documentStatus: pending | waiting_approval | approved | rejected | approved_system | processing |
+//                  waiting_approve_qsa | full_rejected | resend
+//  walletAccountStatus: waiting_approval | approved | rejected
+// O spec NÃO descreve o significado de cada valor (PERGUNTAS 41); o mapa abaixo é a leitura literal dos nomes:
+//  conta blocked/disabled/pending_exclusion             → suspenso
+//  documentStatus rejected/full_rejected OU wallet rejected → recusado
+//  documentStatus approved/approved_system (wallet ≠ waiting_approval) → aprovado
+//  documentStatus waiting_approval/processing/waiting_approve_qsa (ou wallet waiting_approval) → em_analise
+//  documentStatus pending/resend/ausente                → nao_iniciado (pessoa precisa enviar/reenviar documentos)
+//  valor desconhecido → em_analise (nunca aprova por engano)
+export function mapearStatusRecebedor(s: { status?: string; documentStatus?: string; walletAccountStatus?: string }): {
+  status: StatusRecebedor;
+  motivo: string | null;
+} {
+  if (s.status === "blocked" || s.status === "disabled" || s.status === "pending_exclusion") return { status: "suspenso", motivo: `conta_${s.status}` };
+  if (s.documentStatus === "rejected" || s.documentStatus === "full_rejected") return { status: "recusado", motivo: `documentos_${s.documentStatus}` };
+  if (s.walletAccountStatus === "rejected") return { status: "recusado", motivo: "carteira_rejected" };
+  switch (s.documentStatus) {
+    case "approved":
+    case "approved_system":
+      return s.walletAccountStatus === "waiting_approval" ? { status: "em_analise", motivo: null } : { status: "aprovado", motivo: null };
+    case "waiting_approval":
+    case "processing":
+    case "waiting_approve_qsa":
+      return { status: "em_analise", motivo: null };
+    case "pending":
+    case undefined:
+      return { status: "nao_iniciado", motivo: null };
+    case "resend":
+      return { status: "nao_iniciado", motivo: "reenviar_documentos" };
+    default:
+      return { status: "em_analise", motivo: null };
+  }
+}
+
+// Fatura. O spec só enumera o status da TRANSAÇÃO (GET /v2/invoices/{id} → transactions[].status,
+// GET /v2/transactions): paid | recused | refund | canceled | chargeback | processing | waitingPayment | overdue | error.
+// O campo `status` da própria fatura é "string" sem enum; assumimos o mesmo vocabulário (PERGUNTAS 42) e
+// quando ele vier fora do conjunto usamos a transação mais recente.
+//  paid → paga · refund → estornada · chargeback → chargeback · recused/error → recusada · canceled → expirada
+//  waitingPayment/processing/overdue → pendente (a fatura segue pagável até cancelOverdueDays; enviamos 1)
+const STATUS_FATURA: Record<string, StatusCobranca> = {
+  paid: "paga",
+  refund: "estornada",
+  chargeback: "chargeback",
+  recused: "recusada",
+  error: "recusada",
+  canceled: "expirada",
+  waitingPayment: "pendente",
+  processing: "pendente",
+  overdue: "pendente",
+};
+
+type Solicitacao = { acceptedAt?: unknown; refusedAt?: unknown; canceledAt?: unknown };
+type FaturaLytex = {
+  _id?: string;
+  status?: string;
+  linkCheckout?: string;
+  transactions?: { status?: string }[];
+  refundSolicitations?: Solicitacao[];
+};
+
+export function mapearStatusFatura(f: FaturaLytex): StatusCobranca {
+  let status = f.status ? STATUS_FATURA[f.status] : undefined;
+  if (!status && f.transactions?.length) {
+    const ultima = f.transactions[f.transactions.length - 1]?.status;
+    status = ultima ? STATUS_FATURA[ultima] : undefined;
+  }
+  status ??= "pendente";
+  // paga + solicitação de estorno ainda sem aceite/recusa/cancelamento (campos de RefundSolicitation) → estorno_pendente
+  if (status === "paga" && f.refundSolicitations?.some((r) => !r.acceptedAt && !r.refusedAt && !r.canceledAt)) return "estorno_pendente";
+  return status;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Cliente HTTP
+// ---------------------------------------------------------------------------------------------
+
+// mesmo contrato do PaymentProvider, aceitando também os dados extras que a Lytex exige
+export type ProvedorLytex = Omit<PaymentProvider, "criarRecebedor" | "criarCobranca"> & {
+  criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor>;
+  criarCobranca(dados: DadosCobrancaLytex): Promise<Cobranca>;
+};
+
+export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
+  const env = () => opcoes.env ?? process.env;
+  const doFetch: typeof fetch = (...a) => (opcoes.fetch ?? globalThis.fetch)(...a);
+  const agora = () => (opcoes.agora ?? Date.now)();
+  const base = () => (env().LYTEX_API_URL?.trim() || URL_SANDBOX).replace(/\/+$/, "");
+
+  let token: Token | null = null;
+  let emVoo: Promise<Token> | null = null;
+
+  async function chamar(metodo: string, caminho: string, corpo?: unknown, bearer?: string): Promise<unknown> {
+    const res = await doFetch(`${base()}${caminho}`, {
+      method: metodo,
+      headers: { "content-type": "application/json", ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) },
+      body: corpo === undefined ? undefined : JSON.stringify(corpo),
+      signal: AbortSignal.timeout(20_000),
+      cache: "no-store",
+    });
+    const texto = await res.text();
+    let json: unknown = null;
+    try {
+      json = texto ? JSON.parse(texto) : null;
+    } catch {
+      json = null;
+    }
+    if (!res.ok) {
+      // mensagem do spec (message) sem nunca ecoar o corpo enviado (pode ter segredos/dados pessoais)
+      const j = json as { message?: unknown } | null;
+      const msg = typeof j?.message === "string" ? j.message : res.statusText;
+      const e = new Error(`lytex_http_${res.status}: ${msg}`.slice(0, 300)) as Error & { status?: number };
+      e.status = res.status;
+      throw e;
+    }
+    return json;
+  }
+
+  const paraToken = (j: unknown): Token => {
+    const t = j as { accessToken?: string; refreshToken?: string; expireAt?: string; refreshExpireAt?: string };
+    if (!t?.accessToken) throw new Error("lytex_token_invalido");
+    return {
+      accessToken: t.accessToken,
+      refreshToken: t.refreshToken ?? "",
+      expiraEm: t.expireAt ? Date.parse(t.expireAt) : agora() + 5 * 60_000,
+      refreshExpiraEm: t.refreshExpireAt ? Date.parse(t.refreshExpireAt) : 0,
+    };
+  };
+
+  // oauth2 clientCredentials (securitySchemes.lytexAuth): POST /v2/auth/obtain_token
+  // (AuthV2Controller_obtainToken_v2) e POST /v2/auth/refresh_token (AuthV2Controller_refreshToken_v2)
+  async function renovar(): Promise<Token> {
+    const e = env();
+    if (token && token.refreshToken && token.refreshExpiraEm > agora() + 30_000) {
+      try {
+        return paraToken(await chamar("POST", "/v2/auth/refresh_token", { accessToken: token.accessToken, refreshToken: token.refreshToken }));
+      } catch {
+        // refresh falhou (usado/expirado, 410): cai para um token novo
+      }
+    }
+    const clientId = e.LYTEX_CLIENT_ID?.trim();
+    const clientSecret = e.LYTEX_CLIENT_SECRET?.trim();
+    if (!clientId || !clientSecret) throw new Error("LYTEX_CLIENT_ID/LYTEX_CLIENT_SECRET não configurados (ver .env.example).");
+    return paraToken(await chamar("POST", "/v2/auth/obtain_token", { clientId, clientSecret }));
+  }
+
+  async function accessToken(forcar = false): Promise<string> {
+    if (!forcar && token && token.expiraEm - 60_000 > agora()) return token.accessToken;
+    emVoo ??= renovar()
+      .then((t) => (token = t))
+      .finally(() => {
+        emVoo = null;
+      });
+    return (await emVoo).accessToken;
+  }
+
+  // chamada autenticada; um 401 (token revogado/expirado) renova uma vez e repete
+  async function api(metodo: string, caminho: string, corpo?: unknown): Promise<unknown> {
+    try {
+      return await chamar(metodo, caminho, corpo, await accessToken());
+    } catch (e) {
+      if ((e as { status?: number }).status !== 401 && (e as { status?: number }).status !== 410) throw e;
+      return chamar(metodo, caminho, corpo, await accessToken(true));
+    }
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // Recebedores = Subcontas
+  // -------------------------------------------------------------------------------------------
+
+  type Subconta = { _id?: string; cpfCnpj?: string; status?: string; documentStatus?: string; walletAccountStatus?: string; onboardingUrl?: string };
+
+  const paraRecebedor = (s: Subconta, provedorId: string): RecebedorNoProvedor => {
+    const { status, motivo } = mapearStatusRecebedor(s);
+    return { provedorId, status, motivo, documento: s.cpfCnpj ?? null, urlOnboarding: s.onboardingUrl ?? null };
+  };
+
+  const consultarRecebedor = async (provedorId: string): Promise<RecebedorNoProvedor> => {
+    // SubAccountsController_get_v2: GET /v2/sub-accounts/{id}
+    const s = (await api("GET", `/v2/sub-accounts/${encodeURIComponent(provedorId)}`)) as Subconta;
+    return paraRecebedor(s, provedorId);
+  };
+
+  return {
+    nome: "lytex",
+    consultarRecebedor,
+
+    // SubAccountsController_create_v2: POST /v2/sub-accounts
+    async criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor> {
+      const doc = dados.documento.replace(/\D/g, "");
+      const tipo = doc.length > 11 ? "pj" : "pf";
+      const faltando = [
+        !dados.celular && "celular",
+        !dados.endereco && "endereco",
+        tipo === "pj" && !dados.tipoEmpresa && "tipoEmpresa",
+      ].filter(Boolean);
+      if (faltando.length) throw new Error(`lytex_dados_recebedor_incompletos: ${faltando.join(",")}`);
+      const end = dados.endereco!;
+      const corpo = {
+        type: tipo,
+        cpfCnpj: doc,
+        name: dados.nome,
+        email: dados.email,
+        cellphone: dados.celular!.replace(/\D/g, ""),
+        ...(tipo === "pj" ? { fantasyName: dados.nomeFantasia ?? dados.nome, companyType: dados.tipoEmpresa } : {}),
+        address: {
+          street: end.rua,
+          zone: end.bairro,
+          city: end.cidade,
+          state: end.uf,
+          zip: end.cep.replace(/\D/g, ""),
+          ...(end.numero ? { number: end.numero } : {}),
+          ...(end.complemento ? { complement: end.complemento } : {}),
+        },
+      };
+      const criada = (await api("POST", "/v2/sub-accounts", corpo)) as Subconta;
+      if (!criada._id) throw new Error("lytex_subconta_sem_id");
+      const r = await consultarRecebedor(criada._id);
+      if (r.urlOnboarding) return r;
+      // O spec diz que a criação devolve um link de envio de documentos, mas só a LISTAGEM define o
+      // campo `onboardingUrl` (PERGUNTAS 47). Tenta achá-lo ali; falha aqui não impede o cadastro.
+      try {
+        const lista = (await api("GET", `/v2/sub-accounts?search=${encodeURIComponent(doc)}`)) as { results?: Subconta[] };
+        const achada = lista.results?.find((x) => x._id === criada._id);
+        return { ...r, urlOnboarding: achada?.onboardingUrl ?? criada.onboardingUrl ?? null };
+      } catch {
+        return { ...r, urlOnboarding: criada.onboardingUrl ?? null };
+      }
+    },
+
+    // -----------------------------------------------------------------------------------------
+    // Cobrança = Fatura com split
+    // -----------------------------------------------------------------------------------------
+
+    // InvoicesController_createInvoice_v2: POST /v2/invoices
+    async criarCobranca(dados: DadosCobrancaLytex): Promise<Cobranca> {
+      // split.recipients: minItems 2, maxItems 10 (schema de split da fatura)
+      if (dados.split.length < 2 || dados.split.length > 10) throw new Error("lytex_split_precisa_de_2_a_10_recebedores");
+      const soma = dados.split.reduce((s, p) => s + p.valorCentavos, 0);
+      if (soma > dados.totalCentavos) throw new Error("split_maior_que_o_total");
+      if (!dados.comprador) throw new Error("lytex_comprador_obrigatorio"); // client é obrigatório na fatura
+      const docComprador = dados.comprador.documento.replace(/\D/g, "");
+
+      const vence = new Date(agora() + DIAS_VENCIMENTO * 86_400_000).toISOString().slice(0, 10); // dueDate: só data (spec)
+      const cartao = !dados.meio || dados.meio === "cartao";
+      const corpo = {
+        client: {
+          type: docComprador.length > 11 ? "pj" : "pf",
+          name: dados.comprador.nome,
+          cpfCnpj: docComprador,
+          ...(dados.comprador.email ? { email: dados.comprador.email } : {}),
+        },
+        items: [{ name: dados.descricao.slice(0, 255), quantity: 1, value: dados.totalCentavos }],
+        description: dados.descricao.slice(0, 255),
+        dueDate: vence,
+        cancelOverdueDays: 1, // "para não aceitar pagamento após o vencimento, informe 1"
+        paymentMethods: {
+          pix: { enable: !dados.meio || dados.meio === "pix" },
+          boleto: { enable: !dados.meio || dados.meio === "boleto" },
+          creditCard: { enable: cartao, ...(cartao && dados.parcelas ? { maxParcels: dados.parcelas } : {}) },
+        },
+        // type fixedValue = valor em centavos; recebedores são ids de subconta (_recipientId)
+        split: { type: "fixedValue", recipients: dados.split.map((p) => ({ _recipientId: p.recebedorProvedorId, value: p.valorCentavos })) },
+        // referenceId volta em buscas e webhooks; referenceIdUniqueExt dá unicidade por emissor (idempotência)
+        referenceId: dados.pedidoId,
+        referenceIdUniqueExt: dados.pedidoId,
+        redirect: { urlRedirect: dados.urlRetorno, autoRedirect: true },
+        async: true, // "somente true se usar o checkout da LyTex" (usamos linkCheckout)
+      };
+      let fatura: FaturaLytex;
+      try {
+        fatura = (await api("POST", "/v2/invoices", corpo)) as FaturaLytex;
+      } catch (e) {
+        // idempotência: se o pedido já gerou fatura, devolve a existente
+        // (InvoicesController_getInvoiceByReferenceIdUniqueExt_v2: GET /v2/invoices/referenceIdUniqueExt/{ref})
+        const st = (e as { status?: number }).status;
+        if (!st || st < 400 || st >= 500) throw e;
+        const existente = (await api("GET", `/v2/invoices/referenceIdUniqueExt/${encodeURIComponent(dados.pedidoId)}`).catch(() => null)) as FaturaLytex | null;
+        if (!existente?._id) throw e;
+        fatura = existente;
+      }
+      if (!fatura._id) throw new Error("lytex_fatura_sem_id");
+      return { provedorId: fatura._id, status: mapearStatusFatura(fatura), urlPagamento: fatura.linkCheckout ?? null };
+    },
+
+    // InvoicesController_getInvoice_v2: GET /v2/invoices/{id}
+    async consultarCobranca(provedorId): Promise<Cobranca> {
+      const f = (await api("GET", `/v2/invoices/${encodeURIComponent(provedorId)}`)) as FaturaLytex;
+      return { provedorId, status: mapearStatusFatura(f), urlPagamento: f.linkCheckout ?? null };
+    },
+
+    // RefundSolicitationController_create_v2: POST /v2/refund-solicitation {_invoiceId, refundValue} (ambos obrigatórios).
+    // Sem valor = total: usa RefundSolicitationController_getMaxValueToRefund_v2 (GET /v2/refund-solicitation/{_invoiceId}/max-value).
+    // /v2/splits/{id}/refund (SplitController_refundSplit_v2) só aceita type "total" por split; não é usado.
+    // TODO(lytex): unidade de refundValue/maxRefundValue não está dita (assumido centavos como nas faturas) — PERGUNTAS 43.
+    async estornar(provedorId, valorCentavos): Promise<Cobranca> {
+      let valor = valorCentavos;
+      if (valor === undefined) {
+        const m = (await api("GET", `/v2/refund-solicitation/${encodeURIComponent(provedorId)}/max-value`)) as { maxRefundValue?: number };
+        valor = m.maxRefundValue;
+      }
+      if (!valor || valor < 1) throw new Error("lytex_estorno_sem_valor");
+      await api("POST", "/v2/refund-solicitation", { _invoiceId: provedorId, refundValue: valor });
+      // a solicitação nasce pendente; a confirmação (status refund) chega por consulta/conciliação
+      return { provedorId, status: "estorno_pendente" };
+    },
+
+    // O spec NÃO documenta webhooks além de: "informe a URL em Configurações > Integrações > API e responda
+    // HTTP 200". Não há lista de eventos, corpo, id de evento nem assinatura/cabeçalho para usar o
+    // LYTEX_CALLBACK_SECRET (só aparecem `callbackSecret`/`callbackUrl` em GET /v2/sub-accounts, sem algoritmo).
+    // Sem mecanismo documentado de autenticação NÃO se aceita nada (PERGUNTAS 44-46). A conciliação
+    // (consultarCobranca) continua funcionando sem webhook.
+    async validarWebhook(): Promise<EventoPagamento> {
+      throw new IntegracaoPendente("validarWebhook");
+    },
+  };
+}
+
+export const lytex: PaymentProvider = criarLytex();
