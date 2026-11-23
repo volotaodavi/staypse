@@ -26,8 +26,11 @@ export async function cadastrar(
       (PAPEIS_PERMITIDOS as readonly string[]).includes(p),
     );
   const aceitou = formData.get("aceite") === "sim";
+  // declaração de idade (sem data de nascimento): maior de 18/emancipado, ou 16–17 com autorização
+  const idadeBruta = String(formData.get("idade") ?? "");
+  const idade = idadeBruta === "maior" || idadeBruta === "16_17" ? idadeBruta : "";
   // devolvido em caso de erro para não apagar o que foi digitado (nunca a senha)
-  const valores = { nome, email, papeis: papeis.join(",") };
+  const valores = { nome, email, papeis: papeis.join(","), idade };
 
   // Validações (o banco valida de novo — nunca confiamos só no navegador)
   if (nome.length < 2) return { valores, erro: "Informe seu nome." };
@@ -39,14 +42,19 @@ export async function cadastrar(
   // convite de afiliação por produto: a conta nasce como revendedor (afiliado)
   if (proximo.startsWith("/afiliar/") && !papeis.includes("revendedor")) papeis.push("revendedor");
   if (papeis.length === 0 && !convite) return { valores, erro: "Escolha se quer ser produtor, revendedor ou os dois." };
-  if (!aceitou) return { valores, erro: "Para criar a conta é preciso ter 18 anos ou mais e aceitar os Termos e a Política de Privacidade." };
+  if (!idade) return { valores, erro: "Informe sua idade: 18 anos ou mais, ou 16 a 17 anos com autorização dos responsáveis." };
+  // responsável de loja (CNPJ) representa pessoa jurídica: 18 anos ou emancipado
+  if (papeis.includes("produtor") && idade !== "maior") {
+    return { valores, erro: "Para cadastrar uma loja é preciso ter 18 anos ou mais (ou ser emancipado). Menores de 18 podem criar conta só como revendedor." };
+  }
+  if (!aceitou) return { valores, erro: "Para criar a conta é preciso aceitar os Termos e a Política de Privacidade." };
 
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase.auth.signUp({
     email,
     password: senha,
     options: {
-      data: { nome, papeis, termos_versao: TERMOS_VERSAO },
+      data: { nome, papeis, termos_versao: TERMOS_VERSAO, declaracao_idade: idade },
       emailRedirectTo: `${urlDoSite()}/auth/confirmar?proximo=${encodeURIComponent(proximo)}`,
     },
   });

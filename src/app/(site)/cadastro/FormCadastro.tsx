@@ -88,16 +88,36 @@ export function FormCadastro({ proximo }: { proximo?: string }) {
         <span className="text-xs text-petroleo/70">Pode marcar os dois.</span>
       </fieldset>
 
+      {/* Idade: só uma declaração (sem pedir data de nascimento). Afiliado e vendedor: 16+ (16 e 17 com
+          autorização dos responsáveis, Código Civil art. 4º, I); o responsável de uma loja (CNPJ) precisa
+          ser maior de 18 anos ou emancipado. O servidor confere de novo. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">Sua idade</legend>
+        <label className="flex gap-3 text-sm">
+          <input type="radio" name="idade" value="maior" required defaultChecked={v.idade === "maior"} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
+          <span>Tenho 18 anos ou mais (ou sou emancipado).</span>
+        </label>
+        <label className="flex gap-3 text-sm">
+          <input type="radio" name="idade" value="16_17" required defaultChecked={v.idade === "16_17"} className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
+          <span>
+            Tenho 16 ou 17 anos e tenho autorização dos meus pais ou responsáveis. (Não vale para quem vai cadastrar uma loja.)
+          </span>
+        </label>
+        <span className="text-xs text-petroleo/70">
+          Menores de 16 anos não podem criar conta. Receber comissão depende da aprovação do cadastro de recebimento pela instituição de pagamento.
+        </span>
+      </fieldset>
+
       {/* Regra 7: aceite registrado com data e versão */}
       <label className="flex gap-3 text-sm">
         <input type="checkbox" name="aceite" value="sim" required className="mt-0.5 h-5 w-5 shrink-0 accent-petroleo" />
         <span>
-          Tenho 18 anos ou mais e li e aceito os{" "}
+          Li e aceito os{" "}
           <Link href="/termos" target="_blank" className="font-medium underline">
             Termos de Uso
             <span className="sr-only"> (abre em nova aba)</span>
           </Link>
-          e a{" "}
+          {" "}e a{" "}
           <Link href="/privacidade" target="_blank" className="font-medium underline">
             Política de Privacidade
             <span className="sr-only"> (abre em nova aba)</span>
