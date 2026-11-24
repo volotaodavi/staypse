@@ -2841,7 +2841,6 @@ select teste.ok((select entregador_nome = 'João Motoboy' and status = 'preparan
 select teste.bloqueia(format('select public.atualizar_entrega_propria(%L, %L)', :'pedp_id', 'entregue'), 'entrega: não pula de preparando para entregue');
 select public.atualizar_entrega_propria(:'pedp_id', 'saiu');
 select teste.ok((select status = 'saiu' and saiu_em is not null from public.entregas_proprias), 'entrega: saiu para entrega registra a hora');
-select teste.ok((select count(*) = 0 from public.entrega_zonas where false), 'entrega: consulta de controle');
 
 -- comprador: nome e horário sempre; telefone só se a loja marcar
 :comoServidor

@@ -98,6 +98,7 @@ export async function salvarZona(_a: EstadoFormulario, f: FormData): Promise<Est
   const { error } = zonaId
     ? await supabase.from("entrega_zonas").update(linha).eq("id", zonaId)
     : await supabase.from("entrega_zonas").insert(linha);
+  if (error) console.error("salvarZona:", error.message);
   if (error) return volta(error.message.includes("limite_zonas") ? "Limite de 100 zonas por loja." : "Não foi possível salvar a zona. Confira os campos.");
   atualizou();
   return { sucesso: `Zona "${v.nome}" salva.` };
