@@ -61,3 +61,13 @@ Lean: cerca de -480 linhas possíveis (página antiga do revendedor + `MinhasVen
 - Não li em detalhe: as telas de administração, o formulário e as ações de cadastro de loja e de produto (`produtor/itens`, `produtor/loja`), a lista de espera, as vitrines e a página pública da loja, o envio de e-mail, a política de RLS (segurança por linha) fora das tabelas de pedido e os arquivos de `docs/`.
 - Não verifiquei o banco real (o que foi aplicado em produção). O documento `docs/conformidade-juridica.md` diz que a migração `20261203000001` ainda não foi aplicada; se for verdade, `expirar_pedidos` não roda sozinho em produção.
 - Itens que dependem da documentação da Lytex e não podem ser julgados agora: a idempotência da criação de cobrança, se "recusada" é final, quem paga a taxa do meio e como o estorno desfaz o split.
+
+## Correções aplicadas
+
+- **#1** Reserva de estoque no banco (gatilho em `order_items`; liberada ao cancelar ou expirar).
+- **#8** Índices: `clicks(item_id, criado_em)`, `order_items(item_id)`, `orders(vendedor_id)`, `orders(producer_id, status, pago_em)`.
+- **#9** Pedidos da loja: leitura em blocos de 500 (teto de 10 mil), filtro de situação sobre todos, tela paginada (20 por página) e CSV completo.
+- **#13** `/painel/revendedor/page.tsx` e `MinhasVendas` apagados; links e redirect agora vão para `/painel/afiliado`. A função SQL `minhas_vendas` continua (testes de banco a usam).
+- **#15 (a)** `CartaoItem` e `CartaoLink` apagados. Os itens (b) e (c) estão em `src/lib/pagamentos` (outro agente); `legado/` fica, o README o descreve como consulta.
+- Também: E-mail do novo link do pedido (`emailDoLinkDoPedido`).
+- **Não feitos:** #2 a #7, #10 a #12 (pagamentos), #14 (esforço médio), #16 (as duas rotas CSV diferem de propósito: LGPD e colunas), #17 a #19.

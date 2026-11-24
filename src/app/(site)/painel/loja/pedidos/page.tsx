@@ -10,6 +10,7 @@ import { ASSUNTOS_ATENDIMENTO, data, dataHora } from "@/lib/pedidos";
 import { parametrosPeriodo } from "@/lib/periodo";
 import { formatarPreco } from "@/lib/produtor";
 import { STATUS_EXIBICAO, minhaLoja, statusExibicao } from "../dados";
+import { Paginacao, POR_PAGINA, lerPagina } from "../../../admin/paginacao";
 import { responderAtendimento } from "./acoes";
 import { lerPedidosDaLoja, origemDaVenda } from "./consulta";
 
@@ -33,6 +34,8 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
     .order("prazo_ate");
   const atendimentos = atendimentosBrutos ?? [];
   const extras: Record<string, string> = filtro ? { status: filtro } : {};
+  const pagina = lerPagina(sp.pagina);
+  const visiveis = pedidos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   return (
     <div className="flex flex-col gap-5">
@@ -87,7 +90,7 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
           { titulo: "Taxa da plataforma", numero: true },
           { titulo: "Você recebe", numero: true },
         ]}
-        linhas={pedidos.map((p) => {
+        linhas={visiveis.map((p) => {
           const st = statusExibicao(p.status, p.order_items);
           const semNota = p.status === "pago" && p.order_items.some((i) => !i.nota_fiscal_numero);
           return {
@@ -114,6 +117,9 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
           acao: { href: "/painel/loja/produtos", rotulo: "Ver meus produtos" },
         }}
       />
+      {pedidos.length > POR_PAGINA && (
+        <Paginacao caminho="/painel/loja/pedidos" pagina={pagina} total={pedidos.length} filtros={{ ...extras, ...parametrosPeriodo(periodo) }} />
+      )}
       <NotaPagamentos />
       <p className="max-w-prose text-sm text-petroleo/75">
         A taxa da plataforma é descontada do seu repasse.{" "}

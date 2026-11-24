@@ -1054,7 +1054,7 @@ select codigo as ped1, token as tok1 from public.criar_pedido(:'kit', 2, 'envio'
   'Caio Comprador', 'Caio@Teste.com', '529.982.247-25', '(21) 99999-0000',
   '{"cep":"24900000","logradouro":"Rua A","numero":"1","bairro":"Centro","cidade":"Maricá","uf":"RJ","extra":"x"}', '2026-11-18') \gset
 select codigo as ped2, token as tok2 from public.criar_pedido(:'curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b', null,
-  'Duda', 'duda@teste.com', '52998224725', null, null, '2026-11-18') \gset
+  'Duda', 'duda@teste.com', '11144477735', null, null, '2026-11-18') \gset
 reset role;
 select teste.ok((select revendedor_id is null and total_centavos = 11500 and not (endereco_entrega ? 'extra') and comprador_email = 'caio@teste.com'
                  from public.orders where codigo = :'ped1'),
@@ -1322,7 +1322,7 @@ select public.aplicar_status_recebedor('mock', 'rec_a', 'aprovado', null, '11222
 -- vendedor split_direto suspenso: a venda acontece, mas sem comissão para ele
 select public.aplicar_status_recebedor('mock', 'rec_b_vend', 'suspenso', 'Conta em revisão.', null);
 select codigo as ped5 from public.criar_pedido(:'curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b', null,
-  'Gil', 'gil@teste.com', '52998224725', null, null, '2026-11-18') \gset
+  'Gil', 'gil@teste.com', '11144477735', null, null, '2026-11-18') \gset
 reset role;
 select teste.ok((select o.revendedor_id is null and oi.comissao_percentual = 0 from public.orders o
                  join public.order_items oi on oi.order_id = o.id where o.codigo = :'ped5'),
@@ -1861,6 +1861,8 @@ select id as ci_davi from public.items where nome = 'Produto do Davi' \gset
 -- Fabi (afiliada de catálogo, recebedor aprovado) com afiliação APROVADA ao Aff Auto e PENDENTE ao Aff Manual
 :comoF
 select public.afiliar_se(:'aff_auto');
+reset role;
+update public.items set estoque = 200 where id = :'kit';  -- os pedidos abertos dos testes anteriores reservam estoque
 :comoServidor
 select teste.ok((select vitrine_slug = 'loja-da-fabi' from public.validar_codigo_indicacao(:'aff_auto', '@Loja-Da-Fabi', 'ip-ci-0')),
                 'código: afiliado aprovado vale (sem diferenciar maiúsculas, "@" opcional)');
@@ -1892,15 +1894,15 @@ select public.afiliar_se(:'aff_auto');
 :comoServidor
 select public.aplicar_status_recebedor('mock', 'rec_f', 'em_analise', null, null);
 select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
-                             :'aff_auto', 'digital', 'Ivo', 'ivo@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                             :'aff_auto', 'digital', 'Ivo', 'ivo@teste.com', '11144477735', '2026-11-18', 'loja-da-fabi'),
                       'código de afiliado sem recebedor aprovado não atribui');
 select public.aplicar_status_recebedor('mock', 'rec_f', 'aprovado', null, null);
 
 -- vendedor próprio da loja: split direto (Bia) e folha (Davi) atribuem
 select codigo as ci_p2 from public.criar_pedido(:'kit', 1, 'retirada', null, null,
-  'Jana', 'jana@teste.com', '52998224725', null, null, '2026-11-18', 'loja-da-bia') \gset
+  'Jana', 'jana@teste.com', '11144477735', null, null, '2026-11-18', 'loja-da-bia') \gset
 select codigo as ci_p3 from public.criar_pedido(:'kit', 1, 'retirada', null, null,
-  'Kleber', 'kleber@teste.com', '52998224725', null, null, '2026-11-18', 'davi-vendas') \gset
+  'Kleber', 'kleber@teste.com', '11144477735', null, null, '2026-11-18', 'davi-vendas') \gset
 reset role;
 select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000b' and o.vendedor_id is not null and o.atribuicao_origem = 'codigo'
                  from public.orders o where o.codigo = :'ci_p2'),
@@ -1912,21 +1914,21 @@ select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000d'
 -- vendedor de OUTRA loja não atribui (Bia e Davi são vendedores da loja da Ana, não da loja do Davi)
 :comoServidor
 select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
-                             :'ci_davi', 'digital', 'Lia', 'lia@teste.com', '52998224725', '2026-11-18', 'loja-da-bia'),
+                             :'ci_davi', 'digital', 'Lia', 'lia@teste.com', '11144477735', '2026-11-18', 'loja-da-bia'),
                       'código de vendedor de OUTRA loja não atribui');
 select teste.ok((select not valido from public.validar_codigo_indicacao(:'ci_davi', 'loja-da-bia', 'ip-ci-2')),
                 'validar: vendedor de outra loja = código não vale (mesmo resultado de código inexistente)');
 select teste.ok((select not valido from public.validar_codigo_indicacao(:'kit', 'nao-existe-xyz', 'ip-ci-2')),
                 'validar: código inexistente = código não vale');
 select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
-                             :'kit', 'retirada', 'Mel', 'mel@teste.com', '52998224725', '2026-11-18', 'x'),
+                             :'kit', 'retirada', 'Mel', 'mel@teste.com', '11144477735', '2026-11-18', 'x'),
                       'código fora do formato não atribui');
 
 -- o código digitado VENCE o cookie; sem código, o cookie vale e a origem é "link"
 select codigo as ci_p4 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000b', null,
-  'Nando', 'nando@teste.com', '52998224725', null, null, '2026-11-18', 'davi-vendas') \gset
+  'Nando', 'nando@teste.com', '11144477735', null, null, '2026-11-18', 'davi-vendas') \gset
 select codigo as ci_p5 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000b', null,
-  'Olga', 'olga@teste.com', '52998224725', null, null, '2026-11-18') \gset
+  'Olga', 'olga@teste.com', '11144477735', null, null, '2026-11-18') \gset
 reset role;
 select teste.ok((select o.revendedor_id = '00000000-0000-0000-0000-00000000000d' and o.atribuicao_origem = 'codigo'
                  from public.orders o where o.codigo = :'ci_p4'),
@@ -1945,17 +1947,17 @@ insert into public.afiliacoes (afiliado_id, storefront_id, item_id, status, deci
 alter table public.afiliacoes enable trigger afiliacoes_y_recebedor;
 :comoServidor
 select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L, %L)',
-                             :'kit', 'retirada', 'Pia', 'pia@teste.com', '52998224725', '2026-11-18', 'ana-indica'),
+                             :'kit', 'retirada', 'Pia', 'pia@teste.com', '11144477735', '2026-11-18', 'ana-indica'),
                       'dono da loja não se auto-atribui por código');
 select codigo as ci_p6 from public.criar_pedido(:'kit', 1, 'retirada', '00000000-0000-0000-0000-00000000000a', null,
-  'Rui', 'rui@teste.com', '52998224725', null, null, '2026-11-18') \gset
+  'Rui', 'rui@teste.com', '11144477735', null, null, '2026-11-18') \gset
 reset role;
 select teste.ok((select revendedor_id is null and atribuicao_origem is null from public.orders where codigo = :'ci_p6'),
                 'dono da loja não se auto-atribui nem pelo cookie');
 -- comprador logado também não se indica por código
 :comoServidor
 select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, %L, %L, %L, %L, null, null, %L, %L)',
-                             :'aff_auto', 'digital', '00000000-0000-0000-0000-00000000000f', 'Fabi', 'fabi@teste.com', '52998224725', '2026-11-18', 'loja-da-fabi'),
+                             :'aff_auto', 'digital', '00000000-0000-0000-0000-00000000000f', 'Fabi', 'fabi@teste.com', '11144477735', '2026-11-18', 'loja-da-fabi'),
                       'comprador não se indica pelo próprio código');
 
 -- antifraude: 8 tentativas inválidas por hora por IP; depois disso, nem o código certo passa por aquele IP
@@ -1986,7 +1988,7 @@ select estoque as cb_est0 from public.items where id = :'cb_kit' \gset
 :comoServidor
 -- pedido do curso, indicado pela Bia (vendedora split_direto da loja da Ana), comprado por uma conta logada (Fabi)
 select id as cb1, codigo as cb1_cod, token as cb1_tok from public.criar_pedido(:'cb_curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b',
-  '00000000-0000-0000-0000-00000000000f', 'Cris', 'cris@teste.com', '52998224725', null, null, '2026-11-18') \gset
+  '00000000-0000-0000-0000-00000000000f', 'Cris', 'cris@teste.com', '11144477735', null, null, '2026-11-18') \gset
 select id as cb2 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Dani', 'dani@teste.com', '52998224725', null, null, '2026-11-18') \gset
 select id as cb3 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Edu', 'edu@teste.com', '52998224725', null, null, '2026-11-18') \gset
 select id as cb4 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 'Fran', 'fran@teste.com', '52998224725', null, null, '2026-11-18') \gset
@@ -2490,6 +2492,51 @@ select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null
 select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
   format('{"modelo":"classico","secoes":[{"tipo":"colecoes","visivel":true}],"colecoes":[{"categoria":"casa","imagem":"00000000-0000-0000-0000-0000000000ff/c.webp"}]}')), 'v2: imagem de coleção na pasta de outro usuário é recusada');
 reset role;
+
+-- =========================================================================
+-- 11. Correções das auditorias (migração 20261214): link externo, suspensão, estoque, recuperar link
+-- =========================================================================
+reset role;
+select teste.ok(public.link_externo_permitido('https://www.mercadolivre.com.br/produto'), 'link externo legítimo continua aceito');
+select teste.ok(not public.link_externo_permitido('https://evil.com\.shopee.com.br/x'), 'link externo com barra invertida no host é recusado');
+select teste.ok(not public.link_externo_permitido('https://shopee.com.br/x y'), 'link externo com espaço é recusado');
+
+-- suspensão vale no banco: a loja suspensa não lê a própria loja e a recebedora suspensa não conta como apta
+select teste.ok((select count(*) from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 1, 'suspensão: base (a dona vê a loja)');
+update public.profiles set suspenso_em = now(), suspenso_motivo = 'teste de suspensão' where id = '00000000-0000-0000-0000-00000000000a';
+:comoA
+select teste.ok((select count(*) from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 0, 'suspensão: usuário suspenso não lê mais as próprias linhas');
+reset role;
+select teste.ok(not public.recebedor_aprovado('00000000-0000-0000-0000-00000000000a', 'produtor'), 'suspensão: recebedor suspenso não é apto');
+update public.profiles set suspenso_em = null, suspenso_motivo = null where id = '00000000-0000-0000-0000-00000000000a';
+:comoA
+select teste.ok((select count(*) from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 1, 'suspensão: reativado volta a ver a loja');
+reset role;
+
+-- estoque reservado: a última unidade não é vendida duas vezes e volta quando o pedido é cancelado
+select coalesce(sum(oi.quantidade), 0) as rsv from public.order_items oi join public.orders o on o.id = oi.order_id
+  where oi.item_id = :'kit' and o.status = 'aguardando_pagamento' \gset
+update public.items set estoque = :'rsv'::int + 1 where id = :'kit';
+select codigo as rs1, token as rt1 from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Eli', 'eli@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, %L, null, null, %L, %L, %L, null, null, %L)', :'kit', 'retirada', 'Eli', 'eli@teste.com', '52998224725', '2026-11-18'),
+  'estoque: a mesma última unidade não é reservada duas vezes');
+select teste.ok(public.desistir_do_pedido(:'rs1', :'rt1', null) = 'cancelado', 'estoque: pedido cancelado');
+select teste.ok((select count(*) from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Eli', 'eli@teste.com', '52998224725', null, null, '2026-11-18')) = 1, 'estoque: cancelamento libera a reserva');
+
+-- auto-indicação: o afiliado comprando pelo próprio link (mesmo CPF) não leva comissão
+select codigo as ai1 from public.criar_pedido(:'curso', 1, 'digital', '00000000-0000-0000-0000-00000000000b', null, 'Bia', 'bia@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select teste.ok((select o.revendedor_id is null and oi.comissao_percentual = 0 from public.orders o join public.order_items oi on oi.order_id = o.id where o.codigo = :'ai1'),
+  'auto-indicação: comprar com o próprio CPF zera a indicação');
+
+-- recuperar link: depois de 5 tentativas no mesmo código, nem o e-mail certo gera link
+update public.items set estoque = estoque + 10 where id = :'kit';
+select codigo as rc1 from public.criar_pedido(:'kit', 1, 'retirada', null, null, 'Eli', 'eli@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select teste.ok(public.renovar_acesso_pedido(:'rc1', 'eli@teste.com', 'iphash') is not null, 'recuperar: código e e-mail certos geram link');
+select public.renovar_acesso_pedido(:'rc1', 'x1@teste.com', 'iphash');
+select public.renovar_acesso_pedido(:'rc1', 'x2@teste.com', 'iphash');
+select public.renovar_acesso_pedido(:'rc1', 'x3@teste.com', 'iphash');
+select public.renovar_acesso_pedido(:'rc1', 'x4@teste.com', 'iphash');
+select teste.ok(public.renovar_acesso_pedido(:'rc1', 'eli@teste.com', 'iphash') is null, 'recuperar: limite por código bloqueia depois de 5 tentativas');
 
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'

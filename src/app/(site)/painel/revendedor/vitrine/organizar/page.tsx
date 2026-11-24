@@ -31,7 +31,7 @@ export default async function PaginaOrganizar() {
   }));
   const org = lerOrganizacao(vitrine.organizacao);
   const ids = new Set(itens.map((i) => i.id));
-  const voltar = usuario.papeis.includes("revendedor") ? "/painel/revendedor" : "/painel/vendedor";
+  const voltar = usuario.papeis.includes("revendedor") ? "/painel/afiliado" : "/painel/vendedor";
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4">

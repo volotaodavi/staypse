@@ -54,3 +54,19 @@ export function emailDaNotificacao({ titulo, texto, link, siteUrl }: { titulo: s
       `<p style="font-size:13px">${escapar(final)}</p></div>`,
   };
 }
+
+// E-mail com o novo link do pedido (comprador que perdeu o link). Vai só ao e-mail da compra.
+export function emailDoLinkDoPedido({ codigo, link }: { codigo: string; link: string }): EmailMontado {
+  const intro = `Você pediu um novo link para acompanhar o pedido ${codigo} na Staypse. O link anterior deixou de valer.`;
+  const final = "Se não foi você, ignore este e-mail: ninguém vê o pedido sem este link.";
+  return {
+    assunto: `Seu link do pedido ${codigo}`,
+    texto: ["Olá!", "", intro, "", link, "", final, "", "Staypse"].join("\n"),
+    html:
+      `<div style="font-family:Arial,Helvetica,sans-serif;color:#062C30;max-width:480px;line-height:1.5">` +
+      `<p><strong>Olá!</strong></p><p>${escapar(intro)}</p>` +
+      `<p><a href="${escapar(link)}" style="display:inline-block;background:#14D6C4;color:#062C30;` +
+      `padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold">Ver meu pedido</a></p>` +
+      `<p style="font-size:13px">${escapar(final)}</p></div>`,
+  };
+}

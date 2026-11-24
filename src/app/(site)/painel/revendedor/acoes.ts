@@ -128,7 +128,7 @@ export async function cancelarAfiliacao(f: FormData) {
   // RLS: só apaga se for do próprio afiliado
   await supabase.from("afiliacoes").delete().eq("id", texto(f, "afiliacao_id"));
   updateTag(ETIQUETA_VITRINES);
-  redirect("/painel/revendedor");
+  redirect("/painel/afiliado");
 }
 
 // ---------- links externos (Shopee, Mercado Livre, TikTok Shop) ----------

@@ -14,7 +14,12 @@ export type TaxasPlataforma = {
   taxaTotal: Record<Modalidade, Taxa>;
   custoLytex: Record<Modalidade, Taxa>;
   custoSplit: CustoSplit;
+  // tarifa mínima por pedido (centavos): a taxa total nunca fica abaixo dela; 0 = sem mínimo
+  taxaMinimaCentavos: number;
 };
+
+// Pedido mínimo da plataforma (centavos): abaixo disso nem o Pix cobre o custo (docs/precificacao.md, Decisão final)
+export const PEDIDO_MINIMO_CENTAVOS = 1000;
 
 export const ROTULO_MODALIDADE: Record<Modalidade, string> = {
   pix: "Pix",
@@ -24,14 +29,14 @@ export const ROTULO_MODALIDADE: Record<Modalidade, string> = {
   cartao_7a12: "Cartão 7x a 12x",
 };
 
-// Valores recomendados (docs/precificacao.md). Custos = contrato Lytex Tier 01 (taxa incentivo).
+// Valores finais (docs/precificacao.md, "Decisão final"; migração 20261213000001). Custos = contrato Lytex Tier 01 (taxa incentivo).
 export const TAXAS_PADRAO: TaxasPlataforma = {
   taxaTotal: {
-    pix: { percentual: 1.5, fixoCentavos: 200 },
-    boleto: { percentual: 1.5, fixoCentavos: 230 },
-    cartao_1x: { percentual: 4.9, fixoCentavos: 50 },
-    cartao_2a6: { percentual: 5.5, fixoCentavos: 50 },
-    cartao_7a12: { percentual: 6.1, fixoCentavos: 50 },
+    pix: { percentual: 1.5, fixoCentavos: 230 },
+    boleto: { percentual: 1.5, fixoCentavos: 260 },
+    cartao_1x: { percentual: 5.6, fixoCentavos: 80 },
+    cartao_2a6: { percentual: 6.2, fixoCentavos: 80 },
+    cartao_7a12: { percentual: 6.8, fixoCentavos: 80 },
   },
   custoLytex: {
     pix: { percentual: 0, fixoCentavos: 185 },
@@ -41,6 +46,16 @@ export const TAXAS_PADRAO: TaxasPlataforma = {
     cartao_7a12: { percentual: 4.29, fixoCentavos: 0 },
   },
   custoSplit: { percentual: 1, minimoCentavos: 10, maximoCentavos: 100 },
+  taxaMinimaCentavos: 250,
+};
+
+// Tabela anterior (vale até a data de vigência da nova; docs/precificacao.md, seção 3 antiga)
+export const TAXAS_ANTERIORES: Record<Modalidade, Taxa> = {
+  pix: { percentual: 1.5, fixoCentavos: 200 },
+  boleto: { percentual: 1.5, fixoCentavos: 230 },
+  cartao_1x: { percentual: 4.9, fixoCentavos: 50 },
+  cartao_2a6: { percentual: 5.5, fixoCentavos: 50 },
+  cartao_7a12: { percentual: 6.1, fixoCentavos: 50 },
 };
 
 export function modalidadeDoPagamento(meio: "pix" | "boleto" | "cartao", parcelas = 1): Modalidade {
@@ -56,9 +71,10 @@ function pontosBase(percentual: number): number {
   return bp;
 }
 
-// taxa cobrada da loja: arredonda para BAIXO (nunca cobra um centavo a mais do que o combinado)
-export function taxaTotalCentavos(base: number, t: Taxa): number {
-  return Math.floor((base * pontosBase(t.percentual)) / 10000) + t.fixoCentavos;
+// taxa cobrada da loja: arredonda para BAIXO (nunca cobra um centavo a mais do que o combinado);
+// `minimoCentavos` é a tarifa mínima por pedido (0 = sem mínimo)
+export function taxaTotalCentavos(base: number, t: Taxa, minimoCentavos = 0): number {
+  return Math.max(Math.floor((base * pontosBase(t.percentual)) / 10000) + t.fixoCentavos, minimoCentavos);
 }
 
 // custo estimado da Lytex: arredonda para CIMA (estimativa conservadora, nunca subestima)
@@ -93,5 +109,8 @@ export function lerTaxasPlataforma(bruto: Record<string, unknown> | null | undef
   const s = bruto.custo_lytex_split as { percentual?: unknown; minimo_centavos?: unknown; maximo_centavos?: unknown } | undefined;
   const custoSplit: CustoSplit = { percentual: Number(s?.percentual), minimoCentavos: Number(s?.minimo_centavos), maximoCentavos: Number(s?.maximo_centavos) };
   if (![custoSplit.percentual, custoSplit.minimoCentavos, custoSplit.maximoCentavos].every(Number.isFinite)) throw new Error("taxas_nao_configuradas");
-  return { taxaTotal, custoLytex, custoSplit };
+  // tarifa mínima: opcional (ausente = 0, como antes da migração 20261213000001)
+  const minimo = bruto.taxa_minima_centavos === undefined || bruto.taxa_minima_centavos === null ? 0 : Number(bruto.taxa_minima_centavos);
+  if (!Number.isInteger(minimo) || minimo < 0) throw new Error("taxas_nao_configuradas");
+  return { taxaTotal, custoLytex, custoSplit, taxaMinimaCentavos: minimo };
 }

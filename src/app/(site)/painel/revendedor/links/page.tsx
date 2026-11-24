@@ -27,7 +27,7 @@ export default async function Links() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5">
-      <Link href="/painel/revendedor" className="inline-block py-2 text-sm underline">
+      <Link href="/painel/afiliado" className="inline-block py-2 text-sm underline">
         ← Voltar ao painel
       </Link>
       <h1 className="text-3xl">Minhas indicações</h1>

@@ -156,3 +156,16 @@ Método: leitura do código e das migrações em `supabase/migrations/*.sql`. Na
 - RLS e funções: todas as SECURITY DEFINER têm `set search_path = ''` e `revoke` de `public/anon`; as sensíveis só para `service_role`. `split_snapshot` e `cobranca_url` fora do grant de `orders`. O afiliado não lê `orders` (só a RPC `minhas_comissoes`, com nome e valor pago). `eventos_pagamento` só para admin.
 - Server actions: todas as de painel e admin chamam `exigirPapel` e usam o cliente do usuário (RLS) ou RPCs que conferem `is_admin()`. As rotas CSV e relatórios também. IDOR: `pedido/[codigo]`, `atendimento/[protocolo]`, `convite/[token]` e `afiliar/[token]` exigem token de alta entropia guardado como sha256; convites têm expiração.
 - Headers e segredos: HSTS, X-Frame-Options, nosniff, Referrer-Policy e `no-referrer` nas rotas com token. `poweredByHeader` desligado. Nenhum segredo no código ou no histórico do git: `.env.local` está ignorado e `.env.example` só tem placeholders. A chave secreta só é usada em módulos `server-only`.
+
+## Correções aplicadas (migração 20261214000001 e código)
+
+Corrigidos fora de pagamentos e checkout:
+- **M1** `recuperarLink`: o link novo vai só ao e-mail da compra (Resend); sem Resend a resposta é neutra. Resposta igual exista ou não o pedido. Limite de 8 por IP (hash) e 5 por código a cada hora no banco (`renovar_acesso_pedido`). O token antigo ainda é invalidado, mas agora só com limite e e-mail do dono.
+- **M7** `link_externo_permitido` e `imagem_externa_permitida`: host só `[a-z0-9.-]` e URL sem `\`, espaço ou controle.
+- **M8** `instrumentation.ts`: o caminho gravado é o modelo da rota (`/convite/[token]`) e o filtro cobre CNPJ, telefone e `Key (...)=(...)`.
+- **M9** Suspensão no banco: `usuario_suspenso()`, política restritiva em todas as tabelas acessadas por usuário logado (menos `profiles` e `user_roles`) e `recebedor_aprovado` falso para suspenso (loja suspensa não vende, afiliado suspenso não recebe indicação). Pendente: funções SECURITY DEFINER que ignoram RLS (ex.: `minhas_comissoes`) e ban na Auth, que bloquearia também a tela "conta suspensa".
+- **M10** Auto-indicação: pedido com o mesmo CPF ou e-mail de quem indica perde a indicação (gatilho `orders_exige_recebedores`). Falta registrar a tentativa em `audit_log`.
+- **B5** (estoque): gatilho em `order_items` reserva estoque dos pedidos `aguardando_pagamento` com trava na linha do item; cancelamento e expiração liberam. Falta comparar o total aceito com o do banco (fica no checkout).
+- **B6** `recebedor_aprovado` só para `service_role` (os gatilhos são SECURITY DEFINER).
+
+Não tocados (pagamentos, checkout ou esforço maior): A1, A2, M2 a M6, B1 a B4, B7 a B9.

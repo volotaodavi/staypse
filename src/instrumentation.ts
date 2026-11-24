@@ -9,6 +9,9 @@ function limpar(texto: string): string {
     .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[e-mail]")
     .replace(/\b[0-9a-f]{32,}\b/gi, "[token]")
     .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, "[cpf]")
+    .replace(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/g, "[cnpj]")
+    .replace(/\(?\b\d{2}\)?\s?9?\d{4}-?\d{4}\b/g, "[telefone]")
+    .replace(/Key \([^)]*\)=\([^)]*\)/g, "Key [dado]")
     .slice(0, 1000);
 }
 
@@ -24,7 +27,8 @@ export const onRequestError: Instrumentation.onRequestError = async (erro, reque
       .insert({
         mensagem: limpar(mensagem || "(sem mensagem)"),
         digest: digest?.slice(0, 100) ?? null,
-        caminho: request.path.split("?")[0].slice(0, 300),
+        // o caminho real pode ter token (/convite/…) ou código de pedido: guarda só o modelo da rota
+        caminho: limpar(contexto.routePath).slice(0, 300),
         metodo: request.method.slice(0, 10),
         rota: contexto.routePath.slice(0, 200),
         tipo: contexto.routeType,

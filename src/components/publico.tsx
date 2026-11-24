@@ -1,11 +1,7 @@
 // Peças das páginas públicas (vitrine, loja e produto). Rodam no servidor.
 import Image from "next/image";
-import Link from "next/link";
-import { formatarPreco, urlFoto } from "@/lib/produtor";
-import type { LinkExterno } from "@/lib/publico";
+import { urlFoto } from "@/lib/produtor";
 import { supabaseUrl } from "@/lib/supabase/env";
-import { PLATAFORMAS } from "@/lib/vitrine";
-import { LinkRastreado } from "./rastreio";
 
 // ---------- foto do item (next/image: tamanho certo para cada tela) ----------
 export function FotoItem({
@@ -26,76 +22,6 @@ export function FotoItem({
     <div className="relative aspect-square w-full overflow-hidden bg-gelo">
       <Image src={urlFoto(supabaseUrl(), caminho)} alt={alt} fill sizes={sizes} priority={prioridade} className="object-cover" />
     </div>
-  );
-}
-
-// ---------- cartão de um item vendido pela Staypse ----------
-// Selo obrigatório: quem vende é o PRODUTOR; a Staypse só cuida do pagamento
-// (com split). Nunca escrever "vendido pela Staypse".
-export function CartaoItem({
-  href,
-  nome,
-  foto,
-  precoCentavos,
-  produtorNome,
-  prioridade,
-}: {
-  href: string;
-  nome: string;
-  foto?: string;
-  precoCentavos: number;
-  produtorNome?: string;
-  prioridade?: boolean;
-}) {
-  return (
-    <Link href={href} className="group flex w-full flex-col overflow-hidden rounded-2xl bg-branco ring-1 ring-petroleo/10 transition hover:ring-petroleo/30">
-      <FotoItem caminho={foto} alt="" prioridade={prioridade} />
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{nome}</p>
-        <p className="text-base font-semibold">{formatarPreco(precoCentavos)}</p>
-        {produtorNome && (
-          <p className="mt-auto pt-1 text-[11px] leading-tight text-petroleo/70">
-            Vendido por {produtorNome} · pagamento pela Staypse
-          </p>
-        )}
-      </div>
-    </Link>
-  );
-}
-
-// ---------- cartão de indicação externa (Shopee, Mercado Livre, TikTok Shop) ----------
-// O href é EXATAMENTE o link colado pelo revendedor (sem encurtar ou reescrever).
-export function CartaoLink({ link, vitrine }: { link: LinkExterno; vitrine: string }) {
-  return (
-    <LinkRastreado
-      href={link.url}
-      vitrine={vitrine}
-      linkId={link.id}
-      className="group flex items-center gap-3 rounded-2xl bg-branco p-3 ring-1 ring-petroleo/10 transition hover:ring-petroleo/30"
-    >
-      {link.imagem_url ? (
-        // imagem de outro site: <img> simples (não passa pelo otimizador do Next)
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={link.imagem_url}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          className="h-20 w-20 shrink-0 rounded-xl bg-gelo object-cover"
-        />
-      ) : (
-        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gelo text-xs font-medium text-petroleo/75">
-          {PLATAFORMAS[link.plataforma] ?? "Link"}
-        </span>
-      )}
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="line-clamp-2 text-sm font-medium leading-snug group-hover:underline">{link.titulo}</span>
-        {link.preco_centavos != null && <span className="text-sm font-semibold">{formatarPreco(link.preco_centavos)}</span>}
-        <span className="text-[11px] leading-tight text-petroleo/70">
-          Publicidade · a compra acontece em outro site ({PLATAFORMAS[link.plataforma] ?? "outro site"}). Confira o preço lá: ele pode ter mudado.
-        </span>
-      </span>
-    </LinkRastreado>
   );
 }
 

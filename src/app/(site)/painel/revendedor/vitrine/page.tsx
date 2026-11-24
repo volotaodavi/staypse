@@ -19,7 +19,7 @@ export default async function PaginaVitrine() {
     .maybeSingle();
   // mostra o endereço sem "https://" (fica mais curto no celular)
   const site = urlDoSite().replace(/^https?:\/\//, "");
-  const voltar = usuario.papeis.includes("revendedor") ? "/painel/revendedor" : "/painel/vendedor";
+  const voltar = usuario.papeis.includes("revendedor") ? "/painel/afiliado" : "/painel/vendedor";
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4">

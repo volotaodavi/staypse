@@ -10,7 +10,7 @@ export function FormEncontrar() {
       <Campo rotulo="Código do pedido" name="codigo" required maxLength={12} autoComplete="off" />
       <Campo rotulo="E-mail da compra" name="email" type="email" required autoComplete="email" />
       <Aviso estado={estado} />
-      <BotaoEnviar variante="base">Ver meu pedido</BotaoEnviar>
+      <BotaoEnviar variante="base">Receber o link por e-mail</BotaoEnviar>
     </form>
   );
 }

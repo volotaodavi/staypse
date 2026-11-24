@@ -61,7 +61,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/painel/revendedor" className="inline-block py-2 text-sm underline">
+      <Link href="/painel/afiliado" className="inline-block py-2 text-sm underline">
         ← Voltar ao painel
       </Link>
       <h1 className="text-3xl">Catálogo</h1>
