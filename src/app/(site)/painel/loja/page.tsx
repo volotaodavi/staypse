@@ -37,7 +37,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
         <section className="flex flex-col items-start gap-3 rounded-2xl bg-branco p-5">
           <p>
             {!loja
-              ? "Para vender, cadastre sua empresa: CNPJ ativo, endereço e documentos."
+              ? "Para vender, cadastre sua empresa: CNPJ ativo e endereço de envio."
               : loja.status_verificacao === "em_analise"
                 ? "Seu cadastro está em análise. O painel de vendas abre quando a loja for aprovada."
                 : "Seu cadastro ainda não foi aprovado. Confira o que falta."}

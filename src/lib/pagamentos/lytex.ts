@@ -264,11 +264,17 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
   }
 
   // chamada autenticada; um 401 (token revogado/expirado) renova uma vez e repete
-  async function api(metodo: string, caminho: string, corpo?: unknown, extra?: Record<string, string>): Promise<unknown> {
+  // Consulta (GET) logo após criar a fatura pode dar 502/503/504: repete até 2 vezes, 1 s entre elas. POST nunca repete.
+  async function api(metodo: string, caminho: string, corpo?: unknown, extra?: Record<string, string>, tentativa = 0): Promise<unknown> {
     try {
       return await chamar(metodo, caminho, corpo, await accessToken(), extra);
     } catch (e) {
-      if ((e as { status?: number }).status !== 401 && (e as { status?: number }).status !== 410) throw e;
+      const st = (e as { status?: number }).status;
+      if (metodo === "GET" && (st === 502 || st === 503 || st === 504) && tentativa < 2) {
+        await new Promise((r) => setTimeout(r, 1000));
+        return api(metodo, caminho, corpo, extra, tentativa + 1);
+      }
+      if (st !== 401 && st !== 410) throw e;
       return chamar(metodo, caminho, corpo, await accessToken(true), extra);
     }
   }

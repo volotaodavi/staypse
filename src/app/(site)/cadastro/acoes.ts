@@ -64,15 +64,21 @@ export async function cadastrar(
     if (error.code === "weak_password") {
       return { valores, erro: "Senha fraca. Use pelo menos 8 caracteres, misturando letras e números." };
     }
-    if (error.status === 429) {
+    if (error.code === "user_already_exists") {
+      return { valores, erro: "Já existe uma conta com esse e-mail. Entre ou recupere a senha." };
+    }
+    if (error.status === 429 || error.code === "over_email_send_rate_limit") {
       return { valores, erro: "Muitas tentativas. Aguarde alguns minutos e tente de novo." };
+    }
+    if (error.code === "email_address_not_authorized") {
+      return { valores, erro: "Não conseguimos enviar o e-mail de confirmação para esse endereço. Use outro e-mail." };
     }
     return { valores, erro: "Não foi possível criar a conta agora. Tente novamente." };
   }
 
   await registrarAcesso("cadastro", data.user?.id);
 
-  // Se a confirmação de e-mail estiver desligada, já entra direto.
+  // Confirmação de e-mail desligada (autoconfirm): o signUp já devolve a sessão e entra direto, sem tela de aviso.
   if (data.session) redirect(proximo);
 
   return {

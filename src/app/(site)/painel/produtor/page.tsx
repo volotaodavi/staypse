@@ -93,7 +93,7 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
         {!produtor && (
           <>
             <p className="mt-2 text-petroleo/80">
-              Para vender, cadastre sua empresa: CNPJ ativo, endereço de envio e documentos.
+              Para vender, cadastre sua empresa: CNPJ ativo e endereço de envio.
             </p>
             <Link href="/painel/produtor/cadastro" className="mt-4 inline-block rounded-full bg-ciano px-6 py-3 font-medium text-petroleo">
               Começar cadastro

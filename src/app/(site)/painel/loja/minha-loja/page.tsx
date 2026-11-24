@@ -13,7 +13,7 @@ export default async function MinhaLoja() {
     ["/painel/produtor/loja", "Aparência da loja", "Endereço da loja, logo, cores, fonte e layout"],
     [
       "/painel/produtor",
-      "Empresa e documentos (KYC)",
+      "Empresa e recebimento",
       loja ? `Situação: ${STATUS_PRODUTOR[loja.status_verificacao] ?? loja.status_verificacao}` : "Cadastre sua empresa",
     ],
     ["/painel/produtor/frete", "Frete", loja?.frete_fixo_centavos == null ? "Envio desligado" : "Quem paga o frete, valor e prazo"],

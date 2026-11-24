@@ -61,7 +61,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
         </h2>
         {pendentes.length === 0 ? (
           <p className="rounded-2xl bg-branco p-4 text-sm text-petroleo/80">
-            Nenhum pedido aguardando. Produtos com Itens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.quot;Aprovo cada afiliadoItens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.quot; aparecem aqui quando alguém quiser indicá-los.
+            Nenhum pedido aguardando. Itens com &quot;aprovo manualmente&quot; aparecem aqui quando alguém quiser indicá-los.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">

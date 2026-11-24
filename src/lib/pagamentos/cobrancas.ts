@@ -39,11 +39,12 @@ export async function iniciarCobranca(
 
   const { data: atual } = await admin
     .from("orders")
-    .select("status, cobranca_url, cobranca_id, comprador_nome, comprador_documento, comprador_email")
+    .select("status, cobranca_url, cobranca_id, cobranca_pagamento, comprador_nome, comprador_documento, comprador_email")
     .eq("id", pedidoId)
     .maybeSingle();
   if (!atual || atual.status !== "aguardando_pagamento") throw new Error("pedido_nao_aguarda_pagamento");
-  if (atual.cobranca_id) return { url: atual.cobranca_url, pagamento: null };
+  // repetição: devolve o Pix/boleto já guardado (o GET da fatura na Lytex não traz o código)
+  if (atual.cobranca_id) return { url: atual.cobranca_url, pagamento: (atual.cobranca_pagamento as DadosPagamento | null) ?? null };
 
   const { data: dados, error } = await admin.rpc("dados_split_pedido", { p_order: pedidoId, p_provedor: provedor.nome });
   if (error || !dados) throw new Error(error?.message ?? "falha_ao_montar_split");
@@ -97,8 +98,9 @@ export async function iniciarCobranca(
   });
   if (erroRegistro) {
     // clique duplo: outra requisição registrou antes, usa a cobrança dela
-    const { data: outra } = await admin.from("orders").select("cobranca_url").eq("id", pedidoId).maybeSingle();
-    if (outra?.cobranca_url !== undefined && erroRegistro.message.includes("pedido_sem_cobranca_possivel")) return { url: outra.cobranca_url, pagamento: null };
+    const { data: outra } = await admin.from("orders").select("cobranca_url, cobranca_pagamento").eq("id", pedidoId).maybeSingle();
+    if (outra?.cobranca_url !== undefined && erroRegistro.message.includes("pedido_sem_cobranca_possivel"))
+      return { url: outra.cobranca_url, pagamento: (outra.cobranca_pagamento as DadosPagamento | null) ?? null };
     throw new Error(erroRegistro.message);
   }
   return { url: cobranca.urlPagamento ?? null, pagamento: cobranca.pagamento ?? null };

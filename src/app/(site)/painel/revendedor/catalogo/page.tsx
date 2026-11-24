@@ -53,7 +53,8 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
     supabase.rpc("catalogo_afiliados", { p_ordem: ordem }),
     supabase.from("storefronts").select("id").eq("revendedor_id", usuario.id).maybeSingle(),
   ]);
-  const itens = ((data ?? []) as ItemCatalogo[]).filter(
+  const todos = (data ?? []) as ItemCatalogo[];
+  const itens = todos.filter(
     (i) =>
       (!nicho || i.categoria === nicho) && (!tipo || i.tipo === tipo) && Number(i.comissao_percentual) >= comissao,
   );
@@ -144,7 +145,7 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
       </form>
 
       {itens.length === 0 ? (
-        <p className="rounded-2xl bg-branco p-6 text-petroleo/80">Nenhum produto encontrado com esses filtros.</p>
+        <p className="rounded-2xl bg-branco p-6 text-petroleo/80">{todos.length === 0 ? "Ainda não há produtos aprovados no catálogo. Volte em breve." : "Nenhum produto encontrado com esses filtros."}</p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {itens.map((item) => {
