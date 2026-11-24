@@ -1,5 +1,4 @@
-// robots.txt. /entrar e /cadastro NÃO são bloqueados aqui de propósito: eles
-// têm <meta robots noindex>, que o Google só enxerga se puder abrir a página.
+// robots.txt. /entrar e /cadastro são indexáveis e estão no sitemap.
 import type { MetadataRoute } from "next";
 import { urlDoSite } from "@/lib/supabase/env";
 

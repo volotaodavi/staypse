@@ -49,7 +49,7 @@ export default async function Image() {
           Plataforma de afiliados para produtos físicos e digitais
         </div>
         <div style={{ display: "flex", marginTop: 28, fontSize: 34, color: "#14d6c4" }}>
-          Lista de espera aberta
+          Crie a sua conta grátis
         </div>
       </div>
     ),

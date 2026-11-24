@@ -1,5 +1,5 @@
-// Mapa do site: só páginas públicas e estáveis. FORA: /entrar e /cadastro
-// (só para quem tem o link), painéis, admin e /lista/<código> (página pessoal).
+// Mapa do site: só páginas públicas e estáveis. FORA: painéis, admin e
+// /lista/<código> (página pessoal).
 import type { MetadataRoute } from "next";
 import { urlDoSite } from "@/lib/supabase/env";
 
@@ -7,6 +7,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = urlDoSite();
   return [
     { url: `${base}/`, priority: 1 },
+    { url: `${base}/cadastro` },
+    { url: `${base}/entrar` },
     { url: `${base}/termos` },
     { url: `${base}/privacidade` },
     { url: `${base}/cookies` },

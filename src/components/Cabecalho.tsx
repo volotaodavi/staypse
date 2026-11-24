@@ -4,7 +4,7 @@ import { Logo } from "./Logo";
 
 const ATALHOS = [
   ["Como funciona", "/#como-funciona"],
-  ["Perfis", "/#para-quem"],
+  ["Para quem", "/#para-quem"],
   ["Regras", "/#regras"],
   ["Perguntas", "/#faq"],
 ] as const;
@@ -12,9 +12,7 @@ const ATALHOS = [
 type Props = {
   // Se houver alguém logado, mostra "Sair" no lugar de "Entrar".
   logado?: boolean;
-  // Páginas públicas no pré-lançamento: sem "Entrar" nem "Criar conta". O único
-  // botão é a lista de espera (/entrar e /cadastro seguem existindo para quem
-  // tem o link, mas não são oferecidos ao público).
+  // Páginas públicas: atalhos das seções (só em tela maior) mais "Entrar" e "Criar conta".
   preLancamento?: boolean;
   // Painéis com menu lateral: o logo alinha com o menu, sem largura máxima.
   largo?: boolean;
@@ -50,8 +48,11 @@ export function Cabecalho({ logado = false, preLancamento = false, largo = false
                 </Link>
               ))}
             </div>
-            <Link href="/#lista" className="inline-flex min-h-11 items-center rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95">
-              Entrar na lista de espera
+            <Link href="/entrar" className="inline-flex min-h-11 items-center rounded-full px-3 py-2 hover:bg-gelo">
+              Entrar
+            </Link>
+            <Link href="/cadastro" className="inline-flex min-h-11 items-center rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95">
+              Criar conta
             </Link>
           </nav>
         ) : (

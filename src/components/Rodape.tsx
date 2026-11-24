@@ -36,6 +36,9 @@ export function Rodape() {
           <Link href="/reembolso" className="inline-flex min-h-11 items-center hover:text-ciano">
             Reembolso e arrependimento
           </Link>
+          <Link href="/taxas" className="inline-flex min-h-11 items-center hover:text-ciano">
+            Taxas
+          </Link>
           <Link href="/termos" className="inline-flex min-h-11 items-center hover:text-ciano">
             Termos de uso
           </Link>

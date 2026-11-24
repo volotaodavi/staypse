@@ -1,6 +1,6 @@
 "use client";
 // Botão fixo no rodapé da tela (só no celular): aparece depois que a pessoa
-// passa do topo e some quando o formulário da lista de espera está na tela.
+// passa do topo e some quando o fecho da página (com os mesmos botões) está na tela.
 import { useEffect, useState } from "react";
 
 export function BarraFixa() {
@@ -9,7 +9,7 @@ export function BarraFixa() {
 
   useEffect(() => {
     const topo = document.getElementById("topo");
-    const lista = document.getElementById("lista");
+    const lista = document.getElementById("fim");
     if (!topo || !lista) return;
     const observador = new IntersectionObserver((entradas) => {
       for (const e of entradas) {
@@ -32,11 +32,11 @@ export function BarraFixa() {
       aria-hidden={!mostrar}
     >
       <a
-        href="#lista"
+        href="/cadastro"
         tabIndex={mostrar ? 0 : -1}
         className="block rounded-full bg-ciano py-4 text-center font-medium text-petroleo shadow-[0_10px_30px_-10px_rgba(6,44,48,0.6)]"
       >
-        Entrar na lista de espera
+        Criar conta
       </a>
     </div>
   );

@@ -1,71 +1,83 @@
-// Peças da página inicial (pré-lançamento).
-// Duas peças mostram o produto como ele é: o caminho de um link curto até a loja
-// oficial (com a divisão do pagamento) e a tabela de produtos do painel da loja.
-// Os percentuais são exemplos; a comissão real de cada produto é da loja.
+// Peças da página inicial. Linguagem: etiqueta de preço e recibo, como no
+// comércio de verdade. Tudo é HTML e CSS de servidor (sem JavaScript de cliente).
+// Os valores são EXEMPLO e vêm marcados como exemplo na própria peça.
 
-const SPLIT = [
-  ["Lia Calçados", "produtor", 66, "bg-petroleo"],
-  ["Ana", "afiliada", 26, "bg-ciano"],
-  ["Staypse", "taxa da plataforma", 8, "bg-petroleo/30"],
+// Divisão do exemplo: R$ 250,00 = 66% loja + 26% afiliada + 8% plataforma.
+const RECIBO = [
+  ["Lia Calçados", "loja", "R$ 165,00"],
+  ["Ana", "afiliada", "R$ 65,00"],
+  ["Staypse", "taxa", "R$ 20,00"],
 ] as const;
 
-function BarraSplit({ animada = false }: { animada?: boolean }) {
-  return (
-    <div className="flex h-2 gap-1 overflow-hidden rounded-full" aria-hidden="true">
-      {SPLIT.map(([nome, , pct, cor], i) => (
-        <span
-          key={nome}
-          className={`${animada ? "split-segmento " : ""}${cor}`}
-          style={{ flexGrow: pct, animationDelay: `${i * 120}ms` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ---------- hero: o link curto da Ana até a loja da Lia ----------
+// ---------- a coisa memorável: o link vira etiqueta, a venda vira recibo ----------
 // "host": endereço do site sem https:// (vem de urlDoSite, nunca fixo no código)
-export function LinkParaLoja({ host }: { host: string }) {
+export function EtiquetaERecibo({ host }: { host: string }) {
   return (
     <figure
       role="img"
-      aria-label="Exemplo: o link /@ana/tenis-runner leva à loja oficial da Lia Calçados, e o pagamento é dividido entre loja, afiliada e Staypse"
-      className="w-full max-w-md justify-self-center lg:justify-self-end"
+      aria-label="Exemplo: o link /@ana/tenis-runner numa etiqueta de preço de R$ 250,00 e o recibo da divisão do pagamento feita pela Lytex, com R$ 165,00 para a loja, R$ 65,00 para a afiliada e R$ 20,00 de taxa da Staypse. Valores de exemplo."
+      className="relative mx-auto w-full max-w-sm pb-4 lg:mx-0 lg:justify-self-end"
     >
-      <div className="overflow-hidden rounded-2xl bg-branco text-petroleo">
-        <div className="bg-gelo px-5 py-3">
-          <p className="text-xs text-petroleo/75">O que a Ana compartilha</p>
-          <p className="mt-0.5 truncate font-mono text-sm">
-            {host}/@ana/<span className="font-medium">tenis-runner</span>
+      <div aria-hidden="true">
+        {/* barbante */}
+        <svg className="mx-auto -mb-3 block h-14 w-24 overflow-visible" viewBox="0 0 96 56" fill="none">
+          <path d="M8 0C20 30 48 40 62 50" stroke="#EEF6F5" strokeOpacity="0.55" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+
+        {/* etiqueta de preço */}
+        <div
+          className="relative -rotate-3 bg-ciano px-6 pt-9 pb-6 text-petroleo"
+          style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 22px 100%, 0 calc(100% - 22px))" }}
+        >
+          <span className="absolute top-3 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-petroleo" />
+          <p className="text-sm font-medium">O link que a Ana põe na bio</p>
+          <p className="mt-1 font-mono text-[0.95rem] leading-snug break-all">
+            {host}/@ana/<b className="font-medium underline decoration-2 underline-offset-4">tenis-runner</b>
           </p>
-        </div>
-        <div className="px-5 py-5">
-          <p className="text-xs text-petroleo/75">Quem clica cai na loja oficial</p>
-          <div className="mt-2 flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="truncate text-lg font-medium leading-tight">Tênis Runner</p>
-              <p className="text-sm text-petroleo/75">Lia Calçados</p>
-              <p className="mt-1 font-mono text-xs text-petroleo/75">Indicado por @ana</p>
+          <div className="mt-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-lg font-medium leading-tight">Tênis Runner</p>
+              <p className="text-sm">Lia Calçados, Recife</p>
             </div>
-            <span className="shrink-0 rounded-lg bg-petroleo px-4 py-2 text-sm font-medium text-branco">Comprar</span>
+            <p className="text-4xl leading-none font-extrabold tracking-tight tabular-nums">R$&nbsp;250</p>
           </div>
+          <div
+            className="mt-5 h-8 opacity-80"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(90deg,#062c30 0 2px,transparent 2px 5px,#062c30 5px 6px,transparent 6px 10px,#062c30 10px 13px,transparent 13px 15px)",
+            }}
+          />
         </div>
-        <div className="border-t border-petroleo/10 px-5 py-5">
-          <p className="text-sm font-medium">Na hora do pagamento, a Lytex divide</p>
-          <div className="mt-3"><BarraSplit animada /></div>
-          <dl className="mt-4 flex flex-col gap-1.5 text-sm">
-            {SPLIT.map(([nome, papel, pct, cor]) => (
-              <div key={nome} className="flex items-baseline gap-2">
-                <span className={`h-2 w-2 shrink-0 self-center rounded-full ${cor}`} />
-                <dt className="font-medium">{nome}</dt>
-                <dd className="flex-1 text-petroleo/75">{papel}</dd>
-                <dd className="font-mono tabular-nums">{pct}%</dd>
-              </div>
+
+        {/* recibo da divisão */}
+        <div
+          className="relative z-10 -mt-3 ml-auto w-[92%] rotate-2 bg-branco px-5 pt-5 pb-8 font-mono text-[0.8125rem] leading-relaxed text-petroleo"
+          style={{
+            clipPath:
+              "polygon(0 0,100% 0,100% calc(100% - 8px),95% 100%,90% calc(100% - 8px),85% 100%,80% calc(100% - 8px),75% 100%,70% calc(100% - 8px),65% 100%,60% calc(100% - 8px),55% 100%,50% calc(100% - 8px),45% 100%,40% calc(100% - 8px),35% 100%,30% calc(100% - 8px),25% 100%,20% calc(100% - 8px),15% 100%,10% calc(100% - 8px),5% 100%,0 calc(100% - 8px))",
+          }}
+        >
+          <p className="font-sans text-base font-bold">Recibo da venda (exemplo)</p>
+          <p className="text-petroleo/75">Tênis Runner, 1 un.</p>
+          <ul className="mt-3 flex flex-col gap-1">
+            {RECIBO.map(([nome, papel, valor]) => (
+              <li key={nome} className="flex items-baseline gap-2">
+                <span>
+                  {nome} <span className="text-petroleo/75">({papel})</span>
+                </span>
+                <span className="mb-1 min-w-4 flex-1 self-end border-b border-dotted border-petroleo/50" />
+                <span className="tabular-nums">{valor}</span>
+              </li>
             ))}
-          </dl>
+          </ul>
+          <p className="mt-3 flex items-baseline justify-between border-t border-dashed border-petroleo/50 pt-2 font-medium">
+            <span>Total pago</span>
+            <span className="tabular-nums">R$ 250,00</span>
+          </p>
+          <p className="mt-2 text-petroleo/75">Dividido pela Lytex na hora do pagamento.</p>
         </div>
       </div>
-      <figcaption className="mt-3 text-sm text-gelo/75">Exemplo com a comissão da Ana em 26%. Cada loja define a de cada produto.</figcaption>
     </figure>
   );
 }
@@ -73,23 +85,22 @@ export function LinkParaLoja({ host }: { host: string }) {
 // ---------- perguntas frequentes (sanfona nativa: acessível, sem JavaScript) ----------
 export const PERGUNTAS: [string, string][] = [
   ["O que é a Staypse?", "Uma plataforma de afiliados para produtos físicos e digitais. Lojas e fábricas cadastram os produtos e definem a comissão; afiliados divulgam pelo próprio link; o pagamento é dividido automaticamente entre as partes."],
-  ["Quando a Staypse abre?", "Ainda não temos data fechada. Estamos montando as primeiras lojas e vitrines. Quem está na lista de espera é avisado antes da abertura, e quem indica mais pessoas entra antes no acesso antecipado."],
-  ["Entrar na lista ou usar a Staypse custa algo?", "Entrar na lista de espera é grátis, e não haverá taxa de adesão nem mensalidade. Quando a plataforma abrir, a Staypse terá uma taxa sobre cada venda, que já sai dividida no pagamento. Os percentuais serão informados antes da abertura."],
+  ["Criar conta custa alguma coisa?", "Não. Criar conta é grátis, sem taxa de adesão nem mensalidade. A Staypse cobra uma taxa por venda, paga pelo produtor e já descontada na divisão do pagamento. Os percentuais estão na página de taxas."],
   ["Como funciona o pagamento?", "Pagamentos processados pela Lytex. O split acontece na Lytex: no momento da compra, ela divide o valor entre loja, afiliado e Staypse, e cada parte recebe a sua direto. A Staypse nunca recebe nem guarda o dinheiro de ninguém."],
-  ["Preciso ter estoque ou muitos seguidores para ser afiliado?", "Não. Você divulga pelo seu link e a loja envia o pedido. Os resultados variam: dependem dos produtos que você escolher e de como divulgar."],
-  ["Ganho por trazer outras pessoas?", "Não. A comissão vem só das vendas feitas pelo próprio afiliado. Indicar pessoas para a lista de espera só adianta a entrada delas e a sua no acesso antecipado: não há sorteio nem prêmio em dinheiro."],
-  ["Trabalho em uma loja. Como entro?", "Escolha \"Trabalho em loja\" na lista e diga em qual loja você trabalha. Quando a loja usar a Staypse, ela poderá convidar você como vendedor e combinar a sua comissão."],
+  ["Preciso de estoque ou de muitos seguidores para ser afiliado?", "Não. Você divulga pelo seu link e a loja envia o pedido. Os resultados variam: dependem dos produtos que você escolher e de como divulgar."],
+  ["Ganho por trazer outras pessoas?", "Não. A comissão vem só das vendas feitas pelo próprio afiliado. Não existe taxa de adesão nem comissão por recrutar."],
+  ["Trabalho em uma loja. Como entro?", "A loja convida você como vendedor pelo e-mail e combina a sua comissão. Ao aceitar o convite, a sua conta já fica ligada a ela."],
   ["Quem pode vender produtos?", "Lojas e fábricas com CNPJ ativo que emitem nota fiscal de todas as vendas. Cada loja e cada produto passam por análise antes de aparecer nas vitrines."],
-  ["O que a Staypse faz com os meus dados?", "Pedimos só o que é preciso para avisar você da abertura e entender qual é o seu perfil. Você marca o consentimento antes de enviar e pode pedir a exclusão a qualquer momento pelo canal de privacidade (LGPD) da Staypse."],
   ["E se o comprador se arrepender?", "O comprador tem 7 dias para desistir da compra e pedir de volta tudo o que pagou, inclusive o frete. A devolução segue a mesma proporção do split."],
+  ["O que a Staypse faz com os meus dados?", "Pedimos só o que é preciso para criar a conta e fazer a venda acontecer. Você pode pedir a exclusão a qualquer momento pelo canal de privacidade (LGPD) da Staypse."],
 ];
 
 export function Perguntas() {
   return (
-    <div className="divide-y divide-petroleo/10 border-y border-petroleo/10">
+    <div className="divide-y divide-petroleo/15 border-y border-petroleo/15">
       {PERGUNTAS.map(([pergunta, resposta]) => (
-        <details key={pergunta} className="group py-1">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-lg font-medium [&::-webkit-details-marker]:hidden">
+        <details key={pergunta} className="group">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-lg font-medium [&::-webkit-details-marker]:hidden">
             {pergunta}
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gelo text-xl leading-none transition-transform group-open:rotate-45" aria-hidden="true">
               +
@@ -101,66 +112,3 @@ export function Perguntas() {
     </div>
   );
 }
-
-// ---------- painel da loja: a tabela de produtos e o último pedido ----------
-const LINHAS_PAINEL = [
-  ["Tênis Runner", "15%", "Aprovado"],
-  ["Camiseta básica algodão", "20%", "Aprovado"],
-  ["Curso de maquiagem (digital)", "30%", "Em análise"],
-] as const;
-const ETAPAS_PEDIDO = ["Pagamento aprovado na Lytex", "Split feito entre as partes", "Nota fiscal emitida pela loja"] as const;
-
-export function PainelLoja() {
-  return (
-    <figure
-      role="img"
-      aria-label="Exemplo do painel de uma loja: tabela de produtos com a comissão definida pela loja e as etapas do último pedido"
-      className="w-full overflow-hidden rounded-2xl bg-branco text-petroleo"
-    >
-      <div className="grid md:grid-cols-[1.3fr_1fr]" aria-hidden="true">
-        <div className="p-5">
-          <p className="font-mono text-xs text-petroleo/75">Painel da loja / Produtos</p>
-          <table className="mt-3 w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-petroleo/15 text-xs text-petroleo/75">
-                <th className="py-2 pr-3 font-medium">Produto</th>
-                <th className="py-2 pr-3 font-medium">Comissão</th>
-                <th className="py-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {LINHAS_PAINEL.map(([nome, pct, status]) => (
-                <tr key={nome} className="border-b border-petroleo/10 last:border-0">
-                  <td className="py-3 pr-3 font-medium">{nome}</td>
-                  <td className="py-3 pr-3 font-mono tabular-nums">{pct}</td>
-                  <td className="py-3 text-petroleo/75">{status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="border-t border-petroleo/10 bg-gelo p-5 md:border-t-0 md:border-l">
-          <p className="font-mono text-xs text-petroleo/75">Último pedido</p>
-          <ol className="mt-3 flex flex-col gap-2.5 text-sm">
-            {ETAPAS_PEDIDO.map((t, i) => (
-              <li key={t} className="flex gap-3">
-                <span className="w-4 font-mono tabular-nums text-petroleo/75">{i + 1}</span>
-                {t}
-              </li>
-            ))}
-          </ol>
-          <div className="mt-5"><BarraSplit /></div>
-          <p className="mt-2 text-xs text-petroleo/75">Cada parte recebe a sua direto da Lytex.</p>
-        </div>
-      </div>
-    </figure>
-  );
-}
-
-// ---------- como é hoje x com a Staypse (sem citar concorrente) ----------
-export const COMPARATIVO = [
-  ["Comissão", "Combinada por mensagem e difícil de conferir.", "Definida pela loja e visível ao afiliado antes de divulgar."],
-  ["Pagamento", "Acerto manual entre loja e afiliado, depois da venda.", "Split automático na Lytex: cada parte recebe a sua direto."],
-  ["Divulgação", "Link solto, catálogo em PDF ou lista no WhatsApp.", "Vitrine própria, com endereço só do afiliado."],
-  ["Nota fiscal e devolução", "Cada loja resolve do seu jeito.", "A loja emite a nota fiscal e o comprador tem 7 dias para desistir."],
-] as const;

@@ -14,7 +14,7 @@ const outfit = Outfit({
 // SEO + prévia de compartilhamento (WhatsApp/Instagram).
 // A imagem de prévia é gerada por src/app/opengraph-image.tsx.
 const descricao =
-  "Plataforma de afiliados para produtos físicos e digitais. Produtores cadastram, revendedores indicam pelo próprio link e o pagamento é dividido automaticamente entre as partes. Entre na lista de espera.";
+  "Plataforma de afiliados para produtos físicos e digitais. Produtores cadastram, revendedores indicam pelo próprio link e o pagamento é dividido automaticamente entre as partes. Crie a sua conta grátis.";
 
 export const metadata: Metadata = {
   title: {

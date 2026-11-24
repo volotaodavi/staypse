@@ -56,3 +56,35 @@ Medições: Lighthouse mobile contra `next dev` (sem build; desempenho de dev su
 | Diferenciação vs concorrentes | 5 | 8 | Comparação honesta e foco em split na Lytex, vitrine própria e comissão visível. |
 | Conformidade | 9 | 9 | Sem promessa de ganho, sem "saldo", "carteira", "sacar" nem "transferir"; "nunca recebe nem guarda" mantido. |
 | **Geral** | **7,0** | **8,4** | Subiu por estrutura, demonstração e comparação. O que falta para passar disso depende de fatos que ainda não existem: clientes reais, fotos de produto e taxas publicadas. |
+
+## Rodada 3: tirar a cara de IA
+
+### Crítica (design-critique) da landing anterior
+
+Sinais de "feito por IA" encontrados:
+
+1. Blocos empilhados iguais: sete faixas de largura total, cada uma com título à esquerda e conteúdo à direita, alternando claro e petróleo em ritmo previsível.
+2. Títulos genéricos: "Como funciona", "Onde você se encaixa", "O que muda quando a venda por afiliados tem regras", "As regras, sem letra miúda", "Perguntas frequentes".
+3. Tabela "como costuma ser hoje x com a Staypse", o clichê de comparação de SaaS.
+4. Mockup de painel de loja (tabela de produtos, status "Aprovado") que ninguém pediu para ver.
+5. Simetria e proporções repetidas: grade 0,8fr/1,2fr em quase toda seção, cartões de mesmo tamanho.
+6. Excesso de explicação: cada papel recebia três frases, o hero tinha subtítulo, três faixas de confiança e aviso.
+7. Vocabulário de startup: "plataforma de afiliados", "split", "vitrine", "painel", sem nenhuma cena de comércio real.
+8. Frases de efeito e microcopy de modelo ("sem letra miúda", "tudo o que dá para responder").
+9. Cores chapadas, sem textura, sem objeto do mundo real; nenhuma fotografia nem peça física.
+10. Dois hero visuais genéricos (cartão branco com barra de split), sem personalidade.
+11. Quatro CTAs idênticos repetidos por obrigação.
+
+### Direção escolhida: etiqueta e recibo
+
+O balcão da loja de bairro. O link da afiliada vira uma etiqueta de preço pendurada num barbante (ciano com código de barras, o preço em Outfit 800) e a venda vira um recibo térmico de papel com borda serrilhada, números em mono e pontilhado até o valor, escrito como exemplo. É a única "coisa memorável" da página e fica no hero. O resto é quieto: Outfit pesado em títulos grandes, parágrafos curtos, uma lista de regras com divisórias tracejadas de recibo, e um fecho em ciano chapado. Textura: pontilhado fino (perfuração de impressora) no hero, e a própria etiqueta e o recibo, feitos só com CSS e SVG (sem imagem, sem JavaScript novo). Identidade intacta: Petróleo, Ciano (só como fundo de botão e da etiqueta, nunca texto sobre branco), Gelo, Branco, Outfit e o logo SVG oficial.
+
+Copy: exemplos concretos (a Lia vende tênis em Recife, a Ana posta o link no Instagram), frases curtas e longas misturadas, sem "revolucione", "potencialize", "ecossistema".
+
+### O que mudou
+
+Mudança do dono no meio da rodada: as pessoas já podem criar conta e usar a plataforma. Então o CTA principal é Criar conta (/cadastro) e o secundário Entrar (/entrar), no cabeçalho, no hero, no fecho e na barra fixa do celular; a lista de espera saiu da landing (a rota /lista/[codigo] continua para quem já tem link). /entrar e /cadastro ficaram indexáveis e entraram no sitemap. Seções: hero, como funciona (3 passos reais), quatro perfis (âncoras mantidas), regras (a Staypse nunca encosta no dinheiro), FAQ de 9 perguntas, fecho. Saíram: tabela comparativa, mockup de painel, formulário e resumo da lista. Rodapé ganhou o link Taxas. "Pagamentos processados pela Lytex" no hero e no fecho; valores do recibo (R$ 250,00 = 165 + 65 + 20) marcados como exemplo, sem promessa de ganho.
+
+### Medições (build de produção, `npm start -p 3100`, Lighthouse mobile)
+
+Desempenho 100 e 96 (duas rodadas), acessibilidade 100, CLS 0, LCP 0,8 s. axe em 390 e 1440: nenhuma violação. Sem rolagem horizontal; nenhum alvo abaixo de 44 px. Altura da página: 6.189 px no celular (era 8.277) e 4.586 px no desktop (era 5.785). Prints em scratchpad/prints-landing3 (antes-*, depois-*). E2E novo: e2e-landing.mjs (o e2e-lista.mjs cobria o formulário da landing, que saiu).
