@@ -34,6 +34,7 @@ export default async function Comprar({
       envio: boolean;
       retirada: boolean;
       digital: boolean;
+      propria: boolean;
       frete_fixo_centavos: number | null;
       frete_gratis_acima_centavos: number | null;
       frete_prazo_dias: number | null;
@@ -44,7 +45,7 @@ export default async function Comprar({
     supabase.rpc("loja_pode_vender", { p_item: item.id }),
   ]);
   const temEntrega =
-    opcoes && (opcoes.envio || opcoes.retirada || opcoes.digital);
+    opcoes && (opcoes.envio || opcoes.propria || opcoes.retirada || opcoes.digital);
 
   return (
     <div className="flex flex-1 flex-col bg-[color-mix(in_srgb,var(--loja-principal)_5%,white)]">

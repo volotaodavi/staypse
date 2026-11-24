@@ -140,6 +140,8 @@ export type EntregaProduto = {
   frete_prazo_dias: number | null;
   // quem paga o frete: o comprador (fixo, grátis acima de X) ou a loja (frete grátis sempre)
   frete_quem_paga: "comprador" | "loja";
+  // a loja tem zonas de entrega própria ativas (o CEP do comprador decide se vale)
+  propria?: boolean;
 };
 
 export async function buscarEntrega(itemId: string): Promise<EntregaProduto | null> {

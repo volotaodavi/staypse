@@ -66,6 +66,7 @@ function linhasEntrega(tipo: string, prazoPostagem: number | null, retirada: boo
   } else if (prazoPostagem != null) {
     linhas.push({ icone: "caixa", titulo: "Envio", texto: `Postagem em até ${prazoPostagem} dia(s) útil(eis) depois do pagamento.` });
   }
+  if (e?.propria) linhas.push({ icone: "caixa", titulo: "Entrega própria da loja", texto: "Em algumas regiões a loja entrega com motoboy ou motorista. Veja o preço e o prazo pelo seu CEP na compra." });
   if (retirada) linhas.push({ icone: "ponto", titulo: "Retirada no local", texto: "Sem frete. A loja combina local e horário com você." });
   return linhas;
 }

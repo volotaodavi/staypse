@@ -29,6 +29,9 @@ export default async function Frete() {
         Você decide quem paga o frete: a loja (o comprador vê &quot;Frete grátis&quot;) ou o comprador (valor fixo por pedido, com a opção de frete grátis acima de um valor). O comprador vê o frete e o total no resumo,
         antes de pagar. A retirada no local é marcada em cada produto.
       </p>
+      <Link href="/painel/produtor/frete/entrega-propria" className="inline-flex min-h-11 w-fit items-center rounded-full border border-petroleo px-5 text-sm font-medium">
+        Entrega própria (motoboy ou motorista)
+      </Link>
       {!p ? (
         <p className="rounded-2xl bg-branco p-4">Cadastre sua empresa primeiro.</p>
       ) : (

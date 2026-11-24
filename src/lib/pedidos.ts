@@ -8,10 +8,11 @@ export function comprasAbertas(): boolean {
   return process.env.COMPRAS_ABERTAS === "1";
 }
 
-export type ModoEntrega = "envio" | "retirada" | "digital";
+export type ModoEntrega = "envio" | "retirada" | "digital" | "propria";
 
 export const ROTULO_ENTREGA: Record<ModoEntrega, string> = {
   envio: "Entrega pelo correio ou transportadora",
+  propria: "Entrega própria da loja (motoboy ou motorista)",
   retirada: "Retirada no local (combinada com a loja)",
   digital: "Acesso digital liberado após o pagamento",
 };
@@ -52,6 +53,7 @@ export const ERROS_PEDIDO: Record<string, string> = {
   sem_estoque: "Não há estoque suficiente para essa quantidade.",
   entrega_invalida: "Escolha uma forma de entrega disponível para este produto.",
   frete_nao_configurado: "A loja ainda não configurou o frete. Escolha retirada no local ou fale com a loja.",
+  entrega_propria_indisponivel: "A entrega própria da loja não atende este CEP. Escolha outra forma de entrega.",
   nome_invalido: "Informe seu nome completo.",
   email_invalido: "Informe um e-mail válido.",
   cpf_invalido: "CPF inválido. Confira os números.",
@@ -145,6 +147,18 @@ export type PedidoComprador = {
   total_centavos: number;
   indicado: boolean;
   loja: { slug: string; nome: string; razao_social: string; cnpj: string; email: string | null; whatsapp: string | null };
+  // entrega própria da loja: telefone do entregador só vem se a loja marcou "mostrar telefone"
+  entrega_propria: {
+    zona: string | null;
+    prazo_texto: string | null;
+    status: "preparando" | "saiu" | "entregue";
+    entregador_nome: string | null;
+    entregador_telefone: string | null;
+    janela_inicio: string | null;
+    janela_fim: string | null;
+    saiu_em: string | null;
+    entregue_em: string | null;
+  } | null;
   pode_desistir: boolean;
   pode_confirmar_recebimento: boolean;
   itens: {

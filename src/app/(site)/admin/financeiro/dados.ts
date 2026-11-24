@@ -106,3 +106,15 @@ export function painelLytexUrl(): string | null {
   const u = process.env.LYTEX_PAINEL_URL?.trim() ?? "";
   return /^https:\/\/[^\s]+$/.test(u) ? u : null;
 }
+
+// Saques dos usuários (loja, afiliado, vendedor) na subconta Lytex de cada um: SÓ LEITURA para o admin.
+export type SaqueUsuario = { id: string; nome: string; papel: string; valor_centavos: number; custo_centavos: number; status: string; provedor: string; provedor_id: string | null; criado_em: string };
+export async function saquesDosUsuarios(): Promise<SaqueUsuario[]> {
+  const supabase = await criarClienteServidor();
+  const { data } = await supabase
+    .from("saques")
+    .select("id, papel, valor_centavos, custo_centavos, status, provedor, provedor_id, criado_em, profiles(nome)")
+    .order("criado_em", { ascending: false })
+    .limit(50);
+  return ((data ?? []) as unknown as (Omit<SaqueUsuario, "nome"> & { profiles: { nome: string } | null })[]).map(({ profiles, ...s }) => ({ ...s, nome: profiles?.nome ?? "Não informado" }));
+}

@@ -2709,5 +2709,32 @@ select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'assume_taxa_afil
 reset role;
 select teste.ok(exists (select 1 from public.audit_log where acao = 'assume_taxa_afiliado_alterado' and (detalhes ->> 'depois') = 'true'), 'assume taxa: a alteração fica no log');
 
+-- saques dos usuários (área financeira)
+:comoServidor
+insert into public.saques (user_id, papel, valor_centavos, custo_centavos, provedor, chave_idempotencia)
+values ('00000000-0000-0000-0000-00000000000a', 'produtor', 5000, 280, 'mock', 'chave-saque-a1');
+select teste.bloqueia($$insert into public.saques (user_id, papel, valor_centavos, provedor, chave_idempotencia)
+  values ('00000000-0000-0000-0000-00000000000a', 'produtor', 1000, 'mock', 'chave-saque-a2')$$, 'saques: só 1 pendente por pessoa');
+update public.saques set status = 'concluido' where chave_idempotencia = 'chave-saque-a1';
+select teste.bloqueia($$insert into public.saques (user_id, papel, valor_centavos, provedor, chave_idempotencia)
+  values ('00000000-0000-0000-0000-00000000000a', 'produtor', 1000, 'mock', 'chave-saque-a1')$$, 'saques: a mesma chave não cria outro saque (idempotência)');
+select teste.bloqueia($$insert into public.saques (user_id, papel, valor_centavos, provedor, chave_idempotencia)
+  values ('00000000-0000-0000-0000-00000000000a', 'produtor', 0, 'mock', 'chave-saque-a3')$$, 'saques: valor zero é recusado');
+:comoA
+select teste.ok((select count(*) = 1 from public.saques), 'saques: a pessoa vê o próprio saque');
+select teste.bloqueia($$insert into public.saques (user_id, papel, valor_centavos, provedor, chave_idempotencia)
+  values ('00000000-0000-0000-0000-00000000000a', 'produtor', 100, 'mock', 'chave-saque-a9')$$, 'saques: a pessoa não cria saque direto no banco');
+select teste.bloqueia($$update public.saques set status = 'falhou'$$, 'saques: a pessoa não altera saque');
+:comoB
+select teste.ok((select count(*) = 0 from public.saques), 'saques: outra pessoa não vê saque alheio');
+select teste.bloqueia($$select * from public.meu_extrato_financeiro('admin', now() - interval '1 day', now())$$, 'extrato financeiro: papel inválido recusado');
+select teste.ok((select count(*) = 0 from public.meu_extrato_financeiro('produtor', now() - interval '30 days', now())), 'extrato financeiro: quem não tem loja não vê pedidos de outros');
+:comoC
+select teste.ok((select count(*) >= 1 from public.saques), 'saques: o admin vê os saques de todos');
+:comoAnon
+select teste.bloqueia($$select * from public.saques$$, 'saques: visitante não lê');
+select teste.bloqueia($$select * from public.meu_extrato_financeiro('produtor', now() - interval '1 day', now())$$, 'extrato financeiro: visitante não executa');
+reset role;
+
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'

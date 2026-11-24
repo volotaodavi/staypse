@@ -107,3 +107,48 @@ export async function responderAtendimento(f: FormData) {
   if (error) voltar("Não foi possível responder.", true);
   voltar("Resposta enviada. O cliente vê pelo protocolo.");
 }
+
+// ---------- entrega própria: entregador, janela e andamento ----------
+const ERROS_ENTREGA: Record<string, string> = {
+  entregador_invalido: "Informe o nome do entregador (ou escolha um da lista).",
+  telefone_invalido: "Telefone inválido. Use DDD + número.",
+  janela_invalida: "O horário final precisa ser depois do inicial.",
+  entrega_ja_concluida: "Esta entrega já foi concluída.",
+  pedido_indisponivel: "O pedido precisa estar pago e ser de entrega própria da sua loja.",
+  entrega_sem_entregador: "Atribua o entregador antes de atualizar a entrega.",
+  status_invalido: "Esta etapa não pode ser marcada agora.",
+};
+const erroEntrega = (m?: string) => Object.entries(ERROS_ENTREGA).find(([k]) => m?.includes(k))?.[1] ?? "Não foi possível salvar a entrega.";
+
+// "2026-12-17T14:30" (horário de Brasília, UTC-3) -> ISO
+const horario = (v: string) => (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) ? new Date(`${v}:00-03:00`).toISOString() : null);
+
+export async function atribuirEntrega(f: FormData) {
+  await exigirPapel("produtor");
+  const codigo = texto(f, "codigo").replace(/[^A-Z0-9]/g, "").slice(0, 10);
+  const entregador = texto(f, "entregador");
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("atribuir_entrega_propria", {
+    p_order: texto(f, "pedido"),
+    p_entregador: /^[0-9a-f-]{36}$/.test(entregador) ? entregador : null,
+    p_nome: texto(f, "nome"),
+    p_telefone: texto(f, "telefone"),
+    p_mostrar_telefone: f.get("mostrar_telefone") === "sim",
+    p_inicio: horario(texto(f, "inicio")),
+    p_fim: horario(texto(f, "fim")),
+  });
+  if (error) voltar(erroEntrega(error.message), true, codigo);
+  revalidatePath(`/painel/loja/pedidos/${codigo}`);
+  voltar("Entrega atribuída.", false, codigo);
+}
+
+export async function atualizarEntrega(f: FormData) {
+  await exigirPapel("produtor");
+  const codigo = texto(f, "codigo").replace(/[^A-Z0-9]/g, "").slice(0, 10);
+  const status = texto(f, "status");
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("atualizar_entrega_propria", { p_order: texto(f, "pedido"), p_status: status });
+  if (error) voltar(erroEntrega(error.message), true, codigo);
+  revalidatePath(`/painel/loja/pedidos/${codigo}`);
+  voltar(status === "saiu" ? "Marcado como saiu para entrega." : "Entrega concluída.", false, codigo);
+}

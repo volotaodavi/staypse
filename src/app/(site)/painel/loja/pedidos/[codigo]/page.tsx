@@ -6,6 +6,7 @@ import { ROTULO_ENTREGA, ROTULO_ORIGEM_ATRIBUICAO, STATUS_ENTREGA, data, dataHor
 import { formatarPreco } from "@/lib/produtor";
 import { STATUS_EXIBICAO, minhaLoja, statusExibicao } from "../../dados";
 import { registrarEnvio } from "../acoes";
+import { EntregaPropria } from "./EntregaPropria";
 
 export const metadata = { title: "Pedido" };
 export const instant = false;
@@ -49,6 +50,8 @@ type Pedido = {
   revendedor_id: string | null;
   vendedor_id: string | null;
   atribuicao_origem: "link" | "codigo" | null;
+  entrega_zona_nome: string | null;
+  entrega_prazo_texto: string | null;
   storefronts: { slug: string; nome_exibicao: string | null } | null;
   loja_vendedores: { email: string } | null;
   order_items: Item[];
@@ -67,7 +70,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
   const { data: bruto } = await supabase
     .from("orders")
     .select(
-      "id, codigo, status, criado_em, pago_em, entregue_em, arrependimento_ate, arrependimento_motivo, comprador_nome, comprador_email, comprador_documento, comprador_telefone, endereco_entrega, entrega_modo, subtotal_centavos, frete_centavos, total_centavos, revendedor_id, vendedor_id, atribuicao_origem, storefronts(slug, nome_exibicao), loja_vendedores(email), order_items(id, nome_item, tipo_item, quantidade, preco_unitario_centavos, comissao_percentual, status_entrega, codigo_rastreio, nota_fiscal_numero, nota_fiscal_chave, nota_fiscal_url, enviado_em)",
+      "id, codigo, status, criado_em, pago_em, entregue_em, arrependimento_ate, arrependimento_motivo, comprador_nome, comprador_email, comprador_documento, comprador_telefone, endereco_entrega, entrega_modo, subtotal_centavos, frete_centavos, total_centavos, revendedor_id, vendedor_id, atribuicao_origem, entrega_zona_nome, entrega_prazo_texto, storefronts(slug, nome_exibicao), loja_vendedores(email), order_items(id, nome_item, tipo_item, quantidade, preco_unitario_centavos, comissao_percentual, status_entrega, codigo_rastreio, nota_fiscal_numero, nota_fiscal_chave, nota_fiscal_url, enviado_em)",
     )
     .eq("producer_id", loja.id)
     .eq("codigo", codigo)
@@ -203,6 +206,11 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
             )}
           </dl>
         </section>
+        {p.entrega_modo === "propria" && p.status === "pago" && (
+          <div className="lg:col-start-1">
+            <EntregaPropria pedidoId={p.id} codigo={p.codigo} produtorId={loja.id} zona={p.entrega_zona_nome} prazo={p.entrega_prazo_texto} />
+          </div>
+        )}
 
         <aside className="flex flex-col gap-3 text-sm">
           <section className="flex flex-col gap-1 rounded-2xl bg-branco p-5">

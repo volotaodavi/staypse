@@ -68,7 +68,7 @@ export const AREAS_MENU: AreaMenu[] = [
     papel: "produtor",
     caminho: "/painel/loja",
     titulo: "Loja",
-    raizes: ["/painel/loja", "/painel/produtor"],
+    raizes: ["/painel/loja", "/painel/produtor", "/painel/financeiro"],
     itens: [
       { href: "/painel/loja", rotulo: "Resumo", icone: "resumo" },
       { href: "/painel/loja/pedidos", rotulo: "Pedidos", icone: "pedidos" },
@@ -76,6 +76,7 @@ export const AREAS_MENU: AreaMenu[] = [
       { href: "/painel/loja/afiliados", rotulo: "Afiliados", icone: "afiliados" },
       { href: "/painel/loja/vendedores", rotulo: "Vendedores", icone: "vendedores", prefixos: ["/painel/produtor/vendedores"] },
       { href: "/painel/loja/recebimentos", rotulo: "Recebimentos", icone: "recebimentos" },
+      { href: "/painel/financeiro", rotulo: "Financeiro", icone: "recebimentos" },
       { href: "/painel/loja/minha-loja", rotulo: "Minha loja", icone: "loja", prefixos: ["/painel/produtor"] },
     ],
   },
@@ -84,13 +85,14 @@ export const AREAS_MENU: AreaMenu[] = [
     papel: "revendedor",
     caminho: "/painel/afiliado",
     titulo: "Afiliado",
-    raizes: ["/painel/afiliado", "/painel/revendedor"],
+    raizes: ["/painel/afiliado", "/painel/revendedor", "/painel/financeiro"],
     itens: [
       { href: "/painel/afiliado", rotulo: "Resumo", icone: "resumo", prefixos: ["/painel/revendedor"] },
       { href: "/painel/revendedor/catalogo", rotulo: "Catálogo", icone: "catalogo" },
       { href: "/painel/revendedor/vitrine", rotulo: "Vitrine", icone: "vitrine" },
       { href: "/painel/revendedor/links", rotulo: "Links externos", curto: "Links", icone: "links" },
       { href: "/painel/afiliado/recebimentos", rotulo: "Recebimentos", icone: "recebimentos" },
+      { href: "/painel/financeiro", rotulo: "Financeiro", icone: "recebimentos" },
     ],
   },
   {
@@ -98,10 +100,11 @@ export const AREAS_MENU: AreaMenu[] = [
     papel: "vendedor_proprio",
     caminho: "/painel/vendedor",
     titulo: "Vendedor da loja",
-    raizes: ["/painel/vendedor"],
+    raizes: ["/painel/vendedor", "/painel/financeiro"],
     itens: [
       { href: "/painel/vendedor", rotulo: "Resumo", icone: "resumo" },
       { href: "/painel/revendedor/vitrine", rotulo: "Minha vitrine", curto: "Vitrine", icone: "vitrine" },
+      { href: "/painel/financeiro", rotulo: "Financeiro", icone: "recebimentos" },
     ],
   },
 ];

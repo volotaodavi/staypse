@@ -24,6 +24,7 @@ import { MEIOS, type Meio } from "@/lib/pagamentos/parcelas";
 import { politicaParcelasDoItem, taxasVigentes } from "@/lib/pagamentos/politica";
 import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { garantirGeoCep, garantirGeoDaLoja } from "@/lib/entrega-propria-geo";
 import { formatarPreco } from "@/lib/produtor";
 import { urlDoSite } from "@/lib/supabase/env";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
@@ -38,6 +39,8 @@ export type Resumo = {
   total_centavos: number;
   prazo_postagem_dias: number | null;
   prazo_entrega_dias: number | null;
+  zona_nome?: string | null;
+  prazo_texto?: string | null;
   loja_nome: string;
   razao_social: string;
   cnpj: string;
@@ -72,22 +75,27 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   const quantidade = Number(valores.quantidade);
   const modo = valores.entrega as ModoEntrega;
   if (!Number.isInteger(quantidade) || quantidade < 1 || quantidade > 99) return dados("Escolha uma quantidade entre 1 e 99.");
-  if (!["envio", "retirada", "digital"].includes(modo)) return dados("Escolha a forma de entrega.");
+  if (!["envio", "retirada", "digital", "propria"].includes(modo)) return dados("Escolha a forma de entrega.");
   if (valores.nome.length < 2) return dados("Informe seu nome completo.");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(valores.email)) return dados("Informe um e-mail válido.");
   if (valores.cpf.replace(/\D/g, "").length !== 11) return dados("Informe seu CPF (11 números). A loja precisa dele para a nota fiscal.");
   if (!cpfValido(valores.cpf)) return dados("CPF inválido. Confira os números.");
-  if (modo === "envio") {
+  const comEndereco = modo === "envio" || modo === "propria";
+  if (comEndereco) {
     if (valores.cep.replace(/\D/g, "").length !== 8) return dados("Informe o CEP (8 números).");
     if (!valores.logradouro || !valores.numero || !valores.bairro || !valores.cidade || !/^[A-Z]{2}$/.test(valores.uf)) {
       return dados("Endereço incompleto. Confira rua, número, bairro, cidade e UF.");
     }
   }
 
+  // entrega própria: o servidor guarda cidade/bairro/coordenadas do CEP (cache) antes de o banco cotar
+  const cepNumeros = valores.cep.replace(/\D/g, "");
+  if (modo === "propria") await Promise.all([garantirGeoCep(cepNumeros), garantirGeoDaLojaDoItem(valores.item)]);
+
   // preço, frete e total: sempre do banco
   const supabase = await criarClienteServidor();
   const { data: cotacao, error: erroCotacao } = await supabase
-    .rpc("cotar_pedido", { p_item: valores.item, p_quantidade: quantidade, p_modo: modo })
+    .rpc("cotar_pedido", { p_item: valores.item, p_quantidade: quantidade, p_modo: modo, p_cep: modo === "propria" ? cepNumeros : null })
     .maybeSingle<Resumo>();
   if (erroCotacao || !cotacao) return dados(mensagemDeErro(erroCotacao, "Não foi possível calcular o pedido. Tente de novo."));
 
@@ -162,7 +170,7 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
       p_documento: valores.cpf,
       p_telefone: valores.telefone || null,
       p_endereco:
-        modo === "envio"
+        comEndereco
           ? {
               cep: valores.cep.replace(/\D/g, ""),
               logradouro: valores.logradouro,
@@ -196,4 +204,22 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     destino = `${caminho}&${new URLSearchParams({ erro: mensagemDePagamento(e) }).toString()}`;
   }
   redirect(destino);
+}
+
+async function garantirGeoDaLojaDoItem(item: string) {
+  const { data } = await criarClienteAdmin().from("items").select("producer_id").eq("id", item).maybeSingle();
+  if (data?.producer_id) await garantirGeoDaLoja(data.producer_id as string);
+}
+
+export type CotacaoPropria = { zona_nome: string; frete_centavos: number; distancia_km: number | null; prazo_texto: string; loja_paga: boolean };
+
+// Tela do checkout: "a entrega própria atende este CEP?" Preço e zona vêm do banco.
+export async function cotarEntregaPropria(item: string, cep: string, quantidade: number): Promise<CotacaoPropria | null> {
+  const numeros = cep.replace(/\D/g, "");
+  if (numeros.length !== 8 || !/^[0-9a-f-]{36}$/.test(item)) return null;
+  await Promise.all([garantirGeoCep(numeros), garantirGeoDaLojaDoItem(item)]);
+  const { data } = await criarClienteServidor()
+    .rpc("cotar_entrega_propria", { p_item: item, p_cep: numeros, p_quantidade: Math.min(99, Math.max(1, Math.trunc(quantidade) || 1)) })
+    .maybeSingle<CotacaoPropria>();
+  return data ?? null;
 }

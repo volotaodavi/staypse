@@ -10,12 +10,13 @@ import { formatarCnpj, formatarPreco } from "@/lib/produtor";
 import { ROTULO_ENTREGA, type ModoEntrega } from "@/lib/pedidos";
 import type { OpcaoParcela } from "@/lib/pagamentos/juros";
 import { MEIOS, ROTULO_MEIO, type Meio } from "@/lib/pagamentos/parcelas";
-import { comprar, type EstadoCompra } from "./acoes";
+import { comprar, cotarEntregaPropria, type CotacaoPropria, type EstadoCompra } from "./acoes";
 
 type Opcoes = {
   envio: boolean;
   retirada: boolean;
   digital: boolean;
+  propria?: boolean;
   frete_fixo_centavos: number | null;
   frete_gratis_acima_centavos: number | null;
   frete_prazo_dias: number | null;
@@ -110,9 +111,12 @@ export function FormCompra({
 }) {
   const [estado, acao] = useActionState<EstadoCompra, FormData>(comprar, undefined);
   const v = estado?.valores ?? {};
-  const modos = (["envio", "retirada", "digital"] as ModoEntrega[]).filter((m) => opcoes[m]);
+  const modos = (["envio", "propria", "retirada", "digital"] as ModoEntrega[]).filter((m) => opcoes[m]);
   const [modo, setModo] = useState<ModoEntrega>((v.entrega as ModoEntrega) || modos[0]);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  // entrega própria: undefined = ainda não consultou o CEP; null = a loja não atende este CEP
+  const [propria, setPropria] = useState<CotacaoPropria | null | undefined>();
+  const [cepPropria, setCepPropria] = useState("");
   const [avisoCep, setAvisoCep] = useState("");
   const [quantidade, setQuantidade] = useState(v.quantidade || "1");
   const [meioEscolhido, setMeioEscolhido] = useState<string>(v.meio ?? "");
@@ -135,10 +139,13 @@ export function FormCompra({
     const r = estado?.etapa === "resumo" ? estado.resumo : undefined;
     const q = r ? r.quantidade : Math.min(99, Math.max(1, Math.trunc(Number(quantidade)) || 1));
     const sub = r ? r.subtotal_centavos : vitrine.precoCentavos * q;
-    const comFrete = r ? r.frete_centavos > 0 || modo === "envio" : modo === "envio" && opcoes.frete_fixo_centavos != null;
+    const pr = modo === "propria" && !r ? propria : null;
+    const comFrete = r ? r.frete_centavos > 0 || modo === "envio" || modo === "propria" : modo === "envio" ? opcoes.frete_fixo_centavos != null : Boolean(pr);
     const frete = r
       ? r.frete_centavos
-      : opcoes.frete_gratis_acima_centavos != null && sub >= opcoes.frete_gratis_acima_centavos
+      : pr
+        ? pr.frete_centavos
+        : opcoes.frete_gratis_acima_centavos != null && sub >= opcoes.frete_gratis_acima_centavos
         ? 0
         : (opcoes.frete_fixo_centavos ?? 0);
     return (
@@ -283,7 +290,7 @@ export function FormCompra({
           <dl className="grid gap-3 text-sm text-neutral-800">
             <Bloco titulo="Entrega">
               {ROTULO_ENTREGA[estado.valores.entrega as ModoEntrega]}
-              {estado.valores.entrega === "envio" && (
+              {(estado.valores.entrega === "envio" || estado.valores.entrega === "propria") && (
                 <>
                   <br />
                   {estado.valores.logradouro}, {estado.valores.numero}
@@ -291,7 +298,13 @@ export function FormCompra({
                   {estado.valores.cidade}/{estado.valores.uf}, CEP {estado.valores.cep}
                 </>
               )}
-              {r.prazo_postagem_dias != null && r.tipo === "fisico" && (
+              {estado.valores.entrega === "propria" && r.prazo_texto && (
+                <>
+                  <br />
+                  Zona {r.zona_nome}. {r.prazo_texto}.
+                </>
+              )}
+              {r.prazo_postagem_dias != null && r.tipo === "fisico" && estado.valores.entrega !== "propria" && (
                 <>
                   <br />
                   Postagem em até {r.prazo_postagem_dias} dia(s) útil(eis) após o pagamento
@@ -364,9 +377,17 @@ export function FormCompra({
     );
   }
 
+  async function consultarPropria(cep: string, qtd: string) {
+    const numeros = cep.replace(/\D/g, "");
+    if (numeros.length !== 8) return setPropria(undefined);
+    setCepPropria(numeros);
+    setPropria(await cotarEntregaPropria(item, numeros, Number(qtd)));
+  }
+
   async function buscarCep(cep: string, form: HTMLFormElement | null) {
     const numeros = cep.replace(/\D/g, "");
     if (numeros.length !== 8 || !form) return;
+    if (modo === "propria") void consultarPropria(numeros, quantidade);
     setBuscandoCep(true);
     setAvisoCep("");
     try {
@@ -405,7 +426,10 @@ export function FormCompra({
             max={99}
             required
             value={quantidade}
-            onChange={(e) => setQuantidade(e.target.value)}
+            onChange={(e) => {
+              setQuantidade(e.target.value);
+              if (modo === "propria" && cepPropria) void consultarPropria(cepPropria, e.target.value);
+            }}
             className={`${campo} w-28`}
             {...invalido("quantidade")}
           />
@@ -427,6 +451,11 @@ export function FormCompra({
                     {opcoes.frete_prazo_dias ? `, chega em até ${opcoes.frete_prazo_dias} dia(s) útil(eis) após a postagem` : ""}
                   </span>
                 )}
+                {m === "propria" && (
+                  <span className="block text-neutral-700">
+                    A loja entrega com motoboy ou motorista, em algumas regiões. Informe seu CEP abaixo para ver o preço e o prazo.
+                  </span>
+                )}
                 {m === "retirada" && <span className="block text-neutral-700">Sem frete. A loja combina o local e o horário com você.</span>}
               </span>
             </label>
@@ -434,7 +463,7 @@ export function FormCompra({
         </div>
       </fieldset>
 
-      {modo === "envio" && (
+      {(modo === "envio" || modo === "propria") && (
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-2 text-lg font-semibold">Endereço de entrega</legend>
           <label className={rotulo}>
@@ -455,6 +484,17 @@ export function FormCompra({
           <p id="aviso-cep" role="status" className="text-sm text-neutral-700">
             {buscandoCep ? "Buscando endereço..." : avisoCep}
           </p>
+          {modo === "propria" && (
+            <p role="status" className="rounded-md border border-neutral-400 bg-neutral-50 px-3 py-2 text-sm text-neutral-900">
+              {propria === undefined
+                ? "Informe o CEP para ver se a loja entrega aí."
+                : propria === null
+                  ? "A entrega própria da loja não atende este CEP. Escolha outra forma de entrega."
+                  : `Entrega própria (${propria.zona_nome}): ${propria.frete_centavos === 0 ? "frete grátis" : formatarPreco(propria.frete_centavos)}${
+                      propria.distancia_km != null ? `, cerca de ${String(propria.distancia_km).replace(".", ",")} km` : ""
+                    }. ${propria.prazo_texto}.`}
+            </p>
+          )}
           <p className="text-xs text-neutral-700">
             Ao sair do campo CEP, o número é enviado ao serviço gratuito BrasilAPI para preencher o endereço. Se preferir, preencha à mão.
           </p>

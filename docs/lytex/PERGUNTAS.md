@@ -97,3 +97,8 @@ Usamos só o que o spec tem: GET /v2/wallet, GET /v2/wallet/transactions/resume,
 - As credenciais (client_id/secret) da API acessam a carteira da conta principal da Staypse ou de uma subconta?
 - O saque exige conta bancária ativa com o mesmo CPF/CNPJ da Staypse? Há limite diário e horário de corte?
 - Existe webhook de aprovação do saque (`waiting_approval` para `approved`/`released`)?
+
+## Área financeira dos usuários (subconta, saque)
+58. **Saldo da subconta.** O spec não tem saldo por subconta: `GET /v2/wallet` (WalletController_getWalletInfo_v2) e `/v2/wallet/transactions*` não aceitam o cabeçalho `subRecipientId`, e `GET /v2/sub-accounts/{id}` (SubAccountsController_get_v2) não traz saldo. Só `POST /v2/sub-accounts/withdraw` (SubAccountsController_createWithdrawSolicitationSubAccounts_v2) e `GET /v2/sub-accounts/bank_accounts` (SubAccountsController_listBankAccounts_v2) aceitam `subRecipientId`. Hoje a tela mostra "Consulte no painel da Lytex". Existe rota de saldo, extrato ou recebíveis por subconta (`GET /v2/receivables` aceita `subRecipientId`)?
+59. **Status do saque.** Não há rota para consultar um saque depois de criado. Como saber que `waiting_approval` virou `released`/`rejected` (webhook? consulta)? Sem isso o saque fica "pendente" na Staypse até o admin conferir.
+60. **Custo do saque de subconta.** O `taxes` da resposta vem em centavos? A tela mostra R$ 2,80 (contrato) antes de confirmar; confirmar se é descontado do valor sacado ou somado.

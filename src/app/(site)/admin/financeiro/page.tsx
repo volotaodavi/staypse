@@ -8,13 +8,14 @@ import { GraficoBarras } from "@/components/painel/GraficoBarras";
 import { Numeros, inteiro } from "@/components/painel/Numeros";
 import { TabelaDados } from "@/components/painel/TabelaDados";
 import { exigirPapel } from "@/lib/papeis";
+import { dataHora } from "@/lib/pedidos";
 import { lerPeriodo, parametrosPeriodo } from "@/lib/periodo";
 import { MODALIDADES, ROTULO_MODALIDADE, type Modalidade } from "@/lib/pagamentos/taxas";
 import { formatarPreco } from "@/lib/produtor";
 import { um } from "../comuns";
 import { POR_PAGINA, Paginacao, lerPagina } from "../paginacao";
 import { sacarAcao } from "./acoes";
-import { contaStaypse, painelLytexUrl, porModalidade, ranking, resumoFinanceiro, serieDiaria, type TipoRanking } from "./dados";
+import { contaStaypse, painelLytexUrl, porModalidade, ranking, resumoFinanceiro, saquesDosUsuarios, serieDiaria, type TipoRanking } from "./dados";
 import { reaisParaCentavos, validarSaque } from "./saque";
 
 export const metadata = { title: "Financeiro da Staypse" };
@@ -37,12 +38,13 @@ export default async function AdminFinanceiro({ searchParams }: PageProps<"/admi
   const busca = (um(sp.q) ?? "").trim().slice(0, 80);
   const pagina = lerPagina(sp.pagina);
 
-  const [r, serie, linhas, conta, modalidades] = await Promise.all([
+  const [r, serie, linhas, conta, modalidades, saquesUsuarios] = await Promise.all([
     resumoFinanceiro(periodo),
     serieDiaria(periodo),
     ranking(aba.tipo, periodo, busca, POR_PAGINA, (pagina - 1) * POR_PAGINA),
     contaStaypse(),
     porModalidade(periodo),
+    saquesDosUsuarios(),
   ]);
   const total = linhas[0]?.total_linhas ?? 0;
   const semMovimento = r.pedidos === 0 && r.reembolsos_qtd === 0 && r.chargebacks_qtd === 0;
@@ -249,6 +251,22 @@ export default async function AdminFinanceiro({ searchParams }: PageProps<"/admi
             )}
           </>
         )}
+      </section>
+
+      <section aria-labelledby="titulo-saques" className="flex flex-col gap-3">
+        <h2 id="titulo-saques" className="text-xl">
+          Saques dos usuários (só leitura)
+        </h2>
+        <p className="max-w-prose text-sm text-petroleo/80">Pedidos de saque feitos por lojas, afiliados e vendedores na própria subconta Lytex. A Staypse só registra.</p>
+        <TabelaDados
+          legenda="Últimos saques dos usuários"
+          colunas={[{ titulo: "Quem", principal: true }, { titulo: "Papel" }, { titulo: "Valor", numero: true }, { titulo: "Situação" }, { titulo: "Data" }, { titulo: "Código na Lytex" }]}
+          linhas={saquesUsuarios.map((s) => ({
+            chave: s.id,
+            celulas: [s.nome, s.papel === "produtor" ? "Loja" : s.papel === "afiliado" ? "Afiliado" : "Vendedor", formatarPreco(s.valor_centavos), s.status, dataHora(s.criado_em), s.provedor_id ?? "-"],
+          }))}
+          vazio={{ texto: "Nenhum saque de usuário ainda." }}
+        />
       </section>
 
       <section aria-labelledby="titulo-receitas" className="flex flex-col gap-4">

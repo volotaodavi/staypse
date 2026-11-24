@@ -18,6 +18,7 @@ import {
   enderecoEmLinha,
   type PedidoComprador,
 } from "@/lib/pedidos";
+import { ROTULO_STATUS_ENTREGA } from "@/lib/entrega-propria";
 import { formatarCnpj, formatarPreco } from "@/lib/produtor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/supabase/env";
@@ -54,13 +55,18 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
   const msg = um(sp.msg);
   const erro = um(sp.erro);
   const enviado = p.itens.some((i) => i.status_entrega === "enviado" || i.status_entrega === "entregue");
+  const ep = p.entrega_propria;
   const etapas = [
     { nome: "Pedido feito", feito: true, quando: p.criado_em },
     { nome: "Pagamento confirmado", feito: Boolean(p.pago_em), quando: p.pago_em },
     p.entrega_modo === "digital"
       ? { nome: "Acesso liberado", feito: Boolean(p.entregue_em), quando: p.entregue_em }
-      : { nome: p.entrega_modo === "retirada" ? "Pronto / retirado" : "Enviado", feito: enviado || Boolean(p.entregue_em), quando: null },
-    ...(p.entrega_modo === "digital" ? [] : [{ nome: "Recebido", feito: Boolean(p.entregue_em), quando: p.entregue_em }]),
+      : p.entrega_modo === "propria"
+        ? { nome: "Saiu para entrega", feito: ep != null && ep.status !== "preparando", quando: ep?.saiu_em ?? null }
+        : { nome: p.entrega_modo === "retirada" ? "Pronto / retirado" : "Enviado", feito: enviado || Boolean(p.entregue_em), quando: null },
+    ...(p.entrega_modo === "digital"
+      ? []
+      : [{ nome: "Recebido", feito: Boolean(p.entregue_em) || ep?.status === "entregue", quando: p.entregue_em ?? ep?.entregue_em ?? null }]),
   ];
   const encerrado = ["cancelado", "em_reembolso", "reembolsado", "chargeback"].includes(p.status);
   // dados do pagamento e tema da loja (guardados só no servidor; nunca vêm do navegador)
@@ -235,6 +241,24 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
             <h2 className="text-xl">Entrega</h2>
             <p>{ROTULO_ENTREGA[p.entrega_modo]}</p>
             {p.endereco && <p className="text-petroleo/80">{enderecoEmLinha(p.endereco)}</p>}
+            {ep && (
+              <div className="flex flex-col gap-1 rounded-xl bg-gelo p-3" data-entrega-propria>
+                <p>
+                  Status: <strong>{ROTULO_STATUS_ENTREGA[ep.status]}</strong>
+                </p>
+                {ep.entregador_nome ? <p>Entregador: {ep.entregador_nome}</p> : <p>A loja ainda vai escolher o entregador.</p>}
+                {ep.entregador_telefone && <p>Telefone do entregador: {ep.entregador_telefone}</p>}
+                {ep.janela_inicio && (
+                  <p>
+                    Horário estimado: {dataHora(ep.janela_inicio)}
+                    {ep.janela_fim ? ` até ${dataHora(ep.janela_fim)}` : ""}
+                  </p>
+                )}
+                {!ep.janela_inicio && ep.prazo_texto && <p>{ep.prazo_texto}.</p>}
+                {ep.saiu_em && <p>Saiu para entrega em {dataHora(ep.saiu_em)}.</p>}
+                {ep.entregue_em && <p>Entregue em {dataHora(ep.entregue_em)}.</p>}
+              </div>
+            )}
             {p.prazo_entrega_dias && <p className="text-petroleo/80">Chega em até {p.prazo_entrega_dias} dia(s) útil(eis) após a postagem.</p>}
             {p.arrependimento_ate && p.status === "pago" && (
               <p className="text-petroleo/80">Você pode desistir até {data(p.arrependimento_ate)}.</p>

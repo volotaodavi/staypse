@@ -166,6 +166,15 @@ export type ResumoCarteiraLytex = { entradasCentavos: number; saidasCentavos: nu
 export type ContaBancariaLytex = { id: string; banco: string; agencia: string; conta: string; titular: string };
 export type SaqueLytex = { id: string; valorCentavos: number; taxasCentavos: number; status: string };
 
+// Subconta de um usuário (loja, afiliado ou vendedor): o dinheiro dele fica na subconta, nunca na Staypse.
+// O spec NÃO traz saldo por subconta (GET /v2/wallet não aceita o cabeçalho subRecipientId): ver PERGUNTAS 58.
+export type ContaBancariaSubconta = { id: string; banco: string; agenciaFinal: string; contaFinal: string };
+export type SaqueSubconta = { id: string; taxasCentavos: number; status: string };
+export type ContaSubconta = {
+  contasBancarias(subId: string): Promise<ContaBancariaSubconta[]>;
+  solicitarSaque(subId: string, valorCentavos: number, contaBancariaId: string): Promise<SaqueSubconta>;
+};
+
 export type ContaLytex = {
   carteira(): Promise<CarteiraLytex>;
   resumoCarteira(): Promise<ResumoCarteiraLytex>;
@@ -178,6 +187,7 @@ export type ProvedorLytex = Omit<PaymentProvider, "criarRecebedor" | "criarCobra
   criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor>;
   criarCobranca(dados: DadosCobrancaLytex): Promise<Cobranca>;
   conta: ContaLytex;
+  subconta: ContaSubconta;
 };
 
 export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
@@ -189,10 +199,10 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
   let token: Token | null = null;
   let emVoo: Promise<Token> | null = null;
 
-  async function chamar(metodo: string, caminho: string, corpo?: unknown, bearer?: string): Promise<unknown> {
+  async function chamar(metodo: string, caminho: string, corpo?: unknown, bearer?: string, extra?: Record<string, string>): Promise<unknown> {
     const res = await doFetch(`${base()}${caminho}`, {
       method: metodo,
-      headers: { "content-type": "application/json", ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) },
+      headers: { "content-type": "application/json", ...(bearer ? { authorization: `Bearer ${bearer}` } : {}), ...extra },
       body: corpo === undefined ? undefined : JSON.stringify(corpo),
       signal: AbortSignal.timeout(20_000),
       cache: "no-store",
@@ -254,12 +264,12 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
   }
 
   // chamada autenticada; um 401 (token revogado/expirado) renova uma vez e repete
-  async function api(metodo: string, caminho: string, corpo?: unknown): Promise<unknown> {
+  async function api(metodo: string, caminho: string, corpo?: unknown, extra?: Record<string, string>): Promise<unknown> {
     try {
-      return await chamar(metodo, caminho, corpo, await accessToken());
+      return await chamar(metodo, caminho, corpo, await accessToken(), extra);
     } catch (e) {
       if ((e as { status?: number }).status !== 401 && (e as { status?: number }).status !== 410) throw e;
-      return chamar(metodo, caminho, corpo, await accessToken(true));
+      return chamar(metodo, caminho, corpo, await accessToken(true), extra);
     }
   }
 
@@ -318,10 +328,36 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
     },
   };
 
+  // cabeçalho que escolhe a subconta (parâmetro subRecipientId das rotas /v2/sub-accounts/...)
+  const comoSubconta = (subId: string) => ({ subRecipientId: subId });
+  const fim = (v?: string) => (v ? v.slice(-4) : "");
+
+  const subconta: ContaSubconta = {
+    // SubAccountsController_listBankAccounts_v2: GET /v2/sub-accounts/bank_accounts?active=true → results[]
+    // Devolve só o final da agência e da conta: dados bancários completos nunca chegam à tela.
+    async contasBancarias(subId) {
+      type Conta = { _id?: string; bank?: { name?: string }; agency?: { number?: string }; account?: { number?: string } };
+      const r = (await api("GET", "/v2/sub-accounts/bank_accounts?active=true&perPage=20", undefined, comoSubconta(subId))) as { results?: Conta[] } | null;
+      return (r?.results ?? [])
+        .filter((c): c is Conta & { _id: string } => typeof c._id === "string")
+        .map((c) => ({ id: c._id, banco: c.bank?.name ?? "Banco", agenciaFinal: fim(c.agency?.number), contaFinal: fim(c.account?.number) }));
+    },
+    // SubAccountsController_createWithdrawSolicitationSubAccounts_v2: POST /v2/sub-accounts/withdraw {amount:integer>=1, _bankAccountId}
+    // com o cabeçalho subRecipientId → 201 WithdrawSolicitation (status: waiting_approval | approved | rejected | reproved | released)
+    async solicitarSaque(subId, valorCentavos, contaBancariaId) {
+      if (!Number.isInteger(valorCentavos) || valorCentavos < 1) throw new Error("saque_valor_invalido");
+      const w = (await api("POST", "/v2/sub-accounts/withdraw", { amount: valorCentavos, _bankAccountId: contaBancariaId }, comoSubconta(subId))) as
+        | { _id?: string; taxes?: number; status?: string }
+        | null;
+      return { id: w?._id ?? "", taxasCentavos: num(w?.taxes), status: w?.status ?? "waiting_approval" };
+    },
+  };
+
   return {
     nome: "lytex",
     consultarRecebedor,
     conta,
+    subconta,
 
     // SubAccountsController_create_v2: POST /v2/sub-accounts
     async criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor> {
@@ -472,3 +508,5 @@ const instancia = criarLytex();
 export const lytex: PaymentProvider = instancia;
 // conta própria da Staypse (carteira, contas bancárias, saque): só o admin usa
 export const contaLytex: ContaLytex = instancia.conta;
+// subcontas dos usuários (saque e contas bancárias)
+export const subcontaLytex: ContaSubconta = instancia.subconta;
