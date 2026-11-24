@@ -52,15 +52,6 @@ export const TAXAS_PADRAO: TaxasPlataforma = {
   pedidoMinimoCentavos: PEDIDO_MINIMO_CENTAVOS,
 };
 
-// Tabela anterior (vale até a data de vigência da nova; docs/precificacao.md, seção 3 antiga)
-export const TAXAS_ANTERIORES: Record<Modalidade, Taxa> = {
-  pix: { percentual: 1.5, fixoCentavos: 200 },
-  boleto: { percentual: 1.5, fixoCentavos: 230 },
-  cartao_1x: { percentual: 4.9, fixoCentavos: 50 },
-  cartao_2a6: { percentual: 5.5, fixoCentavos: 50 },
-  cartao_7a12: { percentual: 6.1, fixoCentavos: 50 },
-};
-
 export function modalidadeDoPagamento(meio: "pix" | "boleto" | "cartao", parcelas = 1): Modalidade {
   if (meio === "pix" || meio === "boleto") return meio;
   if (!Number.isInteger(parcelas) || parcelas < 1 || parcelas > 12) throw new Error("parcelas_invalidas");

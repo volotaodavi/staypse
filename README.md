@@ -39,7 +39,7 @@ legado/                   ← site antigo, só para consulta
 
 | Regra | Onde |
 |---|---|
-| 1. Staypse nunca guarda dinheiro | `payment_refs` só guarda referências (id da cobrança, status, % do split). Nenhuma coluna de saldo/carteira/repasse — há teste que garante isso. |
+| 1. Staypse nunca guarda dinheiro | `payment_refs` só guarda referências (id da cobrança, status, % do split). Nenhuma coluna de saldo/carteira/repasse, há teste que garante isso. |
 | 2. Produtor com CNPJ ativo + documento; nota fiscal por venda | Constraint `producers_aprovacao_exige_cnpj_e_documento`; `order_items_entrega_exige_nota` impede marcar envio sem NF. |
 | 3. Rodapé legal | `src/components/Rodape.tsx` lendo `src/config/empresa.ts`, presente no layout raiz. |
 | 4. Resumo antes de pagar | `orders.resumo_aceito_em` obrigatório (tela vem na etapa de checkout). |
@@ -124,7 +124,7 @@ banco (RPCs, RLS e gatilhos) e só mexe em usuários `@demo.staypse.invalid`.
 
 ## ⚠️ Obrigatório antes de abrir o beta ao público
 
-- [ ] **E-mail próprio (SMTP) no Supabase** — Authentication → SMTP Settings.
+- [ ] **E-mail próprio (SMTP) no Supabase**, Authentication → SMTP Settings.
       O envio padrão do Supabase tem limite muito baixo por hora: sem SMTP
       próprio, confirmações de cadastro e links mágicos deixam de chegar.
       Configure também os textos dos e-mails em português (passo 6 acima).
@@ -141,7 +141,7 @@ banco (RPCs, RLS e gatilhos) e só mexe em usuários `@demo.staypse.invalid`.
 - **first-customer-finder** (`.claude/skills/first-customer-finder/`, licença MIT,
   de github.com/carolinacherry/claude-first-customer-finder-skill): pesquisa
   possíveis primeiros clientes a partir de sinais públicos, verifica cada fonte,
-  dá nota e **só rascunha** mensagens — nunca envia nada. Use com o resumo
+  dá nota e **só rascunha** mensagens, nunca envia nada. Use com o resumo
   `docs/brief-staypse.md`. Os relatórios vão para `outputs/` (fora do git).
   Precisa de acesso amplo à internet para pesquisar: rode no seu Claude Code
   local ou num ambiente da nuvem com rede liberada.
@@ -162,7 +162,7 @@ Supabase). Qualquer aviso fora dessa lista deve ser investigado.
 
 - **Recuperar o link de indicação por e-mail** (para quem perdeu a página de
   obrigado). Só depois do SMTP próprio configurado.
-- Consulta automática do CNPJ (situação na Receita) no cadastro do produtor —
+- Consulta automática do CNPJ (situação na Receita) no cadastro do produtor -
   hoje o admin confere manualmente pelo link oficial da Receita.
 - Preenchimento do endereço pelo CEP.
 

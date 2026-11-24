@@ -26,7 +26,7 @@ begin
     raise notice 'ok: % (bloqueado: %)', msg, sqlerrm;
     return;
   end;
-  raise exception 'FALHOU: % — o comando passou e não devia', msg;
+  raise exception 'FALHOU: %, o comando passou e não devia', msg;
 end $$;
 
 -- roda um comando e devolve quantas linhas ele afetou
@@ -117,7 +117,7 @@ select teste.bloqueia($$insert into public.user_roles values ('00000000-0000-000
                       'usuário não mexe em papéis de outro');
 
 -- =========================================================================
--- 3. Produtor (REGRA 2) — cadastro em passos + decisão do admin (Etapa 3)
+-- 3. Produtor (REGRA 2), cadastro em passos + decisão do admin (Etapa 3)
 -- =========================================================================
 :comoD
 select teste.bloqueia($$insert into public.producers (user_id, razao_social, cnpj)
@@ -474,7 +474,7 @@ begin
     raise notice 'ok: % (bloqueado: %)', msg, sqlerrm;
     return;
   end;
-  raise exception 'FALHOU: % — a inscrição passou e não devia', msg;
+  raise exception 'FALHOU: %, a inscrição passou e não devia', msg;
 end $$;
 grant execute on function teste.inscricao_recusada(jsonb, text, text) to service_role;
 
@@ -831,7 +831,7 @@ select teste.ok((select count(*) from public.produto_da_loja('ana-cosmeticos', '
 select teste.ok((select count(*) from public.produto_da_loja('ana-cosmeticos', 'serum-facial')) = 0, 'produto em análise não abre');
 
 -- =========================================================================
--- 14. Links curtos, identidade visual e vendedores próprios (Etapa 4 — complemento)
+-- 14. Links curtos, identidade visual e vendedores próprios (Etapa 4, complemento)
 -- =========================================================================
 :comoServidor
 select teste.ok((select not atribuido and loja_slug = 'ana-cosmeticos'
@@ -2898,6 +2898,21 @@ select public.atualizar_entrega_propria(:'pedp_id', 'entregue');
 select teste.ok((select status = 'entregue' and entregue_em is not null from public.entregas_proprias), 'entrega: entregue registra a hora');
 select teste.bloqueia(format('select public.atribuir_entrega_propria(%L, null, %L, null, false, null, null)', :'pedp_id', 'Outro'), 'entrega: depois de entregue não troca o entregador');
 reset role;
+
+-- saques pendentes antigos são encerrados pela conciliação (só o servidor chama)
+reset role;
+insert into public.saques (user_id, papel, valor_centavos, provedor, chave_idempotencia, criado_em)
+  values ('00000000-0000-0000-0000-00000000000a', 'produtor', 1000, 'lytex', 'chave-antiga-1', now() - interval '3 days'),
+         ('00000000-0000-0000-0000-00000000000b', 'afiliado', 1000, 'lytex', 'chave-nova-001', now());
+:comoA
+select teste.bloqueia($$select public.encerrar_saques_pendentes()$$, 'saques: usuário logado não encerra saques');
+:comoAnon
+select teste.bloqueia($$select public.encerrar_saques_pendentes()$$, 'saques: visitante não encerra saques');
+:comoServidor
+select teste.ok((select public.encerrar_saques_pendentes() = 1), 'saques: só o pendente com mais de 2 dias é encerrado');
+reset role;
+select teste.ok((select status = 'concluido' from public.saques where chave_idempotencia = 'chave-antiga-1')
+                and (select status = 'pendente' from public.saques where chave_idempotencia = 'chave-nova-001'), 'saques: o recente continua pendente');
 
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'

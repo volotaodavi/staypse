@@ -1,4 +1,4 @@
-# Auditoria de qualidade — Staypse
+# Auditoria de qualidade, Staypse
 
 Data: 2026-11-23. Auditoria somente leitura (nenhum código foi alterado). Cada achado foi conferido no código; o arquivo e a linha estão na tabela.
 

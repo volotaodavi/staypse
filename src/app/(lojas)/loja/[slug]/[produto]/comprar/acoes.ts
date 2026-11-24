@@ -201,7 +201,8 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     if (url && meio === "cartao") destino = url;
   } catch (e) {
     console.error("iniciarCobranca:", e instanceof Error ? e.message : e);
-    destino = `${caminho}&${new URLSearchParams({ erro: mensagemDePagamento(e) }).toString()}`;
+    // meio e parcelas seguem na URL: o "Pagar agora" refaz a cobrança com a MESMA escolha (a taxa da loja depende dela)
+    destino = `${caminho}&${new URLSearchParams({ erro: mensagemDePagamento(e), meio, parcelas: String(parcelas) }).toString()}`;
   }
   redirect(destino);
 }

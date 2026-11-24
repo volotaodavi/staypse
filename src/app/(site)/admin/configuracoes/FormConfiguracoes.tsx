@@ -37,7 +37,7 @@ export function FormConfiguracoes({ inicial }: { inicial: ValoresIniciais }) {
       ))}
 
       <fieldset className="grid gap-4 rounded-2xl bg-branco p-4 sm:grid-cols-3 sm:p-5">
-        <legend className="px-1 text-lg font-medium">Custo Lytex por repasse (split)</legend>
+        <legend className="px-1 text-lg font-medium">Custo Lytex por divisão (split)</legend>
         <Campo rotulo="Percentual do valor repassado (%)" name="split_pct" inputMode="decimal" required defaultValue={inicial.taxas.split.pct} dica="Interno. Por recebedor." />
         <Campo rotulo="Mínimo (R$)" name="split_min" inputMode="decimal" required defaultValue={inicial.taxas.split.min} />
         <Campo rotulo="Máximo (R$)" name="split_max" inputMode="decimal" required defaultValue={inicial.taxas.split.max} />

@@ -7,6 +7,7 @@ import { emailDoLinkDoPedido } from "@/lib/email-conteudo";
 import { hashDoIp } from "@/lib/ip";
 import { cancelarCobrancaDoPedido, iniciarCobranca } from "@/lib/pagamentos/cobrancas";
 import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
+import { meiosAtivos } from "@/lib/pagamentos/meios";
 import { mensagemDeErro } from "@/lib/pedidos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/supabase/env";
@@ -65,7 +66,12 @@ export async function iniciarPagamento(f: FormData) {
   let destino: string | null = null;
   let falha = "";
   try {
-    destino = (await iniciarCobranca(id, `${urlDoSite()}/pedido/${codigo}?t=${token}`)).url;
+    // escolha feita no checkout (vem na URL quando a 1ª tentativa falhou); o servidor revalida meio e parcelas
+    const meio = String(f.get("meio") ?? "") as "pix" | "boleto" | "cartao";
+    const parcelas = Number(f.get("parcelas") ?? 1);
+    const ligados = await meiosAtivos();
+    const escolha = ["pix", "boleto", "cartao"].includes(meio) && ligados[meio] ? { meio, parcelas: Number.isInteger(parcelas) && parcelas >= 1 && parcelas <= 12 ? parcelas : 1 } : undefined;
+    destino = (await iniciarCobranca(id, `${urlDoSite()}/pedido/${codigo}?t=${token}`, escolha)).url;
   } catch (e) {
     console.error("iniciarCobranca:", e instanceof Error ? e.message : e);
     falha = e instanceof Error && e.message.includes("pedido_nao_aguarda_pagamento") ? "Este pedido não está aguardando pagamento." : mensagemDePagamento(e);

@@ -70,6 +70,22 @@ describe("lytex: status da fatura", () => {
   });
 });
 
+describe("lytex: consulta com 503", () => {
+  it("repete o GET (até 2 vezes) e nunca repete o POST", async () => {
+    let gets = 0;
+    const { f, chamadas } = simular({
+      "POST /v2/auth/obtain_token": () => token(),
+      "GET /v2/invoices/": () => (++gets < 2 ? { status: 503, json: { message: "indisponivel" } } : { json: { _id: "f1", status: "paid" } }),
+      "POST /v2/invoices": () => ({ status: 503, json: { message: "indisponivel" } }),
+    });
+    const p = criarLytex({ fetch: f, env: ENV });
+    assert.equal((await p.consultarCobranca("f1")).status, "paga");
+    assert.equal(gets, 2);
+    await assert.rejects(() => p.criarCobranca({ pedidoId: "p1", totalCentavos: 1000, split: [{ recebedorProvedorId: "a", valorCentavos: 500 }, { recebedorProvedorId: "b", valorCentavos: 500 }], descricao: "x", urlRetorno: "https://x.y", comprador: { nome: "A", documento: "52998224725" } }));
+    assert.equal(chamadas.filter((c) => c.metodo === "POST" && c.url === "/v2/invoices").length, 1);
+  });
+});
+
 describe("lytex: autenticação", () => {
   it("guarda o token em cache e renova ao expirar (refresh_token primeiro)", async () => {
     let agora = Date.parse("2029-01-01T00:00:00Z");

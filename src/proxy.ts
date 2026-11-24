@@ -11,6 +11,35 @@ import { supabaseChavePublica, supabaseUrl } from "@/lib/supabase/env";
 const AREAS_LOGADAS = ["/painel", "/admin"];
 const PAGINAS_DE_ENTRADA = ["/entrar", "/cadastro"];
 
+// Com Cache Components a página só decide "não encontrada" depois de enviar o status 200 (soft 404).
+// Por isso o proxy confere se a loja, o produto ou a vitrine existem e, se não, devolve 404 de verdade.
+// Falha na consulta não bloqueia: a página abre e mostra o "não encontrada" dela.
+async function publicoExiste(caminho: string): Promise<boolean> {
+  const m = caminho.match(/^\/(loja|v)\/([A-Za-z0-9-]{1,60})(?:\/([a-z0-9-]{1,60}))?(?:\/comprar)?\/?$/);
+  if (!m) return true;
+  const [, tipo, slug, produto] = m;
+  const alvo =
+    tipo === "v"
+      ? `/rest/v1/storefronts?select=id&slug=eq.${encodeURIComponent(slug)}&limit=1`
+      : produto
+        ? `/rest/v1/rpc/produto_da_loja`
+        : `/rest/v1/rpc/loja_publica`;
+  try {
+    const chave = supabaseChavePublica();
+    const res = await fetch(`${supabaseUrl()}${alvo}`, {
+      method: tipo === "v" ? "GET" : "POST",
+      headers: { apikey: chave, authorization: `Bearer ${chave}`, "content-type": "application/json" },
+      body: tipo === "v" ? undefined : JSON.stringify(produto ? { p_loja: slug, p_produto: produto } : { p_slug: slug }),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return true;
+    const dados = await res.json();
+    return Array.isArray(dados) ? dados.length > 0 : dados != null;
+  } catch {
+    return true;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   // Links curtos do afiliado (no Next, pasta com "@" é reservada, por isso a
   // reescrita): /@ana → vitrine; /@ana/tenis-runner → abre o link (clique +
@@ -21,7 +50,14 @@ export async function proxy(request: NextRequest) {
   if (arroba) {
     const url = request.nextUrl.clone();
     url.pathname = arroba[2] ? `/ir/${arroba[1]}/${arroba[2]}${arroba[3] ?? ""}` : `/v/${arroba[1].toLowerCase()}`;
-    return NextResponse.rewrite(url);
+    if (!(await publicoExiste(url.pathname))) url.pathname = "/pagina-inexistente";
+    return NextResponse.rewrite(url, url.pathname === "/pagina-inexistente" ? { status: 404 } : undefined);
+  }
+
+  if (!(await publicoExiste(request.nextUrl.pathname))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/pagina-inexistente";
+    return NextResponse.rewrite(url, { status: 404 });
   }
 
   let resposta = NextResponse.next({ request });

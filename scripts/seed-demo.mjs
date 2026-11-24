@@ -1,4 +1,4 @@
-// Seed de DEMONSTRAÇÃO da Staypse — reexecutável (idempotente).
+// Seed de DEMONSTRAÇÃO da Staypse, reexecutável (idempotente).
 //
 // Cria: 1 admin, 2 lojas aprovadas (recebedor mock aprovado, frete, identidade visual,
 // 3-4 itens aprovados cada), 3 afiliados com vitrine e afiliações, 2 vendedores próprios

@@ -161,6 +161,8 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
               semCobranca={
                 <form action={iniciarPagamento}>
                   {campos}
+                  {um(sp.meio) && <input type="hidden" name="meio" value={um(sp.meio)} />}
+                  {um(sp.parcelas) && <input type="hidden" name="parcelas" value={um(sp.parcelas)} />}
                   <button className={`${botaoPrincipal} w-full sm:w-fit`} data-pagar>
                     Pagar agora
                   </button>

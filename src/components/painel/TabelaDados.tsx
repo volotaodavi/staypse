@@ -32,7 +32,7 @@ export function TabelaDados({
   return (
     <>
       {/* computador */}
-      <div className="hidden overflow-x-auto rounded-2xl border border-petroleo/10 bg-branco md:block">
+      <div tabIndex={0} role="region" aria-label={legenda} className="hidden overflow-x-auto rounded-2xl border border-petroleo/10 bg-branco md:block">
         <table className="w-full text-sm">
           <caption className="sr-only">{legenda}</caption>
           <thead>

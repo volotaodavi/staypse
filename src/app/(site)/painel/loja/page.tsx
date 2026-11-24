@@ -147,7 +147,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
           { rotulo: "Vendas", valor: inteiro(r.vendas), destaque: true },
           { rotulo: "Faturamento bruto", valor: formatarPreco(r.faturamento_centavos) },
           { rotulo: "Comissões a afiliados e vendedores", valor: formatarPreco(r.comissoes_centavos), nota: "Repassadas pelo split" },
-          { rotulo: "Taxa da plataforma", valor: formatarPreco(Number(valoresLoja.taxa_centavos)), nota: "Descontada do repasse" },
+          { rotulo: "Taxa da plataforma", valor: formatarPreco(Number(valoresLoja.taxa_centavos)), nota: "Descontada de cada venda" },
           { rotulo: "Você recebe", valor: formatarPreco(Number(valoresLoja.recebe_centavos)), nota: "Depois da comissão e da taxa" },
           { rotulo: "Ticket médio", valor: r.vendas > 0 ? formatarPreco(ticket) : "Sem vendas" },
           { rotulo: "Cliques nos links", valor: inteiro(r.cliques) },

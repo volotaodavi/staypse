@@ -195,7 +195,7 @@ export default async function DetalhePedido({ params, searchParams }: PageProps<
             {taxa != null && recebe != null && (
               <>
                 <div className="flex justify-between gap-3 border-t border-petroleo/10 pt-2 text-petroleo/75" data-taxa-plataforma>
-                  <dt>Taxa da plataforma (descontada do repasse)</dt>
+                  <dt>Taxa da plataforma (descontada da venda)</dt>
                   <dd>{formatarPreco(taxa)}</dd>
                 </div>
                 <div className="flex justify-between gap-3 font-medium" data-voce-recebe>

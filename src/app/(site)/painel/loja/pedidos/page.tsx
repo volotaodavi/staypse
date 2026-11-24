@@ -122,7 +122,7 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
       )}
       <NotaPagamentos />
       <p className="max-w-prose text-sm text-petroleo/75">
-        A taxa da plataforma é descontada do seu repasse.{" "}
+        A taxa da plataforma é descontada de cada venda.{" "}
         <Link href="/taxas" className="font-medium underline">
           Ver taxas para lojas
         </Link>

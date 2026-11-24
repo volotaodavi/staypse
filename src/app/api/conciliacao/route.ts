@@ -31,6 +31,8 @@ async function conciliar(request: Request) {
     // pedidos pagos sem nota fiscal depois do prazo: avisa a loja (uma vez por pedido) e envia os e-mails da fila
     const { data: semNf } = await criarClienteAdmin().rpc("notificar_pedidos_sem_nf");
     await despacharEmailsNotificacoes();
+    // saques pedidos na Lytex que ela nunca devolve como "concluído" (não há consulta): encerra os com mais de 2 dias
+    await criarClienteAdmin().rpc("encerrar_saques_pendentes");
     // sem integração com o provedor real, o cron falha de forma visível (nunca finge que conciliou)
     return NextResponse.json({ ok: !resumo.integracao_pendente, ...resumo, avisos_sem_nf: semNf ?? 0 }, { status: resumo.integracao_pendente ? 501 : 200 });
   } catch {
