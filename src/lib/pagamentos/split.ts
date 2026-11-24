@@ -10,6 +10,8 @@
 //    (padrão Hotmart): taxa do afiliado = taxa total × comissão ÷ total (para baixo); a loja paga o resto
 //    (o centavo residual é dela). VENDEDOR próprio (split direto ou folha) NÃO paga taxa: recebe a comissão
 //    cheia e a loja paga a taxa inteira;
+//  * opção da loja `assumeTaxaAfiliado`: o afiliado não paga taxa (recebe a comissão cheia) e a loja paga a taxa inteira;
+//    o total cobrado e a receita da Staypse não mudam;
 //  * a comissão incide sobre o valor dos produtos (subtotal), nunca sobre o frete;
 //  * vendedor "na folha" não tem recebedor: a parte dele fica com a loja, que paga fora;
 //  * o comprador não paga taxa nenhuma; a loja absorve (desconto no repasse). Única exceção: parcelas ACIMA do limite
@@ -31,6 +33,7 @@ export type EntradaSplit = {
   comissaoPercentual: number; // 0 quando não há indicação
   taxaMinimaCentavos?: number; // tarifa mínima por pedido na taxa total (padrão 0)
   acrescimoCentavos?: number; // juros do parcelamento pagos pelo comprador (fatura = total + acréscimo); padrão 0
+  assumeTaxaAfiliado?: boolean; // a loja paga a taxa do afiliado (padrão false)
   indicador: "nenhum" | "afiliado" | "vendedor_split" | "vendedor_folha";
 };
 
@@ -66,8 +69,8 @@ export function calcularSplit(e: EntradaSplit): ResultadoSplit {
   // comissão sempre para baixo (nunca paga um centavo a mais do que o combinado)
   const comissao = Math.floor((e.subtotalCentavos * e.comissaoPercentual) / 100);
   const comissaoNoSplit = e.indicador === "afiliado" || e.indicador === "vendedor_split" ? comissao : 0;
-  // só o AFILIADO paga a taxa, proporcional à comissão dele no total do pedido; o resíduo é da loja
-  const taxaAfiliado = e.indicador === "afiliado" && e.totalCentavos > 0 ? Math.floor((taxaTotal * comissao) / e.totalCentavos) : 0;
+  // só o AFILIADO paga a taxa (a menos que a loja a assuma), proporcional à comissão dele no total do pedido; o resíduo é da loja
+  const taxaAfiliado = e.indicador === "afiliado" && !e.assumeTaxaAfiliado && e.totalCentavos > 0 ? Math.floor((taxaTotal * comissao) / e.totalCentavos) : 0;
   const taxaLoja = taxaTotal - taxaAfiliado;
   const indicador = comissaoNoSplit - taxaAfiliado;
   const produtor = e.totalCentavos - comissaoNoSplit - taxaLoja;

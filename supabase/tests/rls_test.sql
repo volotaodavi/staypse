@@ -2682,5 +2682,32 @@ select teste.bloqueia($$select * from public.admin_pagamentos_tardios()$$, 'tard
 :comoServidor
 reset role;
 
+-- loja assume a taxa do afiliado
+:comoServidor
+select teste.ok((select not assume_taxa_afiliado from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'), 'assume taxa: padrão desligado');
+select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'assume_taxa_afiliado')::boolean = false, 'assume taxa: dados do split trazem a opção desligada');
+:comoA
+select public.salvar_assume_taxa(true);
+select teste.ok((select assume_taxa_afiliado from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'), 'assume taxa: a loja liga a opção');
+select teste.bloqueia($$select public.salvar_assume_taxa(null)$$, 'assume taxa: valor nulo é recusado');
+select teste.bloqueia($$update public.producers set assume_taxa_afiliado = false$$, 'assume taxa: a loja não altera a coluna direto (só pela função)');
+:comoB
+select teste.bloqueia($$select public.salvar_assume_taxa(true)$$, 'assume taxa: quem não tem loja não define');
+:comoAnon
+select teste.bloqueia($$select public.salvar_assume_taxa(true)$$, 'assume taxa: visitante não define');
+select teste.bloqueia($$select loja_paga_taxa from public.catalogo_afiliados()$$, 'assume taxa: visitante não abre o catálogo');
+:comoF
+select teste.ok((select loja_paga_taxa from public.catalogo_afiliados() where id = :'aff_auto'), 'assume taxa: no catálogo, a loja que paga a taxa leva o aviso');
+:comoA
+select public.salvar_assume_taxa(false);
+:comoF
+select teste.ok((select not loja_paga_taxa from public.catalogo_afiliados() where id = :'aff_auto'), 'assume taxa: desligada, o aviso some do catálogo');
+:comoA
+select public.salvar_assume_taxa(true);
+:comoServidor
+select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'assume_taxa_afiliado')::boolean, 'assume taxa: dados do split trazem a opção ligada');
+reset role;
+select teste.ok(exists (select 1 from public.audit_log where acao = 'assume_taxa_afiliado_alterado' and (detalhes ->> 'depois') = 'true'), 'assume taxa: a alteração fica no log');
+
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'

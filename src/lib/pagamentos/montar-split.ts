@@ -14,6 +14,7 @@ export type DadosSplitPedido = {
   frete_centavos: number;
   comissao_percentual: number;
   indicador: EntradaSplit["indicador"];
+  assume_taxa_afiliado?: boolean; // opção da loja (ausente = false)
   produtor_provedor_id: string;
   indicador_provedor_id: string | null;
   // configurações de taxa (tabela configuracoes), chaves taxa_total_*, custo_lytex_* e custo_lytex_split
@@ -54,6 +55,7 @@ export function montarSplit(
     custoLytex: t.custoLytex[modalidade],
     custoSplit: t.custoSplit,
     comissaoPercentual: dados.indicador === "nenhum" ? 0 : Number(dados.comissao_percentual),
+    assumeTaxaAfiliado: dados.assume_taxa_afiliado === true,
     indicador: dados.indicador,
   };
   const resultado = calcularSplit(entrada);

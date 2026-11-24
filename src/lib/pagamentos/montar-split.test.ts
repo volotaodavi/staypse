@@ -101,3 +101,14 @@ test("tarifa mínima e pedido mínimo chegam pelas taxas em vigor (ausentes = 0,
   assert.equal(lerTaxasPlataforma({ ...taxas, taxa_minima_centavos: 250, pedido_minimo_centavos: 1000 }).pedidoMinimoCentavos, 1000);
   assert.throws(() => lerTaxasPlataforma({ ...taxas, taxa_minima_centavos: -1 }), /taxas_nao_configuradas/);
 });
+
+test("loja assume a taxa do afiliado: o snapshot registra, o afiliado recebe a comissão cheia e a soma fecha", () => {
+  const { partes, snapshot } = montarSplit({ ...base, assume_taxa_afiliado: true }, "rec_staypse", "pix");
+  const r = snapshot.resultado;
+  assert.equal(snapshot.entrada.assumeTaxaAfiliado, true);
+  assert.equal(r.taxaAfiliadoCentavos, 0);
+  assert.equal(partes.find((p) => p.recebedorProvedorId === "rec_afiliada")?.valorCentavos, 5998);
+  assert.equal(soma(partes) + r.custoLytexCentavos, base.total_centavos);
+  // desligada (ou ausente): como antes
+  assert.equal(montarSplit(base, "rec_staypse", "pix").snapshot.entrada.assumeTaxaAfiliado, false);
+});

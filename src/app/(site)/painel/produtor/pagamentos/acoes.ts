@@ -29,3 +29,16 @@ export async function salvarParcelamento(_a: EstadoFormulario, f: FormData): Pro
     valores,
   };
 }
+
+// Opção da loja: pagar a taxa do afiliado (ele recebe a comissão cheia). Validado também no banco (salvar_assume_taxa).
+export async function salvarAssumeTaxa(_a: EstadoFormulario, f: FormData): Promise<EstadoFormulario> {
+  await exigirPapel("produtor");
+  const assume = f.get("assume_taxa_afiliado") === "on";
+  const valores = { assume_taxa_afiliado: assume ? "on" : "" };
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("salvar_assume_taxa", { p_assume: assume });
+  if (error) return { erro: "Não foi possível salvar a opção. Tente de novo.", valores };
+  updateTag(ETIQUETA_VITRINES);
+  revalidatePath("/painel/produtor/pagamentos");
+  return { sucesso: assume ? "Pronto: a sua loja paga a taxa do afiliado e ele recebe a comissão cheia." : "Pronto: afiliado e loja dividem a taxa, cada um na sua parte.", valores };
+}

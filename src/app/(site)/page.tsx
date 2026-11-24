@@ -184,6 +184,9 @@ export default function Inicio() {
             <div>
               <h2 className="max-w-xl text-4xl leading-[1.02] tracking-[-0.03em] sm:text-6xl">Crie a sua conta hoje</h2>
               <p className="mt-3 max-w-md">Grátis, sem taxa de adesão. Pagamentos processados pela Lytex.</p>
+              <Link href="/taxas#simulador" className="mt-1 inline-flex min-h-11 items-center font-medium underline">
+                Simule quanto sobra em uma venda
+              </Link>
             </div>
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <Link

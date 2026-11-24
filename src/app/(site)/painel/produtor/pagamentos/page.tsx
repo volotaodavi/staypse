@@ -3,6 +3,7 @@ import Link from "next/link";
 import { POLITICA_PADRAO, politicaDoBanco } from "@/lib/pagamentos/juros";
 import { exigirPapel } from "@/lib/papeis";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
+import { FormAssumeTaxa } from "./FormAssumeTaxa";
 import { FormParcelamento } from "./FormParcelamento";
 
 export const metadata = { title: "Pagamentos da loja" };
@@ -11,7 +12,7 @@ export const instant = false;
 export default async function Pagamentos() {
   const usuario = await exigirPapel("produtor");
   const supabase = await criarClienteServidor();
-  const { data: p } = await supabase.from("producers").select("parcelas_max, parcelas_sem_juros").eq("user_id", usuario.id).maybeSingle();
+  const { data: p } = await supabase.from("producers").select("parcelas_max, parcelas_sem_juros, assume_taxa_afiliado").eq("user_id", usuario.id).maybeSingle();
   const politica = p ? politicaDoBanco(p) : POLITICA_PADRAO;
 
   return (
@@ -33,6 +34,14 @@ export default async function Pagamentos() {
       ) : (
         <section className="rounded-2xl bg-branco p-6">
           <FormParcelamento inicial={{ max: politica.parcelasMax, semJuros: politica.parcelasSemJuros }} />
+        </section>
+      )}
+      {p && (
+        <section className="flex flex-col gap-3 rounded-2xl bg-branco p-6" aria-labelledby="assume-taxa">
+          <h2 id="assume-taxa" className="text-xl">
+            Taxa do afiliado
+          </h2>
+          <FormAssumeTaxa inicial={p.assume_taxa_afiliado === true} />
         </section>
       )}
     </div>

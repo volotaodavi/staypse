@@ -11,6 +11,7 @@ import {
   taxaTotalCentavos,
   type Modalidade,
 } from "@/lib/pagamentos/taxas";
+import { Simulador } from "./Simulador";
 import { vigenciaFutura } from "@/lib/pagamentos/vigencia";
 import { formatarPreco } from "@/lib/produtor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
@@ -88,6 +89,14 @@ export default async function Taxas() {
   const futura = vigenciaIso !== null && vigenciaFutura(vigenciaIso) && anteriores !== undefined;
   const minimoNovo = Number(cfg.get("taxa_minima_centavos") ?? 0) || 0;
   const pedidoMinimo = Number(cfg.get("pedido_minimo_centavos") ?? 0) || 0;
+  // o simulador usa a tabela em vigor hoje (na janela de aviso, ainda a anterior)
+  const emVigor = (m: Modalidade) => (futura ? lerPar(anteriores?.[m]) : novas(m));
+  const taxaTotalSim = {} as Record<Modalidade, Par>;
+  for (const m of MODALIDADES) {
+    const t = emVigor(m);
+    if (t) taxaTotalSim[m] = t;
+  }
+  const simuladorPronto = MODALIDADES.every((m) => taxaTotalSim[m]);
 
   return (
     <DocumentoLegal
@@ -108,6 +117,15 @@ export default async function Taxas() {
         </>
       }
       secoes={[
+        ...(simuladorPronto
+          ? [
+              {
+                id: "simulador",
+                titulo: "Quanto sobra: simule uma venda",
+                conteudo: <Simulador taxaTotal={taxaTotalSim} taxaMinimaCentavos={futura ? 0 : minimoNovo} pedidoMinimoCentavos={pedidoMinimo} />,
+              },
+            ]
+          : []),
         {
           id: "tabela",
           titulo: "Taxa por meio de pagamento",
@@ -152,6 +170,12 @@ export default async function Taxas() {
                 cheia, e a taxa dessa parte fica com a loja.
               </li>
               <li>Sem indicação, a loja paga a taxa inteira.</li>
+              <li>
+                <strong className={f}>Opção da loja: assumir a taxa do afiliado.</strong>{" "}
+                Em Pagamentos, a loja pode ligar &quot;Minha loja paga a taxa do afiliado&quot; (vem desligada). Aí o afiliado recebe a
+                comissão cheia e a loja paga a taxa inteira. O total cobrado do comprador não muda, e os produtos dessa loja aparecem no
+                catálogo do afiliado com o aviso &quot;Loja paga a taxa&quot;.
+              </li>
               <li>
                 No painel, cada um vê dois números: &quot;Taxa da
                 plataforma&quot; e &quot;Você recebe&quot;.

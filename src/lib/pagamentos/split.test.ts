@@ -156,3 +156,33 @@ test("acréscimo do parcelamento: loja e afiliado recebem o mesmo que no cartão
   assert.equal(soma(parcelado), 20000 + acr);
   assert.equal(parcelado.staypseCentavos + parcelado.custoLytexCentavos, parcelado.taxaTotalCentavos + acr);
 });
+
+test("loja assume a taxa do afiliado: comissão cheia, loja paga a taxa inteira, taxa e total cobrado iguais", () => {
+  const e = entrada("cartao_1x", 150, "afiliado", 30);
+  const padrao = calcularSplit(e);
+  const assume = calcularSplit({ ...e, assumeTaxaAfiliado: true });
+  assert.deepEqual([padrao.produtorCentavos, padrao.indicadorCentavos, padrao.taxaAfiliadoCentavos, padrao.staypseCentavos], [9856, 4224, 276, 259]);
+  assert.deepEqual([assume.produtorCentavos, assume.indicadorCentavos, assume.taxaAfiliadoCentavos, assume.taxaLojaCentavos, assume.staypseCentavos], [9580, 4500, 0, 920, 260]);
+  assert.equal(assume.indicadorCentavos, assume.comissaoDevidaCentavos);
+  assert.equal(assume.taxaTotalCentavos, padrao.taxaTotalCentavos);
+  assert.equal(assume.cobradoCentavos, padrao.cobradoCentavos);
+  assert.equal(soma(assume), e.totalCentavos);
+});
+
+test("loja assume a taxa: a receita da Staypse muda no máximo 1 centavo (arredondamento do custo de repasse)", () => {
+  for (const [m, v, pct] of [["pix", 50, 20], ["pix", 299.9, 20], ["cartao_2a6", 800, 45], ["boleto", 30, 10]] as const) {
+    const e = { ...entrada(m, 0, "afiliado", pct), totalCentavos: Math.round(v * 100), subtotalCentavos: Math.round(v * 100) };
+    const a = calcularSplit(e);
+    const b = calcularSplit({ ...e, assumeTaxaAfiliado: true });
+    assert.ok(Math.abs(a.staypseCentavos - b.staypseCentavos) <= 1, `${m} ${v}`);
+    assert.equal(b.taxaAfiliadoCentavos, 0);
+    assert.equal(soma(b), e.totalCentavos);
+  }
+});
+
+test("loja assume a taxa: não altera vendedor próprio nem venda sem indicador", () => {
+  for (const ind of ["nenhum", "vendedor_split", "vendedor_folha"] as const) {
+    const e = entrada("pix", 150, ind, 20);
+    assert.deepEqual(calcularSplit({ ...e, assumeTaxaAfiliado: true }), calcularSplit(e), ind);
+  }
+});

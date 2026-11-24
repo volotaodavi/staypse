@@ -31,6 +31,7 @@ type ItemCatalogo = {
   minha_afiliacao_status: string | null;
   texto_divulgacao: string | null;
   regras_divulgacao: string | null;
+  loja_paga_taxa: boolean;
 };
 
 const STATUS: Record<string, string> = {
@@ -168,6 +169,11 @@ export default async function Catalogo({ searchParams }: PageProps<"/painel/reve
                     por venda ({pct}%)
                     <span className="block text-xs text-gelo/75">Estimativa por venda, recebida no split automático.</span>
                   </p>
+                  {item.loja_paga_taxa && (
+                    <p className="rounded-xl bg-ciano/30 px-3 py-2 text-sm font-medium" data-loja-paga-taxa>
+                      Loja paga a taxa: você recebe a comissão cheia
+                    </p>
+                  )}
                   <p className="rounded-xl bg-gelo px-3 py-2 text-xs" data-aprovacao={item.aprovacao_afiliacao}>
                     {item.aprovacao_afiliacao === "manual" ? (
                       <>
