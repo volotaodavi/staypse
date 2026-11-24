@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { FiltroPeriodo } from "@/components/painel/FiltroPeriodo";
+import { AvisoTaxas } from "@/components/painel/AvisoTaxas";
 import { GraficoBarras } from "@/components/painel/GraficoBarras";
 import { NotaPagamentos, Numeros, inteiro, percentual } from "@/components/painel/Numeros";
 import { meuRecebedor, recebedorOk } from "@/components/painel/Recebimento";
@@ -85,6 +86,7 @@ export default async function PainelLoja({ searchParams }: PageProps<"/painel/lo
         )}
       </div>
       <FiltroPeriodo periodo={periodo} caminho="/painel/loja" />
+      <AvisoTaxas />
 
       {(!recebe || (semNota ?? 0) > 0 || itensRecusados.length > 0 || r.aguardando_envio > 0 || r.desistencias > 0 || loja.frete_fixo_centavos == null) && (
         <ul className="flex flex-col gap-2 text-sm" aria-label="Pendências" data-pendencias>

@@ -1430,8 +1430,8 @@ select teste.ok(public.configuracoes_publicas() ? 'meios_pagamento' and not (pub
                 and not (public.configuracoes_publicas() ? 'palavras_proibidas'),
                 'leitura pública traz só chaves não sensíveis (sem taxa nem palavras proibidas)');
 :comoC
-select teste.ok((select count(*) from public.configuracoes) = 18, 'admin lê as 18 configurações (6 de regras + admin_email + 5 taxas totais + 5 custos Lytex + custo de repasse)');
-select teste.ok((select valor = '{"percentual": 1.5, "fixo_centavos": 200}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
+select teste.ok((select count(*) from public.configuracoes) = 22, 'admin lê as 22 configurações (6 de regras + admin_email + 5 taxas totais + 5 custos Lytex + custo de repasse + tarifa mínima, pedido mínimo, vigência e taxas anteriores)');
+select teste.ok((select valor = '{"percentual": 1.5, "fixo_centavos": 230}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
                 and (select valor = '{"percentual": 4.29, "fixo_centavos": 0}'::jsonb from public.configuracoes where chave = 'custo_lytex_cartao_7a12'),
                 'taxas por modalidade nascem com os valores recomendados');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 31, "fixo_centavos": 200}}')$$, 'taxa total acima de 30% é recusada');
@@ -1446,7 +1446,7 @@ select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.8,
 select teste.ok((select valor = '{"percentual": 1.8, "fixo_centavos": 210}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
                 and (select valor = '{"percentual": 0, "fixo_centavos": 190}'::jsonb from public.configuracoes where chave = 'custo_lytex_pix'),
                 'taxa total e custo Lytex válidos são salvos (admin)');
-select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5, "fixo_centavos": 200}, "custo_lytex_pix": {"percentual": 0, "fixo_centavos": 185}}');
+select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 1.5, "fixo_centavos": 230}, "custo_lytex_pix": {"percentual": 0, "fixo_centavos": 185}}');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 80}')$$, 'mínimo maior que o máximo salvo é recusado');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"comissao_min_percentual": 40, "comissao_max_percentual": 30}')$$, 'faixa incoerente (min > max) é recusada');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_staypse_percentual": 101}')$$, 'taxa acima de 100 é recusada');
@@ -2116,11 +2116,11 @@ select public.registrar_cobranca(:'cb7', 'mock', 'mock_cob_t7', null, '{}');
 reset role;
 update public.orders set cobranca_criada_em = now() - interval '2 hours' where id = :'cb6';
 :comoServidor
-select teste.ok((select count(*) = 1 and bool_and(cobranca_id = 'mock_cob_t6') from public.cobrancas_para_conciliar('mock')),
-                'conciliação lista só a cobrança pendente há mais de 1 hora (a recente fica de fora)');
+select teste.ok((select count(*) = 1 and bool_and(cobranca_id = 'mock_cob_t6') from public.cobrancas_para_conciliar('mock') where status_pedido = 'aguardando_pagamento'),
+                'conciliação lista só a cobrança pendente há mais de 1 hora (a recente fica de fora; cancelados recentes entram à parte, para o pagamento tardio)');
 select teste.ok((select count(*) = 0 from public.cobrancas_para_conciliar('lytex')), 'conciliação respeita o provedor ativo');
 select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_t6', 'paga', :'cb6') = 'confirmado', 'conciliação aplica o status "paga" que o provedor informou');
-select teste.ok((select count(*) = 0 from public.cobrancas_para_conciliar('mock')), 'depois de aplicada, a cobrança sai da fila de conciliação');
+select teste.ok((select count(*) = 0 from public.cobrancas_para_conciliar('mock') where status_pedido = 'aguardando_pagamento'), 'depois de aplicada, a cobrança sai da fila de conciliação');
 select public.registrar_conciliacao('{"provedor":"mock","consultadas":1,"aplicadas":{"confirmado":1},"sem_mudanca":0,"erros":0}');
 reset role;
 select teste.ok((select status = 'pago' from public.orders where id = :'cb6'), 'pedido pago pela conciliação');
@@ -2537,6 +2537,150 @@ select public.renovar_acesso_pedido(:'rc1', 'x2@teste.com', 'iphash');
 select public.renovar_acesso_pedido(:'rc1', 'x3@teste.com', 'iphash');
 select public.renovar_acesso_pedido(:'rc1', 'x4@teste.com', 'iphash');
 select teste.ok(public.renovar_acesso_pedido(:'rc1', 'eli@teste.com', 'iphash') is null, 'recuperar: limite por código bloqueia depois de 5 tentativas');
+
+-- =========================================================================
+-- 30. Preço final, parcelamento da loja, aviso prévio das taxas e pagamento (migração 20261213000001)
+-- =========================================================================
+reset role;
+-- validação das chaves novas
+select teste.ok(public.configuracao_valida('taxa_minima_centavos', '250') and public.configuracao_valida('pedido_minimo_centavos', '1000'), 'preço final: tarifa mínima e pedido mínimo inteiros são válidos');
+select teste.ok(not public.configuracao_valida('taxa_minima_centavos', '2.5') and not public.configuracao_valida('taxa_minima_centavos', '-1')
+                and not public.configuracao_valida('pedido_minimo_centavos', '6000') and not public.configuracao_valida('taxa_minima_centavos', '"250"'),
+                'preço final: mínimo com centavo quebrado, negativo, acima de R$ 50 ou texto é recusado');
+select teste.ok(public.configuracao_valida('taxas_vigencia_em', '"2026-12-24T12:00:00Z"') and not public.configuracao_valida('taxas_vigencia_em', '"amanhã"')
+                and not public.configuracao_valida('taxas_vigencia_em', '20261224'), 'preço final: vigência só em texto ISO 8601');
+select teste.ok(public.configuracao_valida('taxas_anteriores', '{"pix":{"percentual":1.5,"fixo_centavos":200},"boleto":{"percentual":1.5,"fixo_centavos":230},"cartao_1x":{"percentual":4.9,"fixo_centavos":50},"cartao_2a6":{"percentual":5.5,"fixo_centavos":50},"cartao_7a12":{"percentual":6.1,"fixo_centavos":50}}')
+                and not public.configuracao_valida('taxas_anteriores', '{"pix":{"percentual":1.5,"fixo_centavos":200}}')
+                and not public.configuracao_valida('taxas_anteriores', '{"pix":{"percentual":99,"fixo_centavos":200},"boleto":{"percentual":1.5,"fixo_centavos":230},"cartao_1x":{"percentual":4.9,"fixo_centavos":50},"cartao_2a6":{"percentual":5.5,"fixo_centavos":50},"cartao_7a12":{"percentual":6.1,"fixo_centavos":50}}'),
+                'preço final: tabela anterior precisa das 5 modalidades com valores válidos');
+
+-- padrões novos e tabela anterior guardada
+select teste.ok((select valor from public.configuracoes where chave = 'taxa_total_pix') = '{"percentual": 1.5, "fixo_centavos": 230}'
+                and (select valor from public.configuracoes where chave = 'taxa_total_cartao_1x') = '{"percentual": 5.6, "fixo_centavos": 80}'
+                and (select valor from public.configuracoes where chave = 'taxa_total_cartao_7a12') = '{"percentual": 6.8, "fixo_centavos": 80}'
+                and (select valor from public.configuracoes where chave = 'taxa_minima_centavos') = '250'
+                and (select valor from public.configuracoes where chave = 'pedido_minimo_centavos') = '1000',
+                'preço final: padrões novos de taxa, tarifa mínima e pedido mínimo');
+select teste.ok((select valor -> 'pix' from public.configuracoes where chave = 'taxas_anteriores') = '{"percentual": 1.5, "fixo_centavos": 200}'
+                and (select valor -> 'cartao_2a6' from public.configuracoes where chave = 'taxas_anteriores') = '{"percentual": 5.5, "fixo_centavos": 50}',
+                'preço final: a tabela anterior fica guardada');
+select teste.ok((select (valor #>> '{}')::timestamptz from public.configuracoes where chave = 'taxas_vigencia_em') > now() + interval '29 days'
+                and (select (valor #>> '{}')::timestamptz from public.configuracoes where chave = 'taxas_vigencia_em') < now() + interval '31 days',
+                'preço final: a vigência é 30 dias depois da publicação');
+
+-- até a vigência valem as taxas anteriores (sem tarifa mínima); depois, as novas
+:comoServidor
+select teste.ok((public.taxas_vigentes() -> 'taxa_total_pix' ->> 'fixo_centavos')::int = 200
+                and (public.taxas_vigentes() ->> 'taxa_minima_centavos')::int = 0
+                and (public.taxas_vigentes() ->> 'pedido_minimo_centavos')::int = 0
+                and (public.taxas_vigentes() -> 'taxa_total_cartao_1x' ->> 'percentual')::numeric = 4.9
+                and (public.taxas_vigentes() -> 'custo_lytex_pix' ->> 'fixo_centavos')::int = 185,
+                'vigência: antes da data, o pedido usa as taxas anteriores (custo Lytex não muda)');
+reset role;
+update public.configuracoes set valor = to_jsonb('2020-01-01T00:00:00Z'::text) where chave = 'taxas_vigencia_em';
+:comoServidor
+select teste.ok((public.taxas_vigentes() -> 'taxa_total_pix' ->> 'fixo_centavos')::int = 230
+                and (public.taxas_vigentes() ->> 'taxa_minima_centavos')::int = 250
+                and (public.taxas_vigentes() ->> 'pedido_minimo_centavos')::int = 1000
+                and (public.taxas_vigentes() -> 'taxa_total_cartao_1x' ->> 'percentual')::numeric = 5.6,
+                'vigência: depois da data, valem as taxas novas, a tarifa mínima e o pedido mínimo');
+reset role;
+update public.configuracoes set valor = to_jsonb(to_char((now() + interval '30 days') at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')) where chave = 'taxas_vigencia_em';
+:comoAnon
+select teste.bloqueia($$select public.taxas_vigentes()$$, 'visitante não lê as taxas em vigor');
+:comoA
+select teste.bloqueia($$select public.taxas_vigentes()$$, 'a loja não chama as taxas em vigor direto (só o servidor)');
+
+-- aviso prévio: todas as lojas são notificadas, uma vez só, e o painel mostra a data
+reset role;
+select count(*) as n_lojas_taxas from public.producers \gset
+:comoServidor
+select teste.ok(public.anunciar_novas_taxas() = :n_lojas_taxas, 'aviso: a rotina notifica todas as lojas');
+reset role;
+select teste.ok((select count(*) from public.notificacoes where tipo = 'taxas_novas') = :n_lojas_taxas
+                and (select count(*) from public.notificacoes where tipo = 'taxas_novas' and email_pendente) = :n_lojas_taxas
+                and not exists (select 1 from public.notificacoes where tipo = 'taxas_novas' and link <> '/taxas'),
+                'aviso: uma notificação por loja (e-mail pendente), com link para /taxas, sem duplicar ao repetir');
+:comoA
+select teste.ok((select count(*) from public.notificacoes where tipo = 'taxas_novas') = 1
+                and (select titulo like 'Novas taxas a partir de %' from public.notificacoes where tipo = 'taxas_novas'),
+                'aviso: a loja vê o próprio "Novas taxas a partir de DATA"');
+select teste.ok((select count(*) from public.aviso_taxas_loja()) = 1 and not (select em_vigor from public.aviso_taxas_loja()),
+                'aviso: o painel da loja mostra a data de vigência (ainda não em vigor)');
+:comoB
+select teste.ok((select count(*) from public.aviso_taxas_loja()) = 0, 'aviso: quem não é loja não vê o aviso');
+:comoAnon
+select teste.bloqueia($$select * from public.aviso_taxas_loja()$$, 'aviso: visitante não chama a função do painel');
+
+-- parcelamento é política da loja
+:comoServidor
+select teste.ok((select parcelas_max = 12 and parcelas_sem_juros = 3 from public.politica_parcelas_item(:'cb_curso')),
+                'parcelamento: padrão da loja é até 12x, 3x sem juros');
+:comoA
+select public.salvar_parcelamento(6, 2);
+select teste.ok((select parcelas_max = 6 and parcelas_sem_juros = 2 from public.producers where user_id = '00000000-0000-0000-0000-00000000000a'),
+                'parcelamento: a loja define até 6x e 2x sem juros');
+select teste.bloqueia($$select public.salvar_parcelamento(13, 3)$$, 'parcelamento: mais de 12 parcelas é recusado');
+select teste.bloqueia($$select public.salvar_parcelamento(6, 7)$$, 'parcelamento: sem juros maior que o máximo é recusado');
+select teste.bloqueia($$select public.salvar_parcelamento(6, 0)$$, 'parcelamento: sem juros menor que 1 é recusado');
+select teste.bloqueia($$select public.salvar_parcelamento(0, 0)$$, 'parcelamento: máximo menor que 1 é recusado');
+select teste.bloqueia($$update public.producers set parcelas_max = 1, parcelas_sem_juros = 1$$, 'parcelamento: a loja não altera as colunas direto (só pela função)');
+:comoB
+select teste.bloqueia($$select public.salvar_parcelamento(3, 1)$$, 'parcelamento: quem não tem loja não define');
+:comoAnon
+select teste.bloqueia($$select public.salvar_parcelamento(3, 1)$$, 'parcelamento: visitante não define');
+select teste.ok((select parcelas_max = 6 and parcelas_sem_juros = 2 from public.politica_parcelas_item(:'cb_curso')),
+                'parcelamento: a política da loja é pública (a página do produto mostra "até Nx sem juros")');
+reset role;
+select teste.ok(exists (select 1 from public.audit_log where acao = 'parcelamento_alterado' and (detalhes -> 'depois' ->> 'parcelas_max')::int = 6),
+                'parcelamento: a alteração fica no log');
+select teste.bloqueia($$update public.producers set parcelas_sem_juros = 9 where parcelas_max = 6$$, 'parcelamento: sem juros acima do máximo viola a regra do banco');
+
+-- cobrança com acréscimo, cancelamento no provedor, pagamento tardio e divergência
+:comoServidor
+select id as t1, codigo as t1_cod, token as t1_tok from public.criar_pedido(:'cb_curso', 1, 'digital', null, null, 'Ivo', 'ivo@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select id as t2 from public.criar_pedido(:'cb_curso', 1, 'digital', null, null, 'Jade', 'jade@teste.com', '52998224725', null, null, '2026-11-18') \gset
+select public.registrar_cobranca(:'t1', 'mock', 'mock_cob_tardio_1', '/x', '{}'::jsonb, 'cartao', 7, null, 386);
+select teste.ok((select cobranca_acrescimo_centavos from public.orders where id = :'t1') = 386, 'acréscimo do parcelamento fica guardado no pedido');
+select public.registrar_cobranca(:'t2', 'mock', 'mock_cob_tardio_2', '/y', '{}'::jsonb, 'pix', null, null);
+select teste.ok((select cobranca_acrescimo_centavos from public.orders where id = :'t2') = 0, 'sem acréscimo, o pedido guarda zero');
+:comoB
+select teste.bloqueia($$select cobranca_acrescimo_centavos from public.orders$$, 'usuário logado não lê o acréscimo nem as colunas novas (só o servidor)');
+select teste.bloqueia($$select pagamento_tardio_em from public.orders$$, 'usuário logado não lê o controle de pagamento tardio');
+:comoServidor
+-- divergência: o pedido NÃO é confirmado pelo banco; o servidor chama este registro e a notificação vai para o admin
+select public.registrar_pagamento_divergente(:'t2', '{"esperado_centavos": 5000, "informado_centavos": 100}'::jsonb);
+select teste.ok(exists (select 1 from public.audit_log where acao = 'pagamento_divergente' and entidade_id = :'t2' and (detalhes ->> 'informado_centavos')::int = 100)
+                and (select status from public.orders where id = :'t2') = 'aguardando_pagamento', 'divergência de valor fica no log e o pedido segue aguardando pagamento');
+-- pedido cancelado: a cobrança aberta entra na lista para cancelar no provedor
+select teste.ok(public.desistir_do_pedido(:'t1_cod', :'t1_tok', null) = 'cancelado', 'cancelamento: desistência antes de pagar cancela o pedido');
+select teste.ok((select count(*) from public.cobrancas_para_cancelar('mock') where pedido_id = :'t1') = 1
+                and (select count(*) from public.cobrancas_para_cancelar('mock') where pedido_id = :'t2') = 0
+                and (select count(*) from public.cobrancas_para_cancelar('lytex') where pedido_id = :'t1') = 0,
+                'cancelamento: só pedido cancelado com cobrança aberta, do provedor certo, entra na lista');
+select teste.ok((select count(*) from public.cobrancas_para_conciliar('mock') where pedido_id = :'t1') = 1, 'tardio: enquanto o cancelamento no provedor não foi confirmado, a conciliação consulta o pedido cancelado');
+select public.registrar_cobranca_cancelada(:'t1', 'expirada');
+select teste.ok((select count(*) from public.cobrancas_para_conciliar('mock') where pedido_id = :'t1') = 0, 'cancelada no provedor, o pedido sai da conciliação (a fatura não pode mais ser paga)');
+select teste.ok((select count(*) from public.cobrancas_para_cancelar('mock') where pedido_id = :'t1') = 0
+                and exists (select 1 from public.audit_log where acao = 'cobranca_cancelada_no_provedor' and entidade_id = :'t1'),
+                'cancelamento: depois de cancelada no provedor, sai da lista e fica no log');
+-- pagamento chega depois do cancelamento: a conciliação olha o pedido cancelado e o banco não ressuscita o pedido
+select teste.ok(public.aplicar_status_cobranca('mock', 'mock_cob_tardio_1', 'paga', :'t1') = 'pago_em_pedido_cancelado'
+                and (select status from public.orders where id = :'t1') = 'cancelado', 'tardio: pagamento em pedido cancelado não ressuscita o pedido');
+select teste.ok(public.iniciar_pagamento_tardio(:'t1') and not public.iniciar_pagamento_tardio(:'t1'), 'tardio: o tratamento é reservado uma vez só (sem estorno em duplicidade)');
+select public.registrar_pagamento_tardio(:'t1', 'estorno_solicitado', 'estorno_pendente');
+select teste.ok(exists (select 1 from public.audit_log where acao = 'pagamento_tardio_estorno_solicitado' and entidade_id = :'t1'), 'tardio: estorno automático solicitado fica no log');
+select public.registrar_pagamento_tardio(:'t1', 'fila_admin', 'provedor recusou');
+select teste.bloqueia(format('select public.registrar_pagamento_tardio(%L, %L)', :'t1', 'qualquer'), 'tardio: resultado desconhecido é recusado');
+:comoC
+select teste.ok((select count(*) from public.notificacoes where tipo = 'pagamento_tardio') = 1
+                and (select count(*) from public.notificacoes where tipo = 'pagamento_divergente') = 1,
+                'tardio e divergência: o admin é avisado (fila de atenção)');
+select teste.ok((select count(*) from public.admin_pagamentos_tardios() where pedido_id = :'t1' and resultado = 'fila_admin') = 1, 'tardio: o admin vê o caso na fila, com o resultado do último tratamento');
+:comoA
+select teste.bloqueia($$select * from public.admin_pagamentos_tardios()$$, 'tardio: a fila é só do admin');
+:comoServidor
+reset role;
 
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'

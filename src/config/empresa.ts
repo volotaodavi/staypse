@@ -49,11 +49,17 @@ export const contatoEmLinha = () =>
 // de imagem e aviso de infração, registros de acesso, BrasilAPI, idade mínima na compra)
 // (versão "2026-12-07.1": nome do comprador e valor pago mostrados ao afiliado ou vendedor que indicou a venda)
 // (versão "2026-12-10.1": taxa da plataforma paga só pelo produtor; texto ao comprador sem menção a taxa)
-export const TERMOS_VERSAO = "2026-12-10.1";
+// (versão "2026-12-13.1": alteração de taxa com aviso prévio de 30 dias; parcelamento com juros pela política da loja)
+export const TERMOS_VERSAO = "2026-12-13.1";
 
 // Versão do Contrato do Produtor (página /contrato-produtor). Ao mudar o texto,
 // troque a versão: o produtor precisará aceitar de novo.
 // (versão "2026-11-18.2": texto completo com vendedores da loja, taxa e LGPD)
 // (versão "2026-12-03.1": idade do responsável da loja, direitos de imagem e avaliações)
 // (versão "2026-12-10.1": taxa da plataforma única por modalidade, já com o processamento do pagamento)
-export const CONTRATO_PRODUTOR_VERSAO = "2026-12-10.1";
+// (versão "2026-12-13.1": alteração de taxa com aviso prévio de 30 dias e parcelamento com juros pela política da loja.
+//  NÃO exige novo aceite: o aceite da 2026-12-10.1 continua valendo, porque esse texto já previa taxas "informadas" e
+//  a nova cláusula só detalha o aviso. Por isso há a lista de versões com aceite válido logo abaixo.)
+export const CONTRATO_PRODUTOR_VERSAO = "2026-12-13.1";
+// versões do contrato cujo aceite vale hoje (o texto novo só detalha o aviso prévio de taxa, sem novo aceite)
+export const CONTRATO_PRODUTOR_VERSOES_ACEITAS = ["2026-12-10.1", CONTRATO_PRODUTOR_VERSAO] as const;

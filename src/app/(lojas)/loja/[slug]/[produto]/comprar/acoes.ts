@@ -19,9 +19,12 @@ import { registrarAcesso } from "@/lib/acesso";
 import { usuarioAtual } from "@/lib/papeis";
 import { iniciarCobranca } from "@/lib/pagamentos/cobrancas";
 import { meiosAtivos } from "@/lib/pagamentos/meios";
-import { MEIOS, parcelasValidas, type Meio } from "@/lib/pagamentos/parcelas";
+import { opcoesParcelamento, parcelasPermitidas, type OpcaoParcela } from "@/lib/pagamentos/juros";
+import { MEIOS, type Meio } from "@/lib/pagamentos/parcelas";
+import { politicaParcelasDoItem, taxasVigentes } from "@/lib/pagamentos/politica";
 import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { formatarPreco } from "@/lib/produtor";
 import { urlDoSite } from "@/lib/supabase/env";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
@@ -41,7 +44,7 @@ export type Resumo = {
 };
 
 export type EstadoCompra =
-  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; indicadoPorCodigo?: boolean; meios?: Meio[]; valores: Record<string, string> }
+  | { etapa: "dados" | "resumo"; erro?: string; resumo?: Resumo; indicadoPor?: string | null; indicadoPorCodigo?: boolean; meios?: Meio[]; parcelas?: OpcaoParcela[]; valores: Record<string, string> }
   | undefined;
 
 const CAMPOS = [
@@ -110,6 +113,19 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     indicadoPor = conferido.vitrine_slug;
   }
   const meiosLigados = await meiosAtivos();
+  // política de parcelas da LOJA e taxas em vigor: o servidor calcula parcela, "sem/com juros" e total de cada opção
+  // (o comprador nunca recebe taxa, só estes valores)
+  let taxas;
+  let politica;
+  try {
+    [taxas, politica] = await Promise.all([taxasVigentes(), politicaParcelasDoItem(valores.item)]);
+  } catch {
+    return dados("Não foi possível calcular as parcelas agora. Tente de novo em alguns minutos.");
+  }
+  if (cotacao.total_centavos < taxas.pedidoMinimoCentavos) {
+    return dados(`O pedido mínimo é de ${formatarPreco(taxas.pedidoMinimoCentavos)}. Aumente a quantidade para continuar.`);
+  }
+  const opcoes = opcoesParcelamento(cotacao.total_centavos, politica, taxas);
   const resumo = (erro?: string) => ({
     etapa: "resumo" as const,
     resumo: cotacao,
@@ -117,6 +133,7 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
     indicadoPorCodigo: Boolean(valores.codigo),
     valores,
     meios: MEIOS.filter((m) => meiosLigados[m]),
+    parcelas: opcoes,
     erro,
   });
 
@@ -126,7 +143,9 @@ export async function comprar(_anterior: EstadoCompra, f: FormData): Promise<Est
   const meio = valores.meio as Meio;
   if (!MEIOS.includes(meio) || !meiosLigados[meio]) return resumo("Escolha como você quer pagar.");
   const parcelas = meio === "cartao" ? Number(valores.parcelas || 1) : 1;
-  if (!parcelasValidas(cotacao.total_centavos, parcelas)) return resumo("Escolha um número de parcelas válido para este valor.");
+  if (!Number.isInteger(parcelas) || parcelas < 1 || parcelas > parcelasPermitidas(cotacao.total_centavos, politica)) {
+    return resumo("Escolha um número de parcelas válido para este valor.");
+  }
 
   // REGRA 4: só cria o pedido com o resumo aceito
   if (f.get("aceite") !== "sim") return resumo("Marque que leu o resumo do pedido.");

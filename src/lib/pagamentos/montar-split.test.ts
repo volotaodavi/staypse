@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { montarSplit, type DadosSplitPedido } from "./montar-split";
-import { MODALIDADES, TAXAS_PADRAO } from "./taxas";
+import { MODALIDADES, TAXAS_PADRAO, lerTaxasPlataforma } from "./taxas";
 
 // as chaves que dados_split_pedido devolve (tabela configuracoes)
 const taxas: Record<string, unknown> = { custo_lytex_split: { percentual: 1, minimo_centavos: 10, maximo_centavos: 100 } };
@@ -29,7 +29,7 @@ test("loja, afiliado e Staypse recebem; soma das partes + custo Lytex fecha com 
   assert.deepEqual(partes.map((p) => p.recebedorProvedorId), ["rec_loja", "rec_afiliada", "rec_staypse"]);
   const r = snapshot.resultado;
   assert.equal(r.comissaoDevidaCentavos, 5998); // 20% de R$ 299,90 (sem o frete)
-  assert.equal(r.taxaTotalCentavos, Math.floor((31980 * 150) / 10000) + 200); // 479 + 200
+  assert.equal(r.taxaTotalCentavos, Math.floor((31980 * 150) / 10000) + 230); // 479 + 230
   // o afiliado paga a fração da taxa proporcional à comissão dele no total
   assert.equal(r.taxaAfiliadoCentavos, Math.floor((r.taxaTotalCentavos * 5998) / 31980));
   assert.equal(r.taxaLojaCentavos + r.taxaAfiliadoCentavos, r.taxaTotalCentavos);
@@ -83,4 +83,21 @@ test("comissão sem recebedor do indicador não monta a cobrança", () => {
 
 test("taxas não configuradas não montam a cobrança (nada é inventado)", () => {
   assert.throws(() => montarSplit({ ...base, taxas: {} }, "rec_staypse", "pix"), /taxas_nao_configuradas/);
+});
+
+test("parcelado com juros: fatura = total + acréscimo, loja recebe o mesmo que no 1x e a soma fecha", () => {
+  const avista = montarSplit(base, "rec_staypse", "cartao_1x");
+  const acr = 450;
+  const { partes, snapshot } = montarSplit(base, "rec_staypse", "cartao_7a12", { acrescimoCentavos: acr });
+  assert.equal(partes[0].valorCentavos, avista.partes[0].valorCentavos);
+  assert.equal(partes[1].valorCentavos, avista.partes[1].valorCentavos);
+  assert.equal(soma(partes) + snapshot.resultado.custoLytexCentavos, base.total_centavos + acr);
+  assert.equal(snapshot.entrada.acrescimoCentavos, acr);
+  assert.equal(snapshot.resultado.cobradoCentavos, base.total_centavos + acr);
+});
+
+test("tarifa mínima e pedido mínimo chegam pelas taxas em vigor (ausentes = 0, como antes)", () => {
+  assert.equal(lerTaxasPlataforma(taxas).taxaMinimaCentavos, 0);
+  assert.equal(lerTaxasPlataforma({ ...taxas, taxa_minima_centavos: 250, pedido_minimo_centavos: 1000 }).pedidoMinimoCentavos, 1000);
+  assert.throws(() => lerTaxasPlataforma({ ...taxas, taxa_minima_centavos: -1 }), /taxas_nao_configuradas/);
 });

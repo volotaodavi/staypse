@@ -2,6 +2,7 @@
 // com status, pausar/ativar e estoque.
 import Link from "next/link";
 import { Miniatura } from "@/components/arquivos";
+import { AvisoTaxas } from "@/components/painel/AvisoTaxas";
 import { exigirPapel } from "@/lib/papeis";
 import { STATUS_ITEM, STATUS_PRODUTOR, formatarPreco, pendenciasItem, pendenciasProdutor, urlFoto, type DadosItem } from "@/lib/produtor";
 import { supabaseUrl } from "@/lib/supabase/env";
@@ -61,6 +62,11 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
     <>
       <p className="text-sm font-medium text-petroleo/75">Produtor</p>
       <h1 className="text-3xl">Cadastro da loja</h1>
+      {produtor && (
+        <div className="mt-4">
+          <AvisoTaxas />
+        </div>
+      )}
 
       {aviso.enviado && (
         <p role="status" className="mt-4 rounded-xl bg-branco px-4 py-3 text-sm">
@@ -144,6 +150,10 @@ export default async function PainelProdutor({ searchParams }: PageProps<"/paine
           <Link href="/painel/produtor/frete" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
             <span className="block text-lg font-semibold">Frete</span>
             <span className="text-sm text-petroleo/75">Valor, frete grátis e prazo</span>
+          </Link>
+          <Link href="/painel/produtor/pagamentos" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
+            <span className="block text-lg font-semibold">Pagamentos</span>
+            <span className="text-sm text-petroleo/75">Parcelas e juros</span>
           </Link>
           <Link href="/painel/produtor/loja" className="rounded-xl bg-branco p-5 hover:ring-2 hover:ring-petroleo/20">
             <span className="block text-lg font-semibold">Sua loja</span>

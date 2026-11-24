@@ -12,6 +12,7 @@ const entrada = (m: Modalidade, totalReais: number, ind: EntradaSplit["indicador
   taxaTotal: TAXAS_PADRAO.taxaTotal[m],
   custoLytex: TAXAS_PADRAO.custoLytex[m],
   custoSplit: TAXAS_PADRAO.custoSplit,
+  taxaMinimaCentavos: TAXAS_PADRAO.taxaMinimaCentavos,
   comissaoPercentual: ind === "nenhum" ? 0 : pct,
   indicador: ind,
 });
@@ -19,11 +20,11 @@ const soma = (r: ReturnType<typeof calcularSplit>) => r.produtorCentavos + r.ind
 
 // [taxa total, custo Lytex, margem Staypse] em centavos, por modalidade e ticket (30, 80, 150, 300, 800)
 const TABELA: Record<Modalidade, [number, number, number][]> = {
-  pix: [[245, 225, 20], [320, 273, 47], [425, 339, 86], [650, 384, 266], [1400, 396, 1004]],
-  boleto: [[275, 225, 50], [350, 272, 78], [455, 339, 116], [680, 383, 297], [1430, 396, 1034]],
-  cartao_1x: [[197, 142, 55], [442, 358, 84], [785, 662, 123], [1520, 1213, 307], [3970, 2923, 1047]],
-  cartao_2a6: [[215, 157, 58], [490, 398, 92], [875, 736, 139], [1700, 1362, 338], [4450, 3324, 1126]],
-  cartao_7a12: [[233, 169, 64], [538, 430, 108], [965, 796, 169], [1880, 1482, 398], [4930, 3645, 1285]],
+  pix: [[275, 225, 50], [350, 272, 78], [455, 339, 116], [680, 383, 297], [1430, 396, 1034]],
+  boleto: [[305, 224, 81], [380, 272, 108], [485, 339, 146], [710, 383, 327], [1460, 396, 1064]],
+  cartao_1x: [[250, 142, 108], [528, 358, 170], [920, 661, 259], [1760, 1212, 548], [4560, 2929, 1631]],
+  cartao_2a6: [[266, 157, 109], [576, 397, 179], [1010, 734, 276], [1940, 1362, 578], [5040, 3330, 1710]],
+  cartao_7a12: [[284, 169, 115], [624, 429, 195], [1100, 794, 306], [2120, 1481, 639], [5520, 3651, 1869]],
 };
 
 test("tabela de margem: taxa total, custo Lytex e margem em centavos exatos", () => {
@@ -50,12 +51,12 @@ test("margem da Staypse positiva em todos os cenários, com e sem afiliado; soma
 
 test("taxa rateada: loja e afiliado pagam proporcional à parte de cada um; resíduo é da loja", () => {
   const r = calcularSplit(entrada("pix", 150));
-  assert.equal(r.taxaTotalCentavos, 425); // 1,5% de 15000 = 225 + 200
+  assert.equal(r.taxaTotalCentavos, 455); // 1,5% de 15000 = 225 + 230
   assert.equal(r.comissaoDevidaCentavos, 4500);
-  assert.equal(r.taxaAfiliadoCentavos, Math.floor((425 * 4500) / 15000)); // 127 (30% da taxa, para baixo)
-  assert.equal(r.taxaLojaCentavos, 425 - 127);
-  assert.equal(r.indicadorCentavos, 4500 - 127);
-  assert.equal(r.produtorCentavos, 15000 - 4500 - 298);
+  assert.equal(r.taxaAfiliadoCentavos, Math.floor((455 * 4500) / 15000)); // 136 (30% da taxa, para baixo)
+  assert.equal(r.taxaLojaCentavos, 455 - 136);
+  assert.equal(r.indicadorCentavos, 4500 - 136);
+  assert.equal(r.produtorCentavos, 15000 - 4500 - 319);
   const frac = calcularSplit({ ...entrada("pix", 150), subtotalCentavos: 14999, totalCentavos: 14999, comissaoPercentual: 15 });
   assert.equal(frac.comissaoDevidaCentavos, Math.floor((14999 * 15) / 100)); // 2249,85 vira 2249
 });
@@ -83,20 +84,21 @@ test("só a loja: paga a taxa inteira", () => {
 test("frete entra na base da taxa (a Lytex cobra sobre o total), não na da comissão", () => {
   const r = calcularSplit(entrada("cartao_1x", 100, "afiliado", 20, 2000));
   assert.equal(r.comissaoDevidaCentavos, 2000); // 20% dos produtos (R$ 100), sem o frete
-  assert.equal(r.taxaTotalCentavos, Math.floor((12000 * 490) / 10000) + 50);
+  assert.equal(r.taxaTotalCentavos, Math.floor((12000 * 560) / 10000) + 80);
 });
 
 test("arredondamento: taxa para baixo, custo estimado para cima (sem erro de ponto flutuante)", () => {
-  // 4,9% de 10,10 = 49,49 centavos: taxa 49 (baixo); custo 3,39% = 34,239 centavos: 35 (cima)
-  const e: EntradaSplit = { ...entrada("cartao_1x", 0, "nenhum"), totalCentavos: 1010, subtotalCentavos: 1010 };
+  // 5,6% de 10,10 = 56,56 centavos: taxa 56 (baixo); custo 3,39% = 34,239 centavos: 35 (cima)
+  const e: EntradaSplit = { ...entrada("cartao_1x", 0, "nenhum"), taxaMinimaCentavos: 0, totalCentavos: 1010, subtotalCentavos: 1010 };
   const x = calcularSplit(e);
-  assert.equal(x.taxaTotalCentavos, 49 + 50);
+  assert.equal(x.taxaTotalCentavos, 56 + 80);
   assert.equal(x.custoLytexCentavos, 35 + 10 + 10); // meio + repasse da loja + repasse da Staypse (mínimos)
   assert.equal(soma(x), 1010);
 });
 
 test("venda pequena demais para cobrir o custo não é cobrada no prejuízo", () => {
-  assert.throws(() => calcularSplit({ ...entrada("pix", 0, "nenhum"), totalCentavos: 300, subtotalCentavos: 300 }), /taxa_menor_que_o_custo/);
+  const barata = { ...entrada("pix", 0, "nenhum"), taxaMinimaCentavos: 0, taxaTotal: { percentual: 1.5, fixoCentavos: 190 } };
+  assert.throws(() => calcularSplit({ ...barata, totalCentavos: 300, subtotalCentavos: 300 }), /taxa_menor_que_o_custo/);
   assert.doesNotThrow(() => calcularSplit({ ...entrada("pix", 0, "nenhum"), totalCentavos: 1000, subtotalCentavos: 1000 }));
 });
 
@@ -124,4 +126,33 @@ test("modalidade pelo meio e pelas parcelas", () => {
   assert.equal(modalidadeDoPagamento("cartao", 7), "cartao_7a12");
   assert.equal(modalidadeDoPagamento("cartao", 12), "cartao_7a12");
   assert.throws(() => modalidadeDoPagamento("cartao", 13), /parcelas_invalidas/);
+});
+
+test("tarifa mínima: a taxa total nunca fica abaixo dela; acima do mínimo nada muda", () => {
+  const pequeno = calcularSplit({ ...entrada("pix", 0, "nenhum"), totalCentavos: 1000, subtotalCentavos: 1000 });
+  assert.equal(pequeno.taxaTotalCentavos, 250); // 1,5% de R$ 10 = 15 + 230 = 245, sobe para o mínimo
+  const sem = calcularSplit({ ...entrada("pix", 0, "nenhum"), taxaMinimaCentavos: 0, totalCentavos: 1000, subtotalCentavos: 1000 });
+  assert.equal(sem.taxaTotalCentavos, 245);
+  assert.equal(calcularSplit(entrada("pix", 150)).taxaTotalCentavos, 455);
+});
+
+test("pedido mínimo de R$ 10: toda modalidade, no pior caso (afiliado 30%), fecha com a soma e a Staypse não perde", () => {
+  for (const m of MODALIDADES) {
+    const e = entrada(m, 0, "afiliado", 30);
+    const x = calcularSplit({ ...e, totalCentavos: 1000, subtotalCentavos: 1000 });
+    assert.ok(x.staypseCentavos > 0, m);
+    assert.equal(soma(x), 1000);
+  }
+});
+
+test("acréscimo do parcelamento: loja e afiliado recebem o mesmo que no cartão à vista; a soma fecha com o total cobrado", () => {
+  const base = { ...entrada("cartao_1x", 200, "afiliado", 20) };
+  const avista = calcularSplit(base);
+  const acr = 130;
+  const parcelado = calcularSplit({ ...base, modalidade: "cartao_2a6", custoLytex: TAXAS_PADRAO.custoLytex.cartao_2a6, acrescimoCentavos: acr });
+  assert.equal(parcelado.produtorCentavos, avista.produtorCentavos);
+  assert.equal(parcelado.indicadorCentavos, avista.indicadorCentavos);
+  assert.equal(parcelado.cobradoCentavos, 20000 + acr);
+  assert.equal(soma(parcelado), 20000 + acr);
+  assert.equal(parcelado.staypseCentavos + parcelado.custoLytexCentavos, parcelado.taxaTotalCentavos + acr);
 });

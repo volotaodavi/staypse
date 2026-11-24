@@ -68,7 +68,7 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
     p.status === "aguardando_pagamento"
       ? await admin
           .from("orders")
-          .select("cobranca_url, cobranca_meio, cobranca_parcelas, cobranca_pagamento, producer_id")
+          .select("cobranca_url, cobranca_meio, cobranca_parcelas, cobranca_pagamento, cobranca_acrescimo_centavos, producer_id")
           .eq("id", p.id)
           .maybeSingle()
       : { data: null };
@@ -149,7 +149,8 @@ export default async function PaginaPedido({ params, searchParams }: PageProps<"
               parcelas={cobranca.cobranca_parcelas}
               pagamento={(cobranca.cobranca_pagamento as DadosPagamento | null) ?? null}
               urlPagamento={cobranca.cobranca_url}
-              totalCentavos={p.total_centavos}
+              totalCentavos={p.total_centavos + Number(cobranca.cobranca_acrescimo_centavos ?? 0)}
+              comJuros={Number(cobranca.cobranca_acrescimo_centavos ?? 0) > 0}
               simulado={Boolean(cobranca.cobranca_url?.startsWith("/simulador-pagamentos/"))}
               semCobranca={
                 <form action={iniciarPagamento}>

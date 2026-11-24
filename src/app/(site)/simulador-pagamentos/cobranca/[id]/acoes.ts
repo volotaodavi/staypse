@@ -11,7 +11,7 @@ import type { StatusCobranca } from "@/lib/pagamentos/tipos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { urlDoSite } from "@/lib/supabase/env";
 
-const ACOES = ["pagar_pix", "pagar_cartao", "pagar_sem_webhook", "recusar", "chargeback", "estorno", "reenviar"] as const;
+const ACOES = ["pagar_pix", "pagar_cartao", "pagar_sem_webhook", "pagar_tardio", "recusar", "chargeback", "estorno", "reenviar"] as const;
 type Acao = (typeof ACOES)[number];
 
 async function enviarWebhook(corpo: string): Promise<boolean> {
@@ -49,7 +49,12 @@ export async function acaoSimulada(f: FormData) {
       ? (await enviarWebhook(JSON.stringify(c.ultimo_evento))) ? "Último webhook reenviado (mesmo id)." : "Webhook recusado."
       : "Ainda não há webhook para reenviar.";
   } else {
-    if (acao === "pagar_pix" || acao === "pagar_cartao" || acao === "pagar_sem_webhook") {
+    if (acao === "pagar_tardio") {
+      // simula o Pix antigo pago DEPOIS de a cobrança ter sido cancelada (a Staypse precisa estornar sozinha)
+      if (c.status !== "expirada") redirect(destino(provedorId, volta, "Só cobrança cancelada pode ser paga depois."));
+      novoStatus = "paga";
+      meio = "pix";
+    } else if (acao === "pagar_pix" || acao === "pagar_cartao" || acao === "pagar_sem_webhook") {
       if (c.status !== "pendente") redirect(destino(provedorId, volta, "Esta cobrança não está pendente."));
       novoStatus = "paga";
       meio = acao === "pagar_cartao" ? "cartao" : "pix";

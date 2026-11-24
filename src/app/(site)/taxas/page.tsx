@@ -2,6 +2,7 @@
 // Só a taxa total: o custo da Lytex e a divisão interna não aparecem aqui. Não linkar no checkout nem em
 // páginas do comprador; fora do sitemap e sem indexação.
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { DocumentoLegal, Itens } from "@/components/DocumentoLegal";
 import { TERMOS_VERSAO } from "@/config/empresa";
 import {
@@ -10,6 +11,7 @@ import {
   taxaTotalCentavos,
   type Modalidade,
 } from "@/lib/pagamentos/taxas";
+import { vigenciaFutura } from "@/lib/pagamentos/vigencia";
 import { formatarPreco } from "@/lib/produtor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 
@@ -24,23 +26,68 @@ export const instant = false;
 const f = "font-medium";
 const EXEMPLO_CENTAVOS = 10_000;
 
+type Par = { percentual: number; fixoCentavos: number };
+const lerPar = (v: unknown): Par | undefined => {
+  const o = v as { percentual?: unknown; fixo_centavos?: unknown } | null;
+  return typeof o?.percentual === "number" && typeof o?.fixo_centavos === "number"
+    ? { percentual: o.percentual, fixoCentavos: o.fixo_centavos }
+    : undefined;
+};
+const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
+const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+function TabelaTaxas({ titulo, linha, minimo }: { titulo: string; linha: (m: Modalidade) => Par | undefined; minimo: number }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <caption className="mb-1 text-left font-medium">{titulo}</caption>
+        <thead>
+          <tr className="text-left text-petroleo/75">
+            <th scope="col" className="py-2 pr-3 font-medium">
+              Meio de pagamento
+            </th>
+            <th scope="col" className="py-2 pr-3 text-right font-medium">
+              Taxa
+            </th>
+            <th scope="col" className="py-2 text-right font-medium whitespace-nowrap">
+              Em uma venda de {formatarPreco(EXEMPLO_CENTAVOS)}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {MODALIDADES.map((m) => {
+            const t = linha(m);
+            return (
+              <tr key={m} className="border-t border-petroleo/10">
+                <th scope="row" className="py-2 pr-3 text-left font-normal">
+                  {ROTULO_MODALIDADE[m]}
+                </th>
+                <td className="py-2 pr-3 text-right tabular-nums">
+                  {t ? `${pct(t.percentual)} + ${formatarPreco(t.fixoCentavos)}` : "Consulte o atendimento"}
+                </td>
+                <td className="py-2 text-right tabular-nums">{t ? formatarPreco(taxaTotalCentavos(EXEMPLO_CENTAVOS, t, minimo)) : "-"}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default async function Taxas() {
+  await connection(); // a vigência depende da data de hoje
   const { data } = await criarClienteAdmin()
     .from("configuracoes")
     .select("chave, valor")
-    .like("chave", "taxa_total_%");
-  const taxas = new Map<string, { percentual: number; fixoCentavos: number }>();
-  for (const c of data ?? []) {
-    const v = c.valor as { percentual?: number; fixo_centavos?: number };
-    if (typeof v.percentual === "number" && typeof v.fixo_centavos === "number")
-      taxas.set(c.chave, {
-        percentual: v.percentual,
-        fixoCentavos: v.fixo_centavos,
-      });
-  }
-  const linha = (m: Modalidade) => taxas.get(`taxa_total_${m}`);
-  const pct = (n: number) =>
-    `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
+    .or("chave.like.taxa_total_%,chave.in.(taxas_vigencia_em,taxas_anteriores,taxa_minima_centavos,pedido_minimo_centavos)");
+  const cfg = new Map<string, unknown>((data ?? []).map((c) => [c.chave as string, c.valor]));
+  const novas = (m: Modalidade) => lerPar(cfg.get(`taxa_total_${m}`));
+  const anteriores = cfg.get("taxas_anteriores") as Record<string, unknown> | undefined;
+  const vigenciaIso = typeof cfg.get("taxas_vigencia_em") === "string" ? (cfg.get("taxas_vigencia_em") as string) : null;
+  const futura = vigenciaIso !== null && vigenciaFutura(vigenciaIso) && anteriores !== undefined;
+  const minimoNovo = Number(cfg.get("taxa_minima_centavos") ?? 0) || 0;
+  const pedidoMinimo = Number(cfg.get("pedido_minimo_centavos") ?? 0) || 0;
 
   return (
     <DocumentoLegal
@@ -66,64 +113,24 @@ export default async function Taxas() {
           titulo: "Taxa por meio de pagamento",
           conteudo: (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <caption className="sr-only">
-                    Taxa da plataforma por meio de pagamento
-                  </caption>
-                  <thead>
-                    <tr className="text-left text-petroleo/75">
-                      <th scope="col" className="py-2 pr-3 font-medium">
-                        Meio de pagamento
-                      </th>
-                      <th
-                        scope="col"
-                        className="py-2 pr-3 text-right font-medium"
-                      >
-                        Taxa
-                      </th>
-                      <th
-                        scope="col"
-                        className="py-2 text-right font-medium whitespace-nowrap"
-                      >
-                        Em uma venda de {formatarPreco(EXEMPLO_CENTAVOS)}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MODALIDADES.map((m) => {
-                      const t = linha(m);
-                      return (
-                        <tr key={m} className="border-t border-petroleo/10">
-                          <th
-                            scope="row"
-                            className="py-2 pr-3 text-left font-normal"
-                          >
-                            {ROTULO_MODALIDADE[m]}
-                          </th>
-                          <td className="py-2 pr-3 text-right tabular-nums">
-                            {t
-                              ? `${pct(t.percentual)} + ${formatarPreco(t.fixoCentavos)}`
-                              : "Consulte o atendimento"}
-                          </td>
-                          <td className="py-2 text-right tabular-nums">
-                            {t
-                              ? formatarPreco(
-                                  taxaTotalCentavos(EXEMPLO_CENTAVOS, t),
-                                )
-                              : "-"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              {futura && vigenciaIso ? (
+                <div className="flex flex-col gap-6">
+                  <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900" data-aviso-taxas>
+                    Novas taxas a partir de {dia(vigenciaIso)}. Até lá valem as taxas atuais, abaixo.
+                  </p>
+                  <TabelaTaxas titulo={`Taxas atuais (até ${dia(vigenciaIso)})`} linha={(m) => lerPar(anteriores?.[m])} minimo={0} />
+                  <TabelaTaxas titulo={`Novas taxas (a partir de ${dia(vigenciaIso)})`} linha={novas} minimo={minimoNovo} />
+                </div>
+              ) : (
+                <TabelaTaxas titulo="Taxa por meio de pagamento" linha={novas} minimo={minimoNovo} />
+              )}
               <p className="mt-3 text-sm text-petroleo/80">
                 O percentual incide sobre o total pago, frete incluído. O cartão
-                em 2x a 6x e em 7x a 12x tem faixa própria. As parcelas são sem
-                juros para o comprador. Valores sujeitos a alteração, com aviso
-                prévio no painel.
+                em 2x a 6x e em 7x a 12x tem faixa própria.{" "}
+                {minimoNovo > 0 && `A taxa nunca fica abaixo de ${formatarPreco(minimoNovo)} por pedido. `}
+                {pedidoMinimo > 0 && `O pedido mínimo é de ${formatarPreco(pedidoMinimo)}. `}
+                Alterações de taxa são avisadas com 30 dias de antecedência,
+                pelo painel e por e-mail.
               </p>
             </>
           ),
@@ -148,6 +155,33 @@ export default async function Taxas() {
               <li>
                 No painel, cada um vê dois números: &quot;Taxa da
                 plataforma&quot; e &quot;Você recebe&quot;.
+              </li>
+            </Itens>
+          ),
+        },
+        {
+          id: "parcelamento",
+          titulo: "Parcelamento no cartão",
+          conteudo: (
+            <Itens>
+              <li>
+                <strong className={f}>A loja decide</strong> até quantas vezes
+                o comprador pode parcelar (de 1 a 12) e até quantas vezes sem
+                juros, no painel, em Pagamentos.
+              </li>
+              <li>
+                Nas parcelas <strong className={f}>sem juros</strong>, a loja
+                absorve a taxa da faixa do cartão.
+              </li>
+              <li>
+                Acima desse limite, o comprador paga um acréscimo no total
+                (&quot;com juros&quot;) que cobre só a diferença entre a taxa
+                da faixa e a do cartão à vista. A loja recebe o mesmo que
+                receberia no cartão à vista.
+              </li>
+              <li>
+                O comprador vê apenas o valor de cada parcela, se é sem ou com
+                juros e o total. Nunca vê a taxa da plataforma.
               </li>
             </Itens>
           ),

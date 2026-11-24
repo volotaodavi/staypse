@@ -213,7 +213,7 @@ export default function Termos() {
               <li>A Staypse não tem conta para receber o dinheiro das vendas, não guarda saldos e não faz repasses.</li>
               <li>Prazos de liberação, meios de pagamento e eventuais tarifas da instituição de pagamento são informados antes do pagamento ou no painel de cada participante.</li>
               <li>
-                Lojas e afiliados pagam a taxa da plataforma, proporcional à parte de cada um na venda, descontada no split. O comprador não paga taxa. Veja{" "}
+                Lojas e afiliados pagam a taxa da plataforma, proporcional à parte de cada um na venda, descontada no split. O comprador não paga a taxa da plataforma: paga o preço do anúncio e o frete. Só no parcelamento com juros, acima do número de parcelas sem juros definido pela loja, o comprador paga um acréscimo no total, informado antes de pagar. Alterações de taxa são avisadas com 30 dias de antecedência. Veja{" "}
                 <Link href="/taxas" className="font-medium underline">
                   Taxas para lojas
                 </Link>

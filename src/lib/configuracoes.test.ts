@@ -25,7 +25,7 @@ test("configuração válida", () => {
   const r = validarConfiguracoes(base);
   assert.ok("valores" in r);
   if ("valores" in r) {
-    assert.deepEqual(r.valores.taxas.taxa_total_pix, { percentual: 1.5, fixo_centavos: 200 });
+    assert.deepEqual(r.valores.taxas.taxa_total_pix, { percentual: 1.5, fixo_centavos: 230 });
     assert.deepEqual(r.valores.taxas.custo_lytex_cartao_7a12, { percentual: 4.29, fixo_centavos: 0 });
     assert.deepEqual(r.valores.taxas.custo_lytex_split, { percentual: 1, minimo_centavos: 10, maximo_centavos: 100 });
     assert.deepEqual(r.valores.palavras_proibidas, ["arma", "cassino"]);

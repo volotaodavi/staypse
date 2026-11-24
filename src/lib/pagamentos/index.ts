@@ -4,6 +4,7 @@
 import "server-only";
 import { lytex } from "./lytex";
 import { mock } from "./mock";
+import { simuladorLiberado } from "./simulador";
 import type { PaymentProvider } from "./tipos";
 
 export function nomeDoProvedor(): "mock" | "lytex" {
@@ -21,18 +22,9 @@ export function provedorPorNome(nome: string): PaymentProvider | null {
   return nome === "mock" ? mock : nome === "lytex" ? lytex : null;
 }
 
-// a "página da Lytex" simulada (aprovar/recusar recebedor, pagar cobrança) nunca
-// existe em produção, senão qualquer um aprovaria o próprio cadastro. FALHA FECHADA: além do provedor mock e de
-// não ser produção, exige a bandeira explícita PAGAMENTO_SIMULADOR=1 (só no .env.local de desenvolvimento/teste).
-// Hospedagem fora da Vercel (VPS, Docker) com NODE_ENV=production nunca liga o simulador por esquecimento.
-export function simuladorLiberado(env: Record<string, string | undefined> = process.env): boolean {
-  return (
-    env.PAGAMENTO_SIMULADOR === "1" &&
-    env.NODE_ENV !== "production" &&
-    env.VERCEL_ENV !== "production"
-  );
-}
-
+// a "página da Lytex" simulada (aprovar/recusar recebedor, pagar cobrança) nunca existe em produção, senão qualquer
+// um aprovaria o próprio cadastro. FALHA FECHADA: provedor mock + bandeira explícita PAGAMENTO_SIMULADOR=1 + fora de
+// produção (regra em simulador.ts, testada).
 export function simuladorAtivo(): boolean {
   return nomeDoProvedor() === "mock" && simuladorLiberado();
 }

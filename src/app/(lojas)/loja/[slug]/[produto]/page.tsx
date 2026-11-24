@@ -15,6 +15,9 @@ import { linkWhatsapp } from "@/components/publico";
 import { COOKIE_ATRIBUICAO, atribuicaoDoItem } from "@/lib/atribuicao";
 import { linkDenuncia } from "@/lib/denuncias";
 import { comprasAbertas } from "@/lib/pedidos";
+import { semJurosAte } from "@/lib/pagamentos/juros";
+import { valorParcelaCentavos } from "@/lib/pagamentos/parcelas";
+import { buscarPoliticaParcelas } from "@/lib/pagamentos/parcelamento-publico";
 import { formatarCnpj, formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarEntrega, buscarLoja, buscarProduto, type EntregaProduto } from "@/lib/publico";
 import { supabaseUrl, urlDoSite } from "@/lib/supabase/env";
@@ -92,6 +95,8 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
   await connection();
   const indicacao = atribuicaoDoItem(jar.get(COOKIE_ATRIBUICAO)?.value, item.id);
   const entrega = await buscarEntrega(item.id);
+  // parcelamento é política da loja: "até Nx sem juros" só quando N > 1 (e o valor comporta N parcelas)
+  const semJuros = semJurosAte(item.preco_centavos, await buscarPoliticaParcelas(item.id));
   const url = `${urlDoSite()}/loja/${slug}/${produto}`;
   const fotos = item.fotos.map((f) => urlFoto(supabaseUrl(), f));
   // outros produtos da mesma loja: os da mesma categoria primeiro
@@ -159,6 +164,11 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
               {item.nome}
             </h1>
             <p className={`text-3xl tabular-nums ${disposicao === "denso" ? "font-bold" : "font-semibold"} ${disposicao === "centrada" ? "text-[var(--loja-link)]" : ""}`}>{formatarPreco(item.preco_centavos)}</p>
+            {semJuros > 1 && (
+              <p className="text-sm font-medium text-neutral-800" data-sem-juros>
+                ou em até {semJuros}x sem juros, de {formatarPreco(valorParcelaCentavos(item.preco_centavos, semJuros))} cada
+              </p>
+            )}
             {indicacao && (
               // CDC art. 36 / CONAR: a indicação é remunerada e isso fica claro
               <p className="text-sm text-neutral-700">

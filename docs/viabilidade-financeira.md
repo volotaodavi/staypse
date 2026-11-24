@@ -4,6 +4,27 @@ Data: 2026-11-23. Valores em R$. Base: `docs/precificacao.md` (taxas e margens p
 Convenção: **(E)** = estimativa minha, sem fonte verificada. **(C)** = a confirmar (Lytex, contador ou fornecedor). Não sou contador nem advogado: tributos e contratos exigem validação profissional.
 Limite desta análise: a busca web não estava disponível, então o mix de meios de pagamento abaixo é uma hipótese (E), sem fonte citada. Validar com dados reais dos primeiros 200 pedidos.
 
+## Atualização de 2026-11-24: taxa final decidida (ver `docs/precificacao.md`, seção 10)
+
+O dono pediu para revisar os valores "sem sentar a mão e sem tomar prejuízo", pela curva de Laffer. O resultado substitui os ajustes sugeridos na seção 6 deste documento:
+
+| Item | Sugestão da seção 6 | **Decisão final** | Por quê |
+|---|---|---|---|
+| Pix e boleto | +R$ 0,50 no fixo (R$ 2,50 e R$ 2,80) | **R$ 2,30 e R$ 2,60**, percentual 1,5% igual | loja pequena e fábrica são as mais sensíveis ao Pix; o ganho vem do cartão |
+| Cartão | +0,4 p.p. (5,3%, 5,9%, 6,5%) | **5,6%, 6,2% e 6,8%** + R$ 0,80 | infoprodutor (pouca sensibilidade) concentra o cartão; ainda ~metade da Hotmart |
+| Tarifa mínima | R$ 3,00 | **R$ 2,50** | cobre o custo e o buffer em vendas de R$ 10 a R$ 47 sem passar da microvenda das grandes |
+| Pedido mínimo | R$ 10 | **R$ 10** | abaixo disso nem o Pix cobre o custo |
+| Plano Pro (R$ 79) | recomendado | **opção futura, não implementado** | sem dado de uso real; ponto de virada só acima de ~R$ 15.800 de Pix por mês |
+
+Efeito (modelo da seção 10 de precificacao.md, ticket R$ 150, mix desta análise, buffer de chargeback e subconta incluídos, depois do imposto):
+
+- Margem de contribuição por pedido: **R$ 1,13 para R$ 1,87** no Simples Anexo III e **R$ 1,01 para R$ 1,68** no Anexo V (fator R não atendido).
+- Ponto de equilíbrio da fase 1 (custo fixo ~R$ 1.900): de ~1.690 para **~1.010 pedidos/mês** (Anexo III) e ~1.130 (Anexo V). Fase 0: **218 pedidos/mês**. Fase 2: ~2.770.
+- Margem mínima por célula (pior caso com afiliado): **R$ 0,50** (antes R$ 0,20). Chargeback: buffer de 0,15% do GMV de cartão e 0,02% de Pix e boleto, mais ~R$ 0,10 por pedido de subconta.
+- Risco de volume: o modelo perde ~12% do GMV no cenário base (elasticidades estimadas, sem pesquisa primária). Mesmo com demanda 3x mais sensível, o lucro não cai abaixo da tabela anterior (+5%).
+- Parcelamento passou a ser política da loja (até Nx sem juros; acima, o comprador paga só a diferença de taxa da faixa): a taxa de 2x a 6x e de 7x a 12x pesa para a loja só nas parcelas sem juros que ela escolhe oferecer.
+- Aviso prévio de 30 dias às lojas antes da vigência; até lá, taxas anteriores. As tabelas das seções 1 a 6 abaixo usam a tabela anterior e ficam como histórico.
+
 ## Resumo em 5 linhas
 
 - A taxa proposta cobre o custo Lytex e deixa ~0,75% a 1,0% do GMV de margem bruta (R$ 0,71 a R$ 3,00 por pedido). É um piso, não um negócio.

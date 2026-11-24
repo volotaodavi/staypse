@@ -1,6 +1,6 @@
 // Leitura dos dados do produtor logado (com a sessão dele: a RLS só devolve
 // o que é dele). Usado pelo painel e pelo cadastro em passos.
-import { CONTRATO_PRODUTOR_VERSAO } from "@/config/empresa";
+import { CONTRATO_PRODUTOR_VERSOES_ACEITAS } from "@/config/empresa";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 export type Produtor = {
@@ -31,13 +31,13 @@ export async function meuProdutor(userId: string) {
       )
       .eq("user_id", userId)
       .maybeSingle<Produtor>(),
-    // o contrato precisa ter sido aceito NA VERSÃO ATUAL
+    // o contrato precisa ter sido aceito numa versão cujo aceite ainda vale (a 2026-12-13.1 não pede novo aceite)
     supabase
       .from("terms_acceptances")
       .select("aceito_em")
       .eq("user_id", userId)
       .eq("documento", "termos_produtor")
-      .eq("versao", CONTRATO_PRODUTOR_VERSAO)
+      .in("versao", [...CONTRATO_PRODUTOR_VERSOES_ACEITAS])
       .limit(1)
       .maybeSingle(),
   ]);

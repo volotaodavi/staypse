@@ -16,6 +16,8 @@ export type TaxasPlataforma = {
   custoSplit: CustoSplit;
   // tarifa mínima por pedido (centavos): a taxa total nunca fica abaixo dela; 0 = sem mínimo
   taxaMinimaCentavos: number;
+  // pedido mínimo (centavos) em vigor; 0 = sem mínimo (antes da vigência da tabela nova)
+  pedidoMinimoCentavos: number;
 };
 
 // Pedido mínimo da plataforma (centavos): abaixo disso nem o Pix cobre o custo (docs/precificacao.md, Decisão final)
@@ -47,6 +49,7 @@ export const TAXAS_PADRAO: TaxasPlataforma = {
   },
   custoSplit: { percentual: 1, minimoCentavos: 10, maximoCentavos: 100 },
   taxaMinimaCentavos: 250,
+  pedidoMinimoCentavos: PEDIDO_MINIMO_CENTAVOS,
 };
 
 // Tabela anterior (vale até a data de vigência da nova; docs/precificacao.md, seção 3 antiga)
@@ -112,5 +115,7 @@ export function lerTaxasPlataforma(bruto: Record<string, unknown> | null | undef
   // tarifa mínima: opcional (ausente = 0, como antes da migração 20261213000001)
   const minimo = bruto.taxa_minima_centavos === undefined || bruto.taxa_minima_centavos === null ? 0 : Number(bruto.taxa_minima_centavos);
   if (!Number.isInteger(minimo) || minimo < 0) throw new Error("taxas_nao_configuradas");
-  return { taxaTotal, custoLytex, custoSplit, taxaMinimaCentavos: minimo };
+  const pedidoMinimo = bruto.pedido_minimo_centavos === undefined || bruto.pedido_minimo_centavos === null ? 0 : Number(bruto.pedido_minimo_centavos);
+  if (!Number.isInteger(pedidoMinimo) || pedidoMinimo < 0) throw new Error("taxas_nao_configuradas");
+  return { taxaTotal, custoLytex, custoSplit, taxaMinimaCentavos: minimo, pedidoMinimoCentavos: pedidoMinimo };
 }

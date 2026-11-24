@@ -8,7 +8,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { formatarCnpj, formatarPreco } from "@/lib/produtor";
 import { ROTULO_ENTREGA, type ModoEntrega } from "@/lib/pedidos";
-import { MEIOS, ROTULO_MEIO, maxParcelas, valorParcelaCentavos, type Meio } from "@/lib/pagamentos/parcelas";
+import type { OpcaoParcela } from "@/lib/pagamentos/juros";
+import { MEIOS, ROTULO_MEIO, type Meio } from "@/lib/pagamentos/parcelas";
 import { comprar, type EstadoCompra } from "./acoes";
 
 type Opcoes = {
@@ -222,7 +223,11 @@ export function FormCompra({
     const r = estado.resumo;
     const meiosDisponiveis: Meio[] = estado.meios?.length ? estado.meios : [...MEIOS];
     const meio = (meiosDisponiveis.includes(meioEscolhido as Meio) ? meioEscolhido : meiosDisponiveis[0]) as Meio;
-    const parcelas = String(Math.min(Number(parcelasEscolhidas) || 1, maxParcelas(r.total_centavos)));
+    // parcelas e totais calculados no servidor (política da loja); o comprador vê só parcela, "sem/com juros" e total
+    const opcoes: OpcaoParcela[] = estado.parcelas?.length ? estado.parcelas : [{ parcelas: 1, parcelaCentavos: r.total_centavos, totalCentavos: r.total_centavos, semJuros: true }];
+    const parcelas = String(Math.min(Number(parcelasEscolhidas) || 1, opcoes.length));
+    const opcaoEscolhida = opcoes[Number(parcelas) - 1];
+    const totalPago = meio === "cartao" ? opcaoEscolhida.totalCentavos : r.total_centavos;
     return moldura(
       <form action={acao} className="flex flex-col gap-6">
         {fixos}
@@ -240,7 +245,7 @@ export function FormCompra({
                 <input type="radio" name="meio" value={m} checked={meio === m} onChange={() => setMeioEscolhido(m)} className="mt-0.5 h-5 w-5 shrink-0 accent-[var(--loja-link)]" />
                 <span className="min-w-0">
                   <span className="block text-base font-semibold">{ROTULO_MEIO[m]}</span>
-                  <span className="block text-neutral-700">{DICA_MEIO[m](r.total_centavos)}</span>
+                  <span className="block text-neutral-700">{DICA_MEIO[m](opcoes)}</span>
                 </span>
               </label>
             ))}
@@ -249,9 +254,11 @@ export function FormCompra({
             <label className={rotulo}>
               Parcelas
               <select name="parcelas" value={parcelas} onChange={(e) => setParcelasEscolhidas(e.target.value)} className={`${campo} min-h-12`} data-parcelas>
-                {Array.from({ length: maxParcelas(r.total_centavos) }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {n === 1 ? `À vista, ${formatarPreco(r.total_centavos)}` : `${n}x de ${formatarPreco(valorParcelaCentavos(r.total_centavos, n))} sem juros`}
+                {opcoes.map((o) => (
+                  <option key={o.parcelas} value={o.parcelas}>
+                    {o.parcelas === 1
+                      ? `À vista, ${formatarPreco(o.totalCentavos)}`
+                      : `${o.parcelas}x de ${formatarPreco(o.parcelaCentavos)} ${o.semJuros ? "sem juros" : "com juros"} (total ${formatarPreco(o.totalCentavos)})`}
                   </option>
                 ))}
               </select>
@@ -269,7 +276,8 @@ export function FormCompra({
             <Linha nome="Preço unitário" valor={formatarPreco(r.preco_unitario_centavos)} />
             <Linha nome="Subtotal" valor={formatarPreco(r.subtotal_centavos)} />
             <Linha nome="Frete" valor={r.frete_centavos === 0 ? "Grátis" : formatarPreco(r.frete_centavos)} />
-            <Linha nome="Total a pagar" valor={formatarPreco(r.total_centavos)} forte />
+            {totalPago > r.total_centavos && <Linha nome="Juros do parcelamento" valor={formatarPreco(totalPago - r.total_centavos)} />}
+            <Linha nome="Total a pagar" valor={formatarPreco(totalPago)} forte />
           </dl>
 
           <dl className="grid gap-3 text-sm text-neutral-800">
@@ -341,7 +349,7 @@ export function FormCompra({
             </span>
           </label>
           <Mensagem texto={estado.erro} />
-          <Enviar intencao="confirmar">{rotuloConfirmar(meio, r.total_centavos, Number(parcelas))}</Enviar>
+          <Enviar intencao="confirmar">{rotuloConfirmar(meio, r.total_centavos, opcaoEscolhida)}</Enviar>
           <button
             type="submit"
             name="intencao"
@@ -561,15 +569,20 @@ function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode
   );
 }
 
-const DICA_MEIO: Record<Meio, (total: number) => string> = {
+const DICA_MEIO: Record<Meio, (opcoes: OpcaoParcela[]) => string> = {
   pix: () => "Aprovação na hora, com QR Code ou copia e cola",
   boleto: () => "Compensa em até 2 dias úteis",
-  cartao: (total) => (maxParcelas(total) > 1 ? `Em até ${maxParcelas(total)}x sem juros` : "À vista"),
+  cartao: (opcoes) => {
+    const semJuros = opcoes.filter((o) => o.semJuros).length;
+    if (opcoes.length === 1) return "À vista";
+    return semJuros > 1 ? `Em até ${opcoes.length}x, sendo até ${semJuros}x sem juros` : `Em até ${opcoes.length}x com juros`;
+  },
 };
 
-function rotuloConfirmar(meio: Meio, total: number, parcelas: number) {
-  const preco = formatarPreco(total);
-  if (meio === "pix") return `Gerar Pix de ${preco}`;
-  if (meio === "boleto") return `Gerar boleto de ${preco}`;
-  return parcelas > 1 ? `Pagar em ${parcelas}x de ${formatarPreco(valorParcelaCentavos(total, parcelas))}` : `Pagar ${preco} no cartão`;
+function rotuloConfirmar(meio: Meio, total: number, opcao: OpcaoParcela) {
+  if (meio === "pix") return `Gerar Pix de ${formatarPreco(total)}`;
+  if (meio === "boleto") return `Gerar boleto de ${formatarPreco(total)}`;
+  return opcao.parcelas > 1
+    ? `Pagar em ${opcao.parcelas}x de ${formatarPreco(opcao.parcelaCentavos)}`
+    : `Pagar ${formatarPreco(opcao.totalCentavos)} no cartão`;
 }

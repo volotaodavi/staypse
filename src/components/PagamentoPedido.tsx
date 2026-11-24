@@ -30,6 +30,7 @@ export async function PagamentoPedido({
   pagamento,
   urlPagamento,
   totalCentavos,
+  comJuros = false,
   simulado,
   semCobranca,
 }: {
@@ -38,7 +39,8 @@ export async function PagamentoPedido({
   parcelas: number | null;
   pagamento: DadosPagamento | null;
   urlPagamento: string | null;
-  totalCentavos: number;
+  totalCentavos: number; // o que o comprador paga (já com o acréscimo, se houver)
+  comJuros?: boolean; // parcelamento acima do limite sem juros da loja
   simulado: boolean;
   // quando ainda não há cobrança: formulário "Pagar agora" (vem da página)
   semCobranca?: React.ReactNode;
@@ -64,7 +66,7 @@ export async function PagamentoPedido({
           <p className="text-3xl font-semibold tabular-nums">{formatarPreco(totalCentavos)}</p>
           {meio === "cartao" && parcelas && parcelas > 1 && (
             <p className="text-sm text-neutral-700">
-              Em {parcelas}x de <span className="tabular-nums">{formatarPreco(valorParcelaCentavos(totalCentavos, parcelas))}</span>, sem juros
+              Em {parcelas}x de <span className="tabular-nums">{formatarPreco(valorParcelaCentavos(totalCentavos, parcelas))}</span>, {comJuros ? "com juros" : "sem juros"}
             </p>
           )}
         </header>

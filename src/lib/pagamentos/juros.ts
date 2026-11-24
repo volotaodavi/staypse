@@ -68,3 +68,10 @@ export function opcoesParcelamento(totalCentavos: number, p: PoliticaParcelas, t
   }
   return lista;
 }
+
+// lê a política que o banco devolve ({parcelas_max, parcelas_sem_juros}); sem dado válido, o padrão
+export function politicaDoBanco(bruto: unknown): PoliticaParcelas {
+  const o = bruto as { parcelas_max?: unknown; parcelas_sem_juros?: unknown } | null;
+  const p = { parcelasMax: Number(o?.parcelas_max), parcelasSemJuros: Number(o?.parcelas_sem_juros) };
+  return politicaValida(p) ? p : POLITICA_PADRAO;
+}

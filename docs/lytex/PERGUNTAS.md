@@ -83,6 +83,12 @@ Fonte: `docs/lytex/openapi-v2-sandbox.json`. O que o spec responde está impleme
 51. **Taxas por meio.** `POST /v2/invoices/rates/methods` devolve `{boleto, pix, creditCard}` como números sem unidade (percentual? centavos?). Sem isso `montar-split.ts` segue com taxa 0.
 52. **Sandbox — credenciais.** `POST /v2/auth/obtain_token` respondeu 401 "Client inválido" com as credenciais de `.env.local` (formato aparentemente correto: id 24 caracteres, segredo 256). Conferir se são credenciais de SANDBOX e se o par está ativo.
 
+53. **Juros do parcelado.** O spec de `POST /v2/invoices` não tem campo de juros ou acréscimo para o cartão parcelado (só `maxParcels`; `mulctAndInterest` é multa e juros por ATRASO de boleto). Hoje a Staypse soma o acréscimo ao valor da fatura (`items[].value` = total do pedido + acréscimo, e o split fecha com esse total). A Lytex tem a opção de parcelado com juros pago pelo comprador (o repasse ao lojista já descontado)? Qual o campo? As taxas de 2x a 6x e 7x a 12x incidem sobre o total da fatura, com o acréscimo?
+54. **Moeda.** O spec da fatura não traz campo de moeda. Confirmar que a Lytex só opera em BRL. Hoje `lytex.ts` devolve "BRL" fixo e o checkout só confirma pagamento com moeda BRL e valor igual ao esperado.
+55. **Valor pago.** `paymentData.payedValue` e `totalValue` estão em centavos ou reais? No cartão parcelado, `payedValue` é o total (com acréscimo) ou o valor de uma parcela? Pagamento parcial de Pix ou boleto é possível (a fatura aceita valor menor)? O checkout só confirma se o valor pago for exatamente o esperado.
+56. **Cancelar fatura.** `PUT /v2/invoices/cancel/{id}`: o que acontece com o Pix e o boleto já gerados (deixam de valer na hora)? E se a fatura já foi paga (erro ou cancela)? Há webhook do cancelamento? Prazo para um Pix já lido no app do banco ser recusado?
+57. **Estorno de pagamento tardio.** Quando o comprador paga depois do cancelamento, o `POST /v2/refund-solicitation` devolve o valor total sem tarifa? O split já foi distribuído: a Lytex debita das subcontas ou da conta principal da Staypse?
+
 ## Conta própria da Staypse (admin, financeiro)
 Usamos só o que o spec tem: GET /v2/wallet, GET /v2/wallet/transactions/resume, GET /v2/bank_accounts e POST /v2/wallet/withdraw (tags "Carteira" e "Contas Bancárias"). Perguntas abertas:
 - Os valores de `balance`, `futureBalance`, `minimumWithdrawal`, `currentTax`, `in`, `out`, `taxes` e o `amount` do saque são em **centavos** ou reais? (o spec só diz `number`/`integer`; tratamos como centavos)

@@ -84,6 +84,7 @@ export default async function SimuladorCobranca({ params, searchParams }: PagePr
                   {botao("pagar_sem_webhook", "Pagar sem enviar o webhook")}
                 </>
               )}
+              {status === "expirada" && botao("pagar_tardio", "Pagar Pix depois do cancelamento")}
               {status === "paga" && botao("chargeback", "Chargeback")}
               {status === "estorno_pendente" && (
                 <>

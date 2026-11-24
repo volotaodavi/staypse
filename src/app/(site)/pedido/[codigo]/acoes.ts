@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { emailAtivo, enviarEmail } from "@/lib/email";
 import { emailDoLinkDoPedido } from "@/lib/email-conteudo";
 import { hashDoIp } from "@/lib/ip";
-import { iniciarCobranca } from "@/lib/pagamentos/cobrancas";
+import { cancelarCobrancaDoPedido, iniciarCobranca } from "@/lib/pagamentos/cobrancas";
 import { mensagemDePagamento } from "@/lib/pagamentos/mensagens";
 import { mensagemDeErro } from "@/lib/pedidos";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
@@ -34,6 +34,11 @@ export async function desistir(f: FormData) {
     p_motivo: texto(f, "motivo").slice(0, 1000) || null,
   });
   if (error) voltar(codigo, token, mensagemDeErro(error, "Não foi possível registrar a desistência. Tente de novo."), true);
+  if (data === "cancelado") {
+    // pedido cancelado antes de pagar: cancela também a cobrança no provedor (o Pix já gerado deixa de valer)
+    const { data: p } = await criarClienteAdmin().from("orders").select("id").eq("codigo", codigo).maybeSingle();
+    if (p?.id) await cancelarCobrancaDoPedido(p.id);
+  }
   voltar(
     codigo,
     token,

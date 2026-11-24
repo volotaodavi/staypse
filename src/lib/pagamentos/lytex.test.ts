@@ -184,7 +184,7 @@ describe("lytex: cobrança", () => {
       "POST /v2/invoices": () => ({ status: 201, json: { _id: "inv1", status: "waitingPayment", linkCheckout: "https://checkout.exemplo/x" } }),
     });
     const r = await criarLytex({ fetch: f, env: ENV, agora: () => Date.parse("2026-01-10T12:00:00Z") }).criarCobranca(dados);
-    assert.deepEqual(r, { provedorId: "inv1", status: "pendente", urlPagamento: "https://checkout.exemplo/x", pagamento: null });
+    assert.deepEqual(r, { provedorId: "inv1", status: "pendente", urlPagamento: "https://checkout.exemplo/x", pagamento: null, valorCentavos: null, moeda: "BRL" });
     const c = chamadas.find((x) => x.url === "/v2/invoices")?.corpo as { split: unknown; referenceId: string; referenceIdUniqueExt: string; dueDate: string; items: unknown; client: unknown; paymentMethods: unknown; redirect: { urlRedirect: string } };
     assert.deepEqual(c.split, {
       type: "fixedValue",
@@ -249,7 +249,7 @@ describe("lytex: cobrança", () => {
       "GET /v2/invoices/referenceIdUniqueExt/ped-123": () => ({ json: { _id: "inv0", status: "paid", linkCheckout: "https://c/y" } }),
     });
     const r = await criarLytex({ fetch: f, env: ENV }).criarCobranca(dados);
-    assert.deepEqual(r, { provedorId: "inv0", status: "paga", urlPagamento: "https://c/y", pagamento: null });
+    assert.deepEqual(r, { provedorId: "inv0", status: "paga", urlPagamento: "https://c/y", pagamento: null, valorCentavos: null, moeda: "BRL" });
   });
   it("consulta traduz status", async () => {
     const { f } = simular({
@@ -285,5 +285,29 @@ describe("lytex: webhook", () => {
   it("rejeita tudo enquanto o spec não documentar assinatura", async () => {
     const p = criarLytex({ fetch: simular({}).f, env: { ...ENV, LYTEX_CALLBACK_SECRET: "x" } });
     await assert.rejects(p.validarWebhook('{"id":"1"}', new Headers({ "x-assinatura": "x" })), IntegracaoPendente);
+  });
+});
+
+describe("lytex: valor, moeda e cancelamento", () => {
+  it("consulta devolve o valor pago (paga) ou o total da fatura, sempre em BRL", async () => {
+    const { f } = simular({
+      "POST /v2/auth/obtain_token": () => token(),
+      "GET /v2/invoices/pg": () => ({ json: { _id: "pg", status: "paid", totalValue: 10_000, paymentData: { payedValue: 9_999 } } }),
+      "GET /v2/invoices/pend": () => ({ json: { _id: "pend", status: "waitingPayment", totalValue: 10_000 } }),
+      "GET /v2/invoices/sem": () => ({ json: { _id: "sem", status: "paid" } }),
+    });
+    const p = criarLytex({ fetch: f, env: ENV });
+    assert.deepEqual(await p.consultarCobranca("pg"), { provedorId: "pg", status: "paga", urlPagamento: null, pagamento: null, valorCentavos: 9_999, moeda: "BRL" });
+    assert.equal((await p.consultarCobranca("pend")).valorCentavos, 10_000);
+    assert.equal((await p.consultarCobranca("sem")).valorCentavos, null); // sem valor informado: o checkout NÃO confirma
+  });
+  it("cancelarCobranca usa PUT /v2/invoices/cancel/{id} e traduz o status", async () => {
+    const { f, chamadas } = simular({
+      "POST /v2/auth/obtain_token": () => token(),
+      "PUT /v2/invoices/cancel/inv9": () => ({ json: { _id: "inv9", status: "canceled", totalValue: 5_000 } }),
+    });
+    const r = await criarLytex({ fetch: f, env: ENV }).cancelarCobranca("inv9");
+    assert.equal(r.status, "expirada");
+    assert.ok(chamadas.some((c) => c.metodo === "PUT" && c.url === "/v2/invoices/cancel/inv9"));
   });
 });

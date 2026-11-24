@@ -136,7 +136,18 @@ export default function ContratoProdutor() {
             <Itens>
               <li>Os pagamentos são processados por instituição de pagamento parceira. O Produtor mantém cadastro de recebedor válido nessa instituição para receber a sua parte diretamente no split.</li>
               <li>A Staypse <strong className={f}>não recebe, não guarda e não repassa</strong> o dinheiro das vendas.</li>
-              <li>A taxa da plataforma (percentual mais valor fixo por venda, conforme o meio de pagamento e o número de parcelas) é a única taxa cobrada do Produtor, já inclui o processamento do pagamento, é informada antes da publicação de cada produto e é descontada automaticamente no split. O comprador não paga taxa.</li>
+              <li>A taxa da plataforma (percentual mais valor fixo por venda, conforme o meio de pagamento e o número de parcelas) é a única taxa cobrada do Produtor, já inclui o processamento do pagamento, é informada antes da publicação de cada produto e é descontada automaticamente no split. O comprador não paga taxa da plataforma.</li>
+              <li>
+                <strong className={f}>Alteração de taxas com aviso prévio de 30 dias.</strong> A Staypse pode alterar a tabela de taxas avisando o Produtor com
+                pelo menos 30 dias de antecedência, por notificação no painel e por e-mail, com a data em que as novas taxas passam a valer. Até essa data,
+                as vendas seguem as taxas anteriores. O Produtor que continuar usando a plataforma depois da data de vigência aceita as novas taxas; quem
+                discordar pode encerrar a loja antes dessa data, sem custo.
+              </li>
+              <li>
+                O parcelamento no cartão é política da loja: o Produtor define até quantas parcelas oferece e até quantas sem juros. Nas parcelas sem juros, a
+                loja absorve a taxa da faixa de parcelamento. Acima desse limite, o comprador paga um acréscimo, informado antes do pagamento, que cobre só a
+                diferença de taxa da faixa, de modo que o Produtor recebe o mesmo que receberia no cartão à vista.
+              </li>
               <li>
                 A taxa da plataforma é dividida entre a loja e o afiliado, na proporção da parte de cada um no valor do pedido; vendedores próprios da loja
                 não pagam taxa. A tabela vigente está em{" "}
