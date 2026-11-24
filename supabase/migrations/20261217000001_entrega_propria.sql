@@ -211,6 +211,8 @@ alter table public.orders add constraint orders_entrega_modo_check
 alter table public.orders
   add column entrega_zona_nome   text,
   add column entrega_prazo_texto text;
+-- colunas de pedido são liberadas uma a uma (ver migração de cobrança); a loja lê a zona e o prazo do próprio pedido (RLS)
+grant select (entrega_zona_nome, entrega_prazo_texto) on public.orders to authenticated;
 
 drop function public.cotar_pedido(uuid, integer, text);
 create or replace function public.cotar_pedido(p_item uuid, p_quantidade integer, p_modo text, p_cep text default null)

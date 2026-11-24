@@ -1430,8 +1430,8 @@ select teste.ok(public.configuracoes_publicas() ? 'meios_pagamento' and not (pub
                 and not (public.configuracoes_publicas() ? 'palavras_proibidas'),
                 'leitura pública traz só chaves não sensíveis (sem taxa nem palavras proibidas)');
 :comoC
-select teste.ok((select count(*) from public.configuracoes) = 22, 'admin lê as 22 configurações (6 de regras + admin_email + 5 taxas totais + 5 custos Lytex + custo de repasse + tarifa mínima, pedido mínimo, vigência e taxas anteriores)');
-select teste.ok((select valor = '{"percentual": 1.5, "fixo_centavos": 230}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
+select teste.ok((select count(*) from public.configuracoes) = 20, 'admin lê as 20 configurações (sem aumento agendado: migração 20261216) (6 de regras + admin_email + 5 taxas totais + 5 custos Lytex + custo de repasse + tarifa mínima, pedido mínimo, vigência e taxas anteriores)');
+select teste.ok((select valor = '{"percentual": 1.5, "fixo_centavos": 200}'::jsonb from public.configuracoes where chave = 'taxa_total_pix')
                 and (select valor = '{"percentual": 4.29, "fixo_centavos": 0}'::jsonb from public.configuracoes where chave = 'custo_lytex_cartao_7a12'),
                 'taxas por modalidade nascem com os valores recomendados');
 select teste.bloqueia($$select public.admin_salvar_configuracoes('{"taxa_total_pix": {"percentual": 31, "fixo_centavos": 200}}')$$, 'taxa total acima de 30% é recusada');
@@ -1998,7 +1998,7 @@ select id as cb5 from public.criar_pedido(:'cb_kit', 1, 'retirada', null, null, 
 select teste.ok((public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador') = 'vendedor_split'
                 and (public.dados_split_pedido(:'cb1', 'mock') ->> 'indicador_provedor_id') = 'rec_b_vend'
                 and (public.dados_split_pedido(:'cb1', 'mock') ->> 'produtor_provedor_id') is not null
-                and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas' -> 'taxa_total_pix' ->> 'fixo_centavos')::int = 200
+                and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas' -> 'taxa_total_pix' ->> 'fixo_centavos')::int = (select (valor ->> 'fixo_centavos')::int from public.configuracoes where chave = 'taxa_total_pix')
                 and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas') ? 'custo_lytex_cartao_7a12'
                 and (public.dados_split_pedido(:'cb1', 'mock') -> 'taxas') ? 'custo_lytex_split',
                 'split: loja, indicação (vendedor split_direto da loja) e taxa da Staypse (configuração) montados pelo banco');
@@ -2554,6 +2554,21 @@ select teste.ok(public.configuracao_valida('taxas_anteriores', '{"pix":{"percent
                 and not public.configuracao_valida('taxas_anteriores', '{"pix":{"percentual":99,"fixo_centavos":200},"boleto":{"percentual":1.5,"fixo_centavos":230},"cartao_1x":{"percentual":4.9,"fixo_centavos":50},"cartao_2a6":{"percentual":5.5,"fixo_centavos":50},"cartao_7a12":{"percentual":6.1,"fixo_centavos":50}}'),
                 'preço final: tabela anterior precisa das 5 modalidades com valores válidos');
 
+-- a migração 20261216 manteve a tabela atual e cancelou o aumento agendado
+select teste.ok((select valor from public.configuracoes where chave = 'taxa_total_cartao_1x') = '{"percentual": 4.9, "fixo_centavos": 50}'
+                and (select valor from public.configuracoes where chave = 'taxa_minima_centavos') = '0'
+                and not exists (select 1 from public.configuracoes where chave in ('taxas_vigencia_em', 'taxas_anteriores')),
+                'taxas atuais mantidas e aumento agendado cancelado (migração 20261216)');
+-- recria o cenário de aumento agendado para testar o mecanismo de vigência
+update public.configuracoes set valor = v.valor from (values
+  ('taxa_total_pix', '{"percentual": 1.5, "fixo_centavos": 230}'::jsonb), ('taxa_total_boleto', '{"percentual": 1.5, "fixo_centavos": 260}'::jsonb),
+  ('taxa_total_cartao_1x', '{"percentual": 5.6, "fixo_centavos": 80}'::jsonb), ('taxa_total_cartao_2a6', '{"percentual": 6.2, "fixo_centavos": 80}'::jsonb),
+  ('taxa_total_cartao_7a12', '{"percentual": 6.8, "fixo_centavos": 80}'::jsonb), ('taxa_minima_centavos', '250'::jsonb)) as v(chave, valor)
+where configuracoes.chave = v.chave;
+insert into public.configuracoes (chave, valor) values
+  ('taxas_anteriores', '{"pix":{"percentual":1.5,"fixo_centavos":200},"boleto":{"percentual":1.5,"fixo_centavos":230},"cartao_1x":{"percentual":4.9,"fixo_centavos":50},"cartao_2a6":{"percentual":5.5,"fixo_centavos":50},"cartao_7a12":{"percentual":6.1,"fixo_centavos":50}}'::jsonb),
+  ('taxas_vigencia_em', to_jsonb(to_char((now() + interval '30 days') at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')))
+on conflict (chave) do update set valor = excluded.valor;
 -- padrões novos e tabela anterior guardada
 select teste.ok((select valor from public.configuracoes where chave = 'taxa_total_pix') = '{"percentual": 1.5, "fixo_centavos": 230}'
                 and (select valor from public.configuracoes where chave = 'taxa_total_cartao_1x') = '{"percentual": 5.6, "fixo_centavos": 80}'
@@ -2736,6 +2751,15 @@ select teste.bloqueia($$select * from public.saques$$, 'saques: visitante não l
 select teste.bloqueia($$select * from public.meu_extrato_financeiro('produtor', now() - interval '1 day', now())$$, 'extrato financeiro: visitante não executa');
 reset role;
 
+
+reset role;
+-- volta ao estado real (taxas atuais, sem aumento agendado) para os testes seguintes
+update public.configuracoes set valor = v.valor from (values
+  ('taxa_total_pix', '{"percentual": 1.5, "fixo_centavos": 200}'::jsonb), ('taxa_total_boleto', '{"percentual": 1.5, "fixo_centavos": 230}'::jsonb),
+  ('taxa_total_cartao_1x', '{"percentual": 4.9, "fixo_centavos": 50}'::jsonb), ('taxa_total_cartao_2a6', '{"percentual": 5.5, "fixo_centavos": 50}'::jsonb),
+  ('taxa_total_cartao_7a12', '{"percentual": 6.1, "fixo_centavos": 50}'::jsonb), ('taxa_minima_centavos', '0'::jsonb)) as v(chave, valor)
+where configuracoes.chave = v.chave;
+delete from public.configuracoes where chave in ('taxas_vigencia_em', 'taxas_anteriores');
 
 -- =========================================================================
 -- Entrega própria: zonas, cotação por CEP/cidade/bairro/km, logística e LGPD

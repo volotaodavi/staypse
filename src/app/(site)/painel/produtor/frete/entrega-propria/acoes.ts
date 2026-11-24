@@ -76,6 +76,7 @@ export async function salvarZona(_a: EstadoFormulario, f: FormData): Promise<Est
     if (kmMax != null && !(kmMax > 0 && kmMax <= 5000)) return volta("O km máximo precisa ser maior que 0.");
     Object.assign(linha, { preco_km_centavos: porKm, taxa_minima_centavos: minima, fator_rota: fator, km_max: kmMax, preco_fixo_centavos: fixo });
   } else return volta("Escolha como o preço é calculado: fixo, por km ou grátis acima de um valor.");
+  linha.preco_tipo = v.preco_tipo;
 
   if (v.prazo_tipo === "mesmo_dia") {
     if (!/^\d{2}:\d{2}$/.test(v.hora_limite)) return volta("Informe até que horas o pedido entra no mesmo dia.");
