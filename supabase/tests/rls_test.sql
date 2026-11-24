@@ -2751,21 +2751,21 @@ insert into public.cep_geo (cep, cidade, uf, bairro, latitude, longitude) values
   ('24900300', 'Maricá', 'RJ', 'Ponta Negra', 0, 0.5),    -- 72,3 km (acima do máximo)
   ('24900400', 'Maricá', 'RJ', 'São José', null, null),   -- sem coordenadas
   ('20000000', 'Rio de Janeiro', 'RJ', 'Centro', 0, 0.1);
-select id as prodA from public.producers where user_id = '00000000-0000-0000-0000-00000000000a' \gset
+select id as prodloja from public.producers where user_id = '00000000-0000-0000-0000-00000000000a' \gset
 
 -- só a loja cria zona; visitante e quem não tem loja não
 :comoAnon
 select teste.bloqueia($$select * from public.entrega_zonas$$, 'zonas: visitante não lê');
 :comoB
-select teste.bloqueia(format($q$insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, preco_tipo, preco_fixo_centavos, prazo_tipo, prazo_valor)
-  values (%L, 'Invasora', 'cidade', 'Maricá', 'RJ', 'fixo', 100, 'dias', 1)$q$, :'prodA'), 'zonas: quem não é a loja não cria zona dela');
+select teste.bloqueia(format('insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, preco_tipo, preco_fixo_centavos, prazo_tipo, prazo_valor)
+  values (%L, ''Invasora'', ''cidade'', ''Maricá'', ''RJ'', ''fixo'', 100, ''dias'', 1)', :'prodloja'), 'zonas: quem não é a loja não cria zona dela');
 :comoA
 insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, preco_tipo, preco_km_centavos, taxa_minima_centavos, km_max, prazo_tipo, hora_limite)
-  values (:'prodA', 'Maricá', 'cidade', 'Maricá', 'RJ', 'km', 200, 800, 30, 'mesmo_dia', '14:00');
-select teste.bloqueia(format($q$insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, preco_tipo, prazo_tipo, prazo_valor)
-  values (%L, 'Sem preço', 'cidade', 'Maricá', 'RJ', 'km', 'dias', 1)$q$, :'prodA'), 'zonas: preço por km exige preço e taxa mínima');
-select teste.bloqueia(format($q$insert into public.entrega_zonas (producer_id, nome, cobertura, cep_inicio, cep_fim, preco_tipo, preco_fixo_centavos, prazo_tipo, prazo_valor)
-  values (%L, 'CEP invertido', 'cep', '24900200', '24900100', 'fixo', 500, 'dias', 1)$q$, :'prodA'), 'zonas: faixa de CEP com início maior que o fim é recusada');
+  values (:'prodloja', 'Maricá', 'cidade', 'Maricá', 'RJ', 'km', 200, 800, 30, 'mesmo_dia', '14:00');
+select teste.bloqueia(format('insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, preco_tipo, prazo_tipo, prazo_valor)
+  values (%L, ''Sem preço'', ''cidade'', ''Maricá'', ''RJ'', ''km'', ''dias'', 1)', :'prodloja'), 'zonas: preço por km exige preço e taxa mínima');
+select teste.bloqueia(format('insert into public.entrega_zonas (producer_id, nome, cobertura, cep_inicio, cep_fim, preco_tipo, preco_fixo_centavos, prazo_tipo, prazo_valor)
+  values (%L, ''CEP invertido'', ''cep'', ''24900200'', ''24900100'', ''fixo'', 500, ''dias'', 1)', :'prodloja'), 'zonas: faixa de CEP com início maior que o fim é recusada');
 select teste.ok((select count(*) = 1 from public.entrega_zonas), 'zonas: a loja vê a própria zona');
 :comoB
 select teste.ok((select count(*) = 0 from public.entrega_zonas), 'zonas: afiliado/outra pessoa não lê zonas de outra loja');
@@ -2790,39 +2790,39 @@ select teste.bloqueia(format('select * from public.cotar_pedido(%L, 1, %L, %L)',
 select teste.bloqueia(format('select * from public.cotar_pedido(%L, 1, %L)', :'kit', 'propria'), 'cotar_pedido: entrega própria sem CEP é recusada');
 select teste.bloqueia(format('select * from public.cotar_pedido(%L, 1, %L, %L)', :'curso', 'propria', '24900100'), 'cotar_pedido: produto digital não tem entrega própria');
 reset role;
-update public.producers set frete_quem_paga = 'loja' where id = :'prodA';
+update public.producers set frete_quem_paga = 'loja' where id = :'prodloja';
 select teste.ok((select frete_centavos = 0 from public.cotar_pedido(:'kit', 1, 'propria', '24900100')), 'entrega própria: se a loja paga o frete, o comprador paga 0');
-update public.producers set frete_quem_paga = 'comprador' where id = :'prodA';
+update public.producers set frete_quem_paga = 'comprador' where id = :'prodloja';
 
 -- sem coordenadas: cai para o preço fixo de reserva da zona
 update public.entrega_zonas set preco_fixo_centavos = 1800 where nome = 'Maricá';
-select teste.ok((select frete_centavos = 1800 and distancia_km is null from public.zona_para_cep(:'prodA', '24900400', 5000)), 'entrega própria: sem coordenadas usa o preço fixo de reserva');
+select teste.ok((select frete_centavos = 1800 and distancia_km is null from public.zona_para_cep(:'prodloja', '24900400', 5000)), 'entrega própria: sem coordenadas usa o preço fixo de reserva');
 
 -- mais específica vence: bairro > faixa de CEP > cidade; bairro casa sem acento
 insert into public.entrega_zonas (producer_id, nome, cobertura, cep_inicio, cep_fim, preco_tipo, preco_fixo_centavos, prazo_tipo, prazo_valor)
-  values (:'prodA', 'Faixa Centro', 'cep', '24900100', '24900199', 'fixo', 999, 'horas', 3);
-select teste.ok((select zona_nome = 'Faixa Centro' and frete_centavos = 999 from public.zona_para_cep(:'prodA', '24900100', 5000)), 'zonas: faixa de CEP vence a cidade inteira');
-select teste.ok((select zona_nome = 'Maricá' from public.zona_para_cep(:'prodA', '24900200', 5000)), 'zonas: fora da faixa volta para a cidade');
+  values (:'prodloja', 'Faixa Centro', 'cep', '24900100', '24900199', 'fixo', 999, 'horas', 3);
+select teste.ok((select zona_nome = 'Faixa Centro' and frete_centavos = 999 from public.zona_para_cep(:'prodloja', '24900100', 5000)), 'zonas: faixa de CEP vence a cidade inteira');
+select teste.ok((select zona_nome = 'Maricá' from public.zona_para_cep(:'prodloja', '24900200', 5000)), 'zonas: fora da faixa volta para a cidade');
 insert into public.entrega_zonas (producer_id, nome, cobertura, cidade, uf, bairros, preco_tipo, preco_fixo_centavos, gratis_acima_centavos, prazo_tipo, prazo_valor)
-  values (:'prodA', 'Centro e São José', 'bairro', 'maricá', 'RJ', array['centro', 'Sao Jose'], 'gratis_acima', 700, 5000, 'dias', 1);
-select teste.ok((select zona_nome = 'Centro e São José' and frete_centavos = 700 from public.zona_para_cep(:'prodA', '24900100', 4999)), 'zonas: bairro vence faixa de CEP e cidade');
-select teste.ok((select frete_centavos = 0 from public.zona_para_cep(:'prodA', '24900100', 5000)), 'zonas: grátis acima do valor');
-select teste.ok((select zona_nome = 'Centro e São José' from public.zona_para_cep(:'prodA', '24900400', 100)), 'zonas: bairro "São José" casa com "Sao Jose" (sem acento)');
+  values (:'prodloja', 'Centro e São José', 'bairro', 'maricá', 'RJ', array['centro', 'Sao Jose'], 'gratis_acima', 700, 5000, 'dias', 1);
+select teste.ok((select zona_nome = 'Centro e São José' and frete_centavos = 700 from public.zona_para_cep(:'prodloja', '24900100', 4999)), 'zonas: bairro vence faixa de CEP e cidade');
+select teste.ok((select frete_centavos = 0 from public.zona_para_cep(:'prodloja', '24900100', 5000)), 'zonas: grátis acima do valor');
+select teste.ok((select zona_nome = 'Centro e São José' from public.zona_para_cep(:'prodloja', '24900400', 100)), 'zonas: bairro "São José" casa com "Sao Jose" (sem acento)');
 update public.entrega_zonas set ativo = false where nome = 'Centro e São José';
-select teste.ok((select zona_nome = 'Faixa Centro' from public.zona_para_cep(:'prodA', '24900100', 5000)), 'zonas: zona desligada não vale');
+select teste.ok((select zona_nome = 'Faixa Centro' from public.zona_para_cep(:'prodloja', '24900100', 5000)), 'zonas: zona desligada não vale');
 update public.entrega_zonas set ativo = true where nome = 'Centro e São José';
 -- zona para o CEP de fora da cidade, só por faixa
-select teste.ok((select count(*) = 0 from public.zona_para_cep(:'prodA', '20000000', 5000)), 'zonas: CEP de outra cidade sem zona não casa');
+select teste.ok((select count(*) = 0 from public.zona_para_cep(:'prodloja', '20000000', 5000)), 'zonas: CEP de outra cidade sem zona não casa');
 
 -- pedido com entrega própria + logística + LGPD
 :comoServidor
 select codigo as pedp, token as tokp from public.criar_pedido(:'kit', 1, 'propria', null, '00000000-0000-0000-0000-00000000000b',
   'Bia Compradora', 'bia@teste.com', '52998224725', '(21) 98888-0000',
   '{"cep":"24900200","logradouro":"Rua B","numero":"2","bairro":"Barra","cidade":"Maricá","uf":"RJ"}', '2026-11-18') \gset
-select teste.ok((select entrega_modo = 'propria' and frete_centavos = 1800 and entrega_zona_nome = 'Maricá' and total_centavos = 6800
+select teste.ok((select entrega_modo = 'propria' and frete_centavos = 800 and entrega_zona_nome = 'Maricá' and total_centavos = 5800
                  from public.orders where codigo = :'pedp'), 'pedido: entrega própria guarda modo, zona e frete do banco');
-select teste.bloqueia(format($q$select * from public.criar_pedido(%L, 1, 'propria', null, null, 'Caio', 'c@teste.com', '52998224725', null,
-  '{"cep":"24900300","logradouro":"Rua C","numero":"3","bairro":"Ponta Negra","cidade":"Maricá","uf":"RJ"}', '2026-11-18')$q$, :'kit'),
+select teste.bloqueia(format('select * from public.criar_pedido(%L, 1, ''propria'', null, null, ''Caio'', ''c@teste.com'', ''52998224725'', null,
+  ''{"cep":"24900300","logradouro":"Rua C","numero":"3","bairro":"Ponta Negra","cidade":"Maricá","uf":"RJ"}'', ''2026-11-18'')', :'kit'),
   'pedido: CEP sem zona não vira pedido de entrega própria');
 select public.confirmar_pagamento(id) from public.orders where codigo = :'pedp';
 select teste.ok((public.pedido_do_comprador(:'pedp', :'tokp') -> 'entrega_propria' ->> 'status') = 'preparando', 'comprador: entrega própria começa em preparando');
@@ -2868,9 +2868,9 @@ select teste.ok((select count(*) = 0 from public.entregas_proprias), 'LGPD: outr
 select teste.bloqueia($$select * from public.entregas_proprias$$, 'LGPD: visitante não lê entregas');
 select teste.bloqueia($$select * from public.entregadores$$, 'LGPD: visitante não lê entregadores');
 :comoA
-insert into public.entregadores (producer_id, nome, telefone) values (:'prodA', 'Maria Motorista', '21977776666');
+insert into public.entregadores (producer_id, nome, telefone) values (:'prodloja', 'Maria Motorista', '21977776666');
 select teste.ok((select count(*) = 1 from public.entregadores), 'entregadores: a loja cadastra os próprios');
-select teste.bloqueia(format($q$insert into public.entregadores (producer_id, nome, telefone) values (%L, 'X', '1')$q$, :'prodA'), 'entregadores: telefone inválido recusado');
+select teste.bloqueia(format('insert into public.entregadores (producer_id, nome, telefone) values (%L, ''X'', ''1'')', :'prodloja'), 'entregadores: telefone inválido recusado');
 select public.atualizar_entrega_propria(:'pedp_id', 'entregue');
 select teste.ok((select status = 'entregue' and entregue_em is not null from public.entregas_proprias), 'entrega: entregue registra a hora');
 select teste.bloqueia(format('select public.atribuir_entrega_propria(%L, null, %L, null, false, null, null)', :'pedp_id', 'Outro'), 'entrega: depois de entregue não troca o entregador');
