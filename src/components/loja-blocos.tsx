@@ -197,33 +197,29 @@ export function CarrosselBanners({
         ))}
       </div>
       {total > 1 && (
-        <div className={`flex items-center justify-center gap-1 ${fora ? "pt-1" : "absolute inset-x-0 top-2 justify-between px-4 @2xl:top-1/2 @2xl:-translate-y-1/2 @2xl:px-6"}`}>
-          {!fora && (
-            <button type="button" onClick={() => irPara(atual - 1)} aria-label="Banner anterior" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-neutral-900 ring-1 ring-neutral-300 hover:bg-white">
-              {seta("esq")}
-            </button>
-          )}
-          <ul className={`flex items-center ${fora ? "" : "absolute top-0 left-1/2 -translate-x-1/2"}`}>
+        <>
+          {!fora &&
+            (["esq", "dir"] as const).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => irPara(atual + (d === "esq" ? -1 : 1))}
+                aria-label={d === "esq" ? "Banner anterior" : "Próximo banner"}
+                className={`absolute top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-neutral-900 ring-1 ring-neutral-300 hover:bg-white @2xl:flex ${d === "esq" ? "left-6" : "right-6"}`}
+              >
+                {seta(d)}
+              </button>
+            ))}
+          <ul className="flex items-center justify-center">
             {slides.map((_, i) => (
               <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => irPara(i)}
-                  aria-label={`Ir para o banner ${i + 1}`}
-                  aria-current={atual === i}
-                  className="flex h-11 w-7 items-center justify-center"
-                >
+                <button type="button" onClick={() => irPara(i)} aria-label={`Ir para o banner ${i + 1}`} aria-current={atual === i} className="flex h-11 w-7 items-center justify-center">
                   <span className={`block h-2.5 rounded-full ring-1 ring-neutral-500 ${atual === i ? "w-6 bg-neutral-900" : "w-2.5 bg-white"}`} />
                 </button>
               </li>
             ))}
           </ul>
-          {!fora && (
-            <button type="button" onClick={() => irPara(atual + 1)} aria-label="Próximo banner" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-neutral-900 ring-1 ring-neutral-300 hover:bg-white">
-              {seta("dir")}
-            </button>
-          )}
-        </div>
+        </>
       )}
     </section>
   );

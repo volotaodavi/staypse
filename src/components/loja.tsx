@@ -62,7 +62,7 @@ export function CabecalhoLoja({
   const conteudo = (
     <>
       {logo ? (
-        <Image src={urlFoto(supabaseUrl(), logo)} alt="" width={160} height={40} className="h-10 w-auto max-w-40 shrink-0 object-contain" />
+        <Image src={urlFoto(supabaseUrl(), logo)} alt="" width={160} height={40} className="h-10 w-auto max-w-40 shrink-0 object-contain" style={{ width: "auto" }} />
       ) : (
         <span
           aria-hidden="true"
@@ -89,8 +89,10 @@ export function CabecalhoLoja({
       Meu pedido
     </Link>
   );
+  // na prévia do painel (que já está dentro de um formulário) não pode haver outro <form>
+  const Caixa = previa ? "div" : "form";
   const formBusca = busca && (
-    <form action={`/loja/${slug}#produtos`} method="get" role="search" className="flex w-full min-w-0 @2xl:max-w-xs">
+    <Caixa {...(previa ? { role: "search" } : { action: `/loja/${slug}#produtos`, method: "get", role: "search" })} className="flex w-full min-w-0 @2xl:max-w-xs">
       <label className="sr-only" htmlFor={`busca-${slug}`}>
         Buscar nesta loja
       </label>
@@ -104,12 +106,12 @@ export function CabecalhoLoja({
         className="min-h-11 min-w-0 flex-1 rounded-l-[var(--loja-raio,6px)] border border-neutral-500 bg-white px-3 text-base text-neutral-900 placeholder:text-neutral-600 focus:ring-2 focus:ring-[var(--loja-destaque)] focus:outline-none"
       />
       <button
-        type="submit"
+        type={previa ? "button" : "submit"}
         className="inline-flex min-h-11 items-center rounded-r-[var(--loja-raio,6px)] bg-[var(--loja-destaque)] px-4 text-sm font-semibold text-[var(--loja-destaque-texto)] hover:opacity-90"
       >
         Buscar
       </button>
-    </form>
+    </Caixa>
   );
   const temNav = menu.length > 0 || busca;
 

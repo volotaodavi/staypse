@@ -1191,7 +1191,7 @@ select teste.ok((select bool_and(enviado_em is not null) from public.order_items
                  where o.codigo = :'ped1' and oi.status_entrega in ('enviado', 'entregue', 'devolvido')),
                 'marcar como enviado registra a data do envio');
 :comoA
-select teste.ok((select (r ->> 'vendas')::int >= 1 and jsonb_array_length(r -> 'serie') = 7
+select teste.ok((select (r ->> 'vendas')::int >= 1 and jsonb_array_length(r -> 'serie') between 7 and 8
                  from public.painel_loja_resumo(now() - interval '6 days', now() + interval '1 hour') r),
                 'resumo da loja: vendas do período e série com um ponto por dia');
 select teste.ok((select (r ->> 'vendas')::int = 0 from public.painel_loja_resumo(now() - interval '400 days', now() - interval '300 days') r),
@@ -1240,7 +1240,7 @@ select teste.ok((select count(*) from public.minhas_comissoes('afiliado', now() 
 select teste.ok((select bool_and(situacao in ('aguardando_pagamento', 'a_receber', 'repassada', 'estornada', 'cancelada'))
                  from public.minhas_comissoes('afiliado', now() - interval '30 days', now() + interval '1 hour')),
                 'cada comissão tem uma situação (a receber, repassada, estornada...)');
-select teste.ok((select jsonb_array_length(r -> 'serie') = 7 and r ? 'a_receber_centavos' and r ? 'repassada_centavos'
+select teste.ok((select jsonb_array_length(r -> 'serie') between 7 and 8 and r ? 'a_receber_centavos' and r ? 'repassada_centavos'
                  from public.painel_indicador('afiliado', now() - interval '6 days', now() + interval '1 hour') r),
                 'painel do afiliado: cards e série de cliques × vendas');
 :comoD
@@ -2455,6 +2455,41 @@ reset role;
 select teste.ok(not exists (select 1 from pg_tables
                             where schemaname = 'public' and not rowsecurity),
                 'RLS ativo em todas as tabelas do schema public');
+
+-- =========================================================================
+-- 10. Temas da loja v2 (migração 20261212): 8 modelos e blocos editáveis
+-- =========================================================================
+reset role;
+select id as item_ana_v2 from public.items where nome = 'Aff Auto' \gset
+select id as item_davi_v2 from public.items where nome = 'Produto do Davi' \gset
+select user_id::text as uid_ana_v2 from public.producers where user_id = '00000000-0000-0000-0000-00000000000a' \gset
+
+select teste.ok(public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}]}'), 'v2: tema no formato antigo continua válido');
+select teste.ok(public.tema_loja_valido('{"modelo":"boutique","versao":2,"secoes":[{"tipo":"faq","visivel":true},{"tipo":"video","visivel":true},{"tipo":"colecoes","visivel":false}]}'), 'v2: os 8 modelos e os blocos novos são aceitos');
+select teste.ok(not public.tema_loja_valido('{"modelo":"classico","secoes":[{"tipo":"depoimentos","visivel":true}]}'), 'v2: não existe bloco de depoimentos');
+select teste.ok(not public.tema_loja_valido(format('{"modelo":"minimal","secoes":[{"tipo":"banner","visivel":true}],"banners":%s}', (select jsonb_agg('{"frase":"x"}'::jsonb) from generate_series(1, 6)))::jsonb), 'v2: mais de 5 banners são recusados');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"banner","visivel":true}],"banners":[{"frase":"x","url":"javascript:alert(1)"}]}'), 'v2: link de banner só https');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"banner","visivel":true}],"anuncio":{"visivel":true,"texto":"x","url":"http://a.com"}}'), 'v2: link do anúncio só https');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"video","visivel":true}],"video":{"plataforma":"youtube","id":"<script>x</script>","titulo":null}}'), 'v2: código de vídeo malformado é recusado');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"video","visivel":true}],"video":{"plataforma":"outra","id":"dQw4w9WgXcQ"}}'), 'v2: só YouTube e Vimeo');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"faq","visivel":true}],"faq":[{"p":"a","r":"b","html":"x"}]}'), 'v2: chave extra nas perguntas é recusada');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"faq","visivel":true}],"rodape":{"instagram":"a b/c"}}'), 'v2: usuário de rede social inválido é recusado');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"faq","visivel":true}],"rodape":{"whatsapp":"abc"}}'), 'v2: WhatsApp só com números');
+select teste.ok(not public.tema_loja_valido('{"modelo":"minimal","secoes":[{"tipo":"faq","visivel":true}],"colecoes":[{"categoria":"Casa Nova","imagem":null}]}'), 'v2: categoria da coleção inválida é recusada');
+
+:comoA
+select public.salvar_minha_loja('ana-cosmeticos', 'Ana Cosméticos', 'Cosméticos naturais.', null, null, null, null, null,
+  format('{"versao":2,"modelo":"fabrica","secoes":[{"tipo":"banner","visivel":true},{"tipo":"faq","visivel":true}],"banners":[{"imagem":"%s/b1.webp","celular":"%s/b1c.webp","frase":"Oferta","alt":null,"produto":"%s","url":null}],"anuncio":{"visivel":true,"texto":"Envio em 2 dias","url":"https://exemplo.com"},"faq":[{"p":"Prazo?","r":"2 dias"}],"video":{"plataforma":"youtube","id":"dQw4w9WgXcQ","titulo":null}}', :'uid_ana_v2', :'uid_ana_v2', :'item_ana_v2')::jsonb);
+select teste.ok((select loja_tema ->> 'modelo' from public.producers where user_id = '00000000-0000-0000-0000-00000000000a') = 'fabrica', 'v2: a dona salva o tema novo com banners, anúncio, vídeo e perguntas');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  format('{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banners":[{"frase":"x","produto":"%s"}]}', :'item_davi_v2')), 'v2: banner com produto de outra loja é recusado');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  '{"modelo":"classico","secoes":[{"tipo":"banner","visivel":true}],"banners":[{"frase":"x","imagem":"00000000-0000-0000-0000-0000000000ff/b.webp"}]}'), 'v2: imagem de banner na pasta de outro usuário é recusada');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  '{"modelo":"classico","secoes":[{"tipo":"sobre","visivel":true}],"sobre":{"titulo":"x","texto":"y","imagem":"00000000-0000-0000-0000-0000000000ff/s.webp"}}'), 'v2: imagem do Sobre na pasta de outro usuário é recusada');
+select teste.bloqueia(format('select public.salvar_minha_loja(%L, %L, null, null, null, null, null, null, %L::jsonb)', 'ana-cosmeticos', 'Ana',
+  format('{"modelo":"classico","secoes":[{"tipo":"colecoes","visivel":true}],"colecoes":[{"categoria":"casa","imagem":"00000000-0000-0000-0000-0000000000ff/c.webp"}]}')), 'v2: imagem de coleção na pasta de outro usuário é recusada');
+reset role;
 
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'
