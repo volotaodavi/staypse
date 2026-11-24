@@ -1,7 +1,7 @@
 // Quem está logado, quais papéis tem e para qual página deve ir.
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { ehEmailAdmin, sincronizarAdminEmail } from "@/lib/admin-email";
+import { adminEmail, ehEmailAdmin, sincronizarAdminEmail } from "@/lib/admin-email";
 import { criarClienteServidor } from "@/lib/supabase/servidor";
 
 export type Papel = "produtor" | "revendedor" | "admin" | "vendedor_proprio";
@@ -39,7 +39,8 @@ export async function usuarioAtual(): Promise<UsuarioAtual | null> {
     email,
     nome: perfil?.nome ?? "",
     // admin único: o papel só vale para o e-mail de ADMIN_EMAIL (sem diferenciar maiúsculas)
-    papeis: (papeis ?? []).map((p) => p.papel as Papel).filter((p) => p !== "admin" || ehEmailAdmin(email)),
+    // shortcut: sem ADMIN_EMAIL configurado vale o papel admin do banco (como antes); configure ADMIN_EMAIL na Vercel para travar em um e-mail só
+    papeis: (papeis ?? []).map((p) => p.papel as Papel).filter((p) => p !== "admin" || !adminEmail() || ehEmailAdmin(email)),
     suspensoMotivo: perfil?.suspenso_motivo ?? null,
   };
 }
