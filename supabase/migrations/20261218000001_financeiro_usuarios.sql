@@ -73,5 +73,5 @@ alter table public.notificacoes add constraint notificacoes_tipo_check check (ti
   'afiliacao_aprovada', 'afiliacao_recusada', 'afiliacao_bloqueada',
   'venda_atribuida', 'comissao_estornada',
   'recebedor_aprovado', 'recebedor_recusado', 'recebedor_suspenso',
-  'denuncia_nova', 'loja_curadoria', 'saque_staypse',
+  'denuncia_nova', 'loja_curadoria', 'entrega_saiu', 'saque_staypse',
   'taxas_novas', 'pagamento_tardio', 'pagamento_divergente', 'saque_usuario'));

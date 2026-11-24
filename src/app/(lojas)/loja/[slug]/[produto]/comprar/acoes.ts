@@ -218,7 +218,7 @@ export async function cotarEntregaPropria(item: string, cep: string, quantidade:
   const numeros = cep.replace(/\D/g, "");
   if (numeros.length !== 8 || !/^[0-9a-f-]{36}$/.test(item)) return null;
   await Promise.all([garantirGeoCep(numeros), garantirGeoDaLojaDoItem(item)]);
-  const { data } = await criarClienteServidor()
+  const { data } = await (await criarClienteServidor())
     .rpc("cotar_entrega_propria", { p_item: item, p_cep: numeros, p_quantidade: Math.min(99, Math.max(1, Math.trunc(quantidade) || 1)) })
     .maybeSingle<CotacaoPropria>();
   return data ?? null;

@@ -422,14 +422,17 @@ grant select on public.entregas_proprias to authenticated;
 create policy "entrega própria: a loja vê as próprias" on public.entregas_proprias
   for select to authenticated using (producer_id in (select id from public.producers where user_id = (select auth.uid())));
 
-alter table public.notificacoes drop constraint if exists notificacoes_tipo_check;
-alter table public.notificacoes add constraint notificacoes_tipo_check check (tipo in (
-  'venda_paga', 'pedido_sem_nf', 'desistencia', 'reembolso', 'chargeback',
-  'afiliacao_pedida', 'atendimento_novo',
-  'afiliacao_aprovada', 'afiliacao_recusada', 'afiliacao_bloqueada',
-  'venda_atribuida', 'comissao_estornada',
-  'recebedor_aprovado', 'recebedor_recusado', 'recebedor_suspenso',
-  'denuncia_nova', 'loja_curadoria', 'entrega_saiu'));
+-- novo tipo de notificação: acrescenta à lista que já existe (sem repetir nem perder os outros tipos)
+do $$
+declare v_tipos text[];
+begin
+  select array_agg(distinct m[1]) into v_tipos from pg_constraint c,
+    lateral regexp_matches(pg_get_constraintdef(c.oid), '''([a-z_]+)''::text', 'g') m
+  where c.conrelid = 'public.notificacoes'::regclass and c.conname = 'notificacoes_tipo_check';
+  alter table public.notificacoes drop constraint notificacoes_tipo_check;
+  execute format('alter table public.notificacoes add constraint notificacoes_tipo_check check (tipo = any (%L::text[]))',
+                 array_append(v_tipos, 'entrega_saiu'));
+end $$;
 
 -- a loja atribui (ou troca) o entregador e a janela de um pedido pago de entrega própria
 create or replace function public.atribuir_entrega_propria(
