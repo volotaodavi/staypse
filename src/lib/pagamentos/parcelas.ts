@@ -1,6 +1,6 @@
 // Parcelamento no cartão (função PURA, usada no checkout e no servidor).
-// Padrão de docs/precificacao.md, seção 9: parcelas SEM juros para o comprador; a taxa da faixa
-// (2x a 6x, 7x a 12x) é da loja. O comprador nunca vê taxa: só "12x de R$ X sem juros".
+// A POLÍTICA é da loja (juros.ts): até N parcelas sem juros (a loja absorve a taxa da faixa) e acima de N o comprador
+// paga o acréscimo. O comprador nunca vê taxa: só "12x de R$ X sem juros" ou "com juros", e o total.
 export const MAX_PARCELAS = 12; // limite da fatura (creditCard.maxParcels, 1 a 12)
 export const PARCELA_MINIMA_CENTAVOS = 500; // regra nossa: parcela de pelo menos R$ 5,00
 
@@ -9,7 +9,8 @@ export function maxParcelas(totalCentavos: number): number {
   return Math.max(1, Math.min(MAX_PARCELAS, Math.floor(totalCentavos / PARCELA_MINIMA_CENTAVOS)));
 }
 
-export const valorParcelaCentavos = (totalCentavos: number, parcelas: number) => Math.round(totalCentavos / parcelas);
+// para baixo (consistente com o resto do dinheiro: nunca promete um centavo a mais)
+export const valorParcelaCentavos = (totalCentavos: number, parcelas: number) => Math.floor(totalCentavos / parcelas);
 
 export function parcelasValidas(totalCentavos: number, parcelas: number): boolean {
   return Number.isInteger(parcelas) && parcelas >= 1 && parcelas <= maxParcelas(totalCentavos);

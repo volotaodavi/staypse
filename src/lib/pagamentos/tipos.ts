@@ -56,6 +56,10 @@ export type Cobranca = {
   status: StatusCobranca;
   urlPagamento?: string | null; // checkout do provedor (nenhum dado de cartão passa pela Staypse)
   pagamento?: DadosPagamento | null; // Pix/boleto já gerados (só quando o meio foi escolhido antes)
+  // O que o provedor diz que a cobrança vale/recebeu (centavos) e a moeda. Conferidos ANTES de confirmar o pagamento
+  // (cobrancas.ts): valor diferente do esperado ou moeda fora de BRL nunca confirma o pedido.
+  valorCentavos?: number | null;
+  moeda?: string | null;
 };
 
 // evento de webhook já validado e traduzido para o formato da Staypse
@@ -70,6 +74,8 @@ export interface PaymentProvider {
   criarCobranca(dados: DadosCobranca): Promise<Cobranca>;
   consultarCobranca(provedorId: string): Promise<Cobranca>;
   estornar(provedorId: string, valorCentavos?: number): Promise<Cobranca>; // sem valor = total
+  // cancela a cobrança ainda não paga (pedido cancelado ou expirado): depois disso o comprador não consegue mais pagá-la
+  cancelarCobranca(provedorId: string): Promise<Cobranca>;
   // confere a assinatura e traduz o corpo; lança erro se a origem não for o provedor
   validarWebhook(corpo: string, cabecalhos: Headers): Promise<EventoPagamento>;
 }

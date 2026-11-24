@@ -119,7 +119,18 @@ type FaturaLytex = {
   };
   transactions?: { status?: string }[];
   refundSolicitations?: Solicitacao[];
+  totalValue?: number; // GET /v2/invoices/{id}: valor da fatura
+  paymentData?: { payedValue?: number }; // valor efetivamente pago (quando paga)
 };
+
+// Valor da fatura em centavos (o que conferimos antes de confirmar). Paga: o valor pago (paymentData.payedValue);
+// senão o total da fatura. A unidade não é dita no spec (assumida centavos, como o `value` que enviamos: PERGUNTAS 43).
+// O spec NÃO tem campo de moeda: a Lytex só opera em reais, então a moeda é BRL (PERGUNTAS 54).
+export function valorDaFatura(f: FaturaLytex, status: StatusCobranca): number | null {
+  const v = status === "paga" || status === "estorno_pendente" ? (f.paymentData?.payedValue ?? f.totalValue) : f.totalValue;
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+const MOEDA_LYTEX = "BRL";
 
 // Pix e boleto que a fatura devolve (InvoicesController_createInvoice_v2, resposta 201:
 // paymentMethods.pix.qrcode "copia e cola", paymentMethods.boleto.digitableLine, linkBoleto, dueDate)
@@ -409,13 +420,25 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
         fatura = existente;
       }
       if (!fatura._id) throw new Error("lytex_fatura_sem_id");
-      return { provedorId: fatura._id, status: mapearStatusFatura(fatura), urlPagamento: fatura.linkCheckout ?? null, pagamento: pagamentoDaFatura(fatura) };
+      const status = mapearStatusFatura(fatura);
+      return { provedorId: fatura._id, status, urlPagamento: fatura.linkCheckout ?? null, pagamento: pagamentoDaFatura(fatura), valorCentavos: valorDaFatura(fatura, status), moeda: MOEDA_LYTEX };
     },
 
     // InvoicesController_getInvoice_v2: GET /v2/invoices/{id}
     async consultarCobranca(provedorId): Promise<Cobranca> {
       const f = (await api("GET", `/v2/invoices/${encodeURIComponent(provedorId)}`)) as FaturaLytex;
-      return { provedorId, status: mapearStatusFatura(f), urlPagamento: f.linkCheckout ?? null, pagamento: pagamentoDaFatura(f) };
+      const status = mapearStatusFatura(f);
+      return { provedorId, status, urlPagamento: f.linkCheckout ?? null, pagamento: pagamentoDaFatura(f), valorCentavos: valorDaFatura(f, status), moeda: MOEDA_LYTEX };
+    },
+
+    // InvoicesController_cancel_v2: PUT /v2/invoices/cancel/{id} ("Cancelar uma fatura de um determinado cliente").
+    // Sem corpo. Fatura já paga não é cancelada por aqui: devolve o status real para o chamador decidir (estorno).
+    async cancelarCobranca(provedorId): Promise<Cobranca> {
+      const f = (await api("PUT", `/v2/invoices/cancel/${encodeURIComponent(provedorId)}`)) as FaturaLytex | null;
+      // a resposta é a fatura (schema Invoice); sem ela, confirma consultando
+      const fatura = f?._id ? f : ((await api("GET", `/v2/invoices/${encodeURIComponent(provedorId)}`)) as FaturaLytex);
+      const status = mapearStatusFatura(fatura);
+      return { provedorId, status, valorCentavos: valorDaFatura(fatura, status), moeda: MOEDA_LYTEX };
     },
 
     // RefundSolicitationController_create_v2: POST /v2/refund-solicitation {_invoiceId, refundValue} (ambos obrigatórios).

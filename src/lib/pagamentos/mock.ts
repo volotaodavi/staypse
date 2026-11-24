@@ -18,14 +18,18 @@ export function assinarMock(corpo: string): string {
 
 // no simulador, a "Lytex" é o próprio banco: o status da cobrança fica em simulador_cobrancas
 export async function statusDaCobrancaSimulada(provedorId: string): Promise<StatusCobranca> {
+  return (await dadosDaCobrancaSimulada(provedorId)).status;
+}
+
+async function dadosDaCobrancaSimulada(provedorId: string): Promise<{ status: StatusCobranca; valorCentavos: number }> {
   const { data } = await criarClienteAdmin()
     .from("simulador_cobrancas")
-    .select("status, estorno_solicitado_em")
+    .select("status, estorno_solicitado_em, total_centavos")
     .eq("provedor_id", provedorId)
     .maybeSingle();
   if (!data) throw new Error("cobranca_inexistente");
-  if (data.status === "paga" && data.estorno_solicitado_em) return "estorno_pendente";
-  return data.status as StatusCobranca;
+  const status = data.status === "paga" && data.estorno_solicitado_em ? "estorno_pendente" : (data.status as StatusCobranca);
+  return { status, valorCentavos: data.total_centavos };
 }
 
 export const mock: PaymentProvider = {
@@ -77,7 +81,18 @@ export const mock: PaymentProvider = {
     return { provedorId, status: "pendente", urlPagamento: `/simulador-pagamentos/cobranca/${provedorId}?volta=${volta}`, pagamento };
   },
   async consultarCobranca(provedorId) {
-    return { provedorId, status: await statusDaCobrancaSimulada(provedorId) };
+    const d = await dadosDaCobrancaSimulada(provedorId);
+    return { provedorId, status: d.status, valorCentavos: d.valorCentavos, moeda: "BRL" };
+  },
+  // cancela a cobrança ainda pendente (no simulador vira "expirada": a página dele não deixa mais pagar)
+  async cancelarCobranca(provedorId) {
+    const status = await statusDaCobrancaSimulada(provedorId);
+    if (status === "pendente") {
+      const { error } = await criarClienteAdmin().from("simulador_cobrancas").update({ status: "expirada" }).eq("provedor_id", provedorId);
+      if (error) throw new Error("falha_ao_cancelar_cobranca");
+      return { provedorId, status: "expirada" };
+    }
+    return { provedorId, status };
   },
   // pede o estorno; o simulador só "confirma" (estornada) quando alguém aperta o botão na página dele,
   // o que dispara o webhook, igual ao que esperamos do provedor real

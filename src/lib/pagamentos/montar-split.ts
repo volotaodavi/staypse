@@ -32,17 +32,25 @@ export type SnapshotSplit = {
   partes: (ParteSplit & { papel: PapelDaParte; indicador?: EntradaSplit["indicador"] })[];
 };
 
+// Parcelamento com juros pago pelo comprador: `modalidade` continua sendo a do cartão (custo da Lytex), mas a taxa da
+// loja e do afiliado é a do cartão à vista; o acréscimo (juros.ts) vai na fatura e fica com a Staypse.
+export type OpcoesSplit = { acrescimoCentavos?: number };
+
 export function montarSplit(
   dados: DadosSplitPedido,
   staypseRecebedorId: string,
   modalidade: Modalidade,
+  opcoes: OpcoesSplit = {},
 ): { partes: ParteSplit[]; snapshot: SnapshotSplit } {
   const t = lerTaxasPlataforma(dados.taxas);
+  const acrescimo = opcoes.acrescimoCentavos ?? 0;
   const entrada: EntradaSplit = {
     totalCentavos: dados.total_centavos,
     subtotalCentavos: dados.subtotal_centavos,
     modalidade,
-    taxaTotal: t.taxaTotal[modalidade],
+    taxaTotal: t.taxaTotal[acrescimo > 0 ? "cartao_1x" : modalidade],
+    taxaMinimaCentavos: t.taxaMinimaCentavos,
+    acrescimoCentavos: acrescimo,
     custoLytex: t.custoLytex[modalidade],
     custoSplit: t.custoSplit,
     comissaoPercentual: dados.indicador === "nenhum" ? 0 : Number(dados.comissao_percentual),
@@ -68,9 +76,9 @@ export function montarSplit(
   }
   const comPapel = lista.filter((p) => p.valorCentavos > 0);
   const partes = comPapel;
-  // a soma das partes + o custo da Lytex é EXATAMENTE o total (nunca sobra nem falta um centavo)
+  // a soma das partes + o custo da Lytex é EXATAMENTE o total cobrado, acréscimo incluso (nunca sobra nem falta um centavo)
   const soma = partes.reduce((s, p) => s + p.valorCentavos, 0);
-  if (soma + resultado.custoLytexCentavos !== dados.total_centavos) throw new Error("split_nao_fecha_com_o_total");
+  if (soma + resultado.custoLytexCentavos !== dados.total_centavos + acrescimo) throw new Error("split_nao_fecha_com_o_total");
 
   return {
     partes: partes.map(({ recebedorProvedorId, valorCentavos }) => ({ recebedorProvedorId, valorCentavos })),
