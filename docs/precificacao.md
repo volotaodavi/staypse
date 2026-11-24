@@ -268,3 +268,8 @@ de pedidos de lojas novas, ou churn de lojas ativas acima de 8% ao mês: voltar 
 
 Da `docs/viabilidade-financeira.md`: R$ 79/mês para lojas de maior volume, com percentual menor (ex.: Pix 1,0%), API, webhooks e conectores. Ponto de virada contra a tabela final no Pix: com taxa 0,5 p.p. menor, a loja economiza R$ 79 acima de ~R$ 15.800 de GMV
 em Pix por mês. Só faz sentido com lojas acima desse volume e com dado real de uso. Não entra no escopo atual.
+
+
+## 11. Decisão do dono (24/11/2026)
+
+Mantida a tabela anterior, mais acessível: Pix 1,5% + R$ 2,00; boleto 1,5% + R$ 2,30; cartão 1x 4,9% + R$ 0,50; 2 a 6x 5,5% + R$ 0,50; 7 a 12x 6,1% + R$ 0,50. Aumento agendado cancelado; sem tarifa mínima; pedido mínimo de R$ 10 mantido. Revisar com 3 meses de dados reais.
