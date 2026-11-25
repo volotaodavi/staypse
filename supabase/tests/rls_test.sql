@@ -2914,5 +2914,24 @@ reset role;
 select teste.ok((select status = 'concluido' from public.saques where chave_idempotencia = 'chave-antiga-1')
                 and (select status = 'pendente' from public.saques where chave_idempotencia = 'chave-nova-001'), 'saques: o recente continua pendente');
 
+-- pendências finais (migração 20261221): relatório com floor e funções recusam suspenso
+reset role;
+select teste.ok(pg_get_functiondef('public.relatorio_comissoes_base(date)'::regprocedure) like '%floor(%'
+                and pg_get_functiondef('public.relatorio_comissoes_base(date)'::regprocedure) not like '%round(%', 'relatório mensal usa floor como o resto');
+update public.profiles set suspenso_em = now(), suspenso_motivo = 'teste' where id = '00000000-0000-0000-0000-00000000000a';
+:comoA
+select teste.bloqueia($$select * from public.minhas_comissoes('afiliado', now() - interval '1 day', now())$$, 'suspenso: minhas_comissoes recusa');
+select teste.bloqueia($$select public.painel_indicador('afiliado', now() - interval '1 day', now())$$, 'suspenso: painel_indicador recusa');
+select teste.bloqueia($$select public.painel_loja_resumo(now() - interval '1 day', now())$$, 'suspenso: painel_loja_resumo recusa');
+select teste.bloqueia($$select * from public.painel_loja_produtos(now() - interval '1 day', now())$$, 'suspenso: painel_loja_produtos recusa');
+select teste.bloqueia($$select public.painel_loja_taxas(now() - interval '1 day', now())$$, 'suspenso: painel_loja_taxas recusa');
+select teste.bloqueia($$select * from public.relatorio_comissoes(current_date)$$, 'suspenso: relatório recusa');
+reset role;
+update public.profiles set suspenso_em = null, suspenso_motivo = null where id = '00000000-0000-0000-0000-00000000000a';
+:comoA
+select teste.ok((select public.painel_loja_resumo(now() - interval '1 day', now())) is not null, 'reativado: painel volta a responder');
+select teste.ok((select count(*) from public.minhas_comissoes('afiliado', now() - interval '1 day', now())) >= 0, 'reativado: minhas_comissoes volta a responder');
+reset role;
+
 \o
 \echo '>>> TODOS OS TESTES PASSARAM'
