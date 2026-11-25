@@ -2,7 +2,7 @@
 // Formulário do cadastro de recebimento: documento (afiliado/vendedor), celular, endereço (CEP
 // preenche pela BrasilAPI, como no checkout) e tipo de empresa quando o documento é CNPJ.
 // Esses dados só vão para a Lytex; a Staypse não os guarda.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { completarRecebimento } from "@/app/(site)/painel/recebimento/acoes";
 import { TIPOS_EMPRESA } from "@/lib/pagamentos/dados-recebedor";
 
@@ -14,7 +14,7 @@ export function FormRecebimento({ papel, pedeDocumento, sugestao, rotuloBotao, c
   const [doc, setDoc] = useState(sugestao.documento ?? "");
   const [aviso, setAviso] = useState("");
   const cnpj = doc.replace(/\W/g, "").length === 14 || !pedeDocumento;
-  const [ultimoCnpj, setUltimoCnpj] = useState("");
+  const ultimoCnpj = useRef("");
 
   const preencher = (form: HTMLFormElement, campos: Record<string, string | undefined>) => {
     for (const [nome, v] of Object.entries(campos)) {
@@ -26,8 +26,8 @@ export function FormRecebimento({ papel, pedeDocumento, sugestao, rotuloBotao, c
   // CNPJ completo: dados públicos da Receita (BrasilAPI, pela rota do servidor). Falhou? Segue manual.
   async function buscarCnpj(valor: string, form: HTMLFormElement | null) {
     const n = valor.replace(/\D/g, "");
-    if (n.length !== 14 || !form || n === ultimoCnpj) return;
-    setUltimoCnpj(n);
+    if (n.length !== 14 || !form || n === ultimoCnpj.current) return;
+    ultimoCnpj.current = n;
     try {
       const r = await fetch(`/api/cnpj/${n}`);
       if (r.status !== 200) return;
