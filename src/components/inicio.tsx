@@ -32,9 +32,10 @@ function Garrafa() {
 }
 
 const PARTES = [
-  ["Loja", "R$ 148,00", "bg-gelo/45"],
-  ["Afiliada @ana", "R$ 40,00", "bg-ciano"],
-  ["Taxa Staypse", "R$ 12,00", "bg-branco"],
+  // Pix de R$ 200, comissão 20%: taxa 1,5% + R$ 2,00 = R$ 5,00, rateada (loja R$ 4,00; afiliada R$ 1,00)
+  ["Loja", "R$ 156,00", "bg-gelo/45"],
+  ["Afiliada @ana", "R$ 39,00", "bg-ciano"],
+  ["Taxa Staypse (Pix)", "R$ 5,00", "bg-branco"],
 ] as const;
 
 export function VisualHero({ host }: { host: string }) {
@@ -85,8 +86,8 @@ export function VisualHero({ host }: { host: string }) {
             <span className="text-2xl font-semibold text-branco tabular-nums">R$ 200,00</span>
           </p>
           <div className="mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden="true">
-            <span className="w-[74%] bg-gelo/45" />
-            <span className="w-[20%] bg-ciano" />
+            <span className="w-[78%] bg-gelo/45" />
+            <span className="w-[19.5%] bg-ciano" />
             <span className="w-[6%] bg-branco" />
           </div>
           <ul className="mt-4 flex flex-col gap-2 text-sm">
