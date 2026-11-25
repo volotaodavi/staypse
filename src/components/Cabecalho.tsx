@@ -4,8 +4,9 @@ import { Logo } from "./Logo";
 
 const ATALHOS = [
   ["Como funciona", "/#como-funciona"],
-  ["Para quem", "/#para-quem"],
-  ["Regras", "/#regras"],
+  ["Para lojas", "/#para-lojas"],
+  ["Para afiliados", "/#para-afiliados"],
+  ["Taxas", "/#taxas"],
   ["Perguntas", "/#faq"],
 ] as const;
 
@@ -41,19 +42,40 @@ export function Cabecalho({ logado = false, preLancamento = false, largo = false
         ) : preLancamento ? (
           <nav aria-label="Principal" className="flex items-center gap-1 text-sm font-medium">
             {/* atalhos para as seções: só em telas maiores (no celular o botão basta) */}
-            <div className="hidden items-center md:flex">
+            <div className="hidden items-center lg:flex">
               {ATALHOS.map(([rotulo, href]) => (
                 <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-full px-3 py-2 hover:bg-gelo">
                   {rotulo}
                 </Link>
               ))}
             </div>
-            <Link href="/entrar" className="inline-flex min-h-11 items-center rounded-full px-3 py-2 hover:bg-gelo">
+            <Link href="/entrar" className="hidden min-h-11 items-center rounded-full px-3 py-2 hover:bg-gelo sm:inline-flex">
               Entrar
             </Link>
             <Link href="/cadastro" className="inline-flex min-h-11 items-center rounded-full bg-ciano px-4 py-2 text-petroleo hover:brightness-95">
               Criar conta
             </Link>
+            {/* menu do celular: sanfona nativa, sem JavaScript */}
+            <details className="group relative lg:hidden">
+              <summary
+                aria-label="Menu"
+                className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full hover:bg-gelo [&::-webkit-details-marker]:hidden"
+              >
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#062C30" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M3 6h16M3 11h16M3 16h16" />
+                </svg>
+              </summary>
+              <div className="absolute top-12 right-0 flex w-56 flex-col rounded-2xl border border-petroleo/10 bg-branco p-2 shadow-lg">
+                {ATALHOS.map(([rotulo, href]) => (
+                  <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-xl px-3 hover:bg-gelo">
+                    {rotulo}
+                  </Link>
+                ))}
+                <Link href="/entrar" className="inline-flex min-h-11 items-center rounded-xl px-3 hover:bg-gelo sm:hidden">
+                  Entrar
+                </Link>
+              </div>
+            </details>
           </nav>
         ) : (
           <nav className="flex items-center gap-2 text-sm font-medium">

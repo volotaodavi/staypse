@@ -7,11 +7,10 @@ import { DocumentoLegal, Itens } from "@/components/DocumentoLegal";
 import { TERMOS_VERSAO } from "@/config/empresa";
 import {
   MODALIDADES,
-  ROTULO_MODALIDADE,
-  taxaTotalCentavos,
   type Modalidade,
 } from "@/lib/pagamentos/taxas";
 import { Simulador } from "./Simulador";
+import { lerPar, TabelaTaxas, type Par } from "@/components/TabelaTaxas";
 import { vigenciaFutura } from "@/lib/pagamentos/vigencia";
 import { formatarPreco } from "@/lib/produtor";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
@@ -25,56 +24,8 @@ export const metadata: Metadata = {
 export const instant = false;
 
 const f = "font-medium";
-const EXEMPLO_CENTAVOS = 10_000;
 
-type Par = { percentual: number; fixoCentavos: number };
-const lerPar = (v: unknown): Par | undefined => {
-  const o = v as { percentual?: unknown; fixo_centavos?: unknown } | null;
-  return typeof o?.percentual === "number" && typeof o?.fixo_centavos === "number"
-    ? { percentual: o.percentual, fixoCentavos: o.fixo_centavos }
-    : undefined;
-};
-const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
 const dia = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-
-function TabelaTaxas({ titulo, linha, minimo }: { titulo: string; linha: (m: Modalidade) => Par | undefined; minimo: number }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <caption className="mb-1 text-left font-medium">{titulo}</caption>
-        <thead>
-          <tr className="text-left text-petroleo/75">
-            <th scope="col" className="py-2 pr-3 font-medium">
-              Meio de pagamento
-            </th>
-            <th scope="col" className="py-2 pr-3 text-right font-medium">
-              Taxa
-            </th>
-            <th scope="col" className="py-2 text-right font-medium whitespace-nowrap">
-              Em uma venda de {formatarPreco(EXEMPLO_CENTAVOS)}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {MODALIDADES.map((m) => {
-            const t = linha(m);
-            return (
-              <tr key={m} className="border-t border-petroleo/10">
-                <th scope="row" className="py-2 pr-3 text-left font-normal">
-                  {ROTULO_MODALIDADE[m]}
-                </th>
-                <td className="py-2 pr-3 text-right tabular-nums">
-                  {t ? `${pct(t.percentual)} + ${formatarPreco(t.fixoCentavos)}` : "Consulte o atendimento"}
-                </td>
-                <td className="py-2 text-right tabular-nums">{t ? formatarPreco(taxaTotalCentavos(EXEMPLO_CENTAVOS, t, minimo)) : "-"}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 export default async function Taxas() {
   await connection(); // a vigência depende da data de hoje

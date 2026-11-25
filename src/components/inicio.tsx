@@ -1,84 +1,192 @@
-// Peças da página inicial. Linguagem: etiqueta de preço e recibo, como no
-// comércio de verdade. Tudo é HTML e CSS de servidor (sem JavaScript de cliente).
-// Os valores são EXEMPLO e vêm marcados como exemplo na própria peça.
+// Peças da página inicial. Tudo é HTML, CSS e SVG de servidor (sem JavaScript de cliente).
+// Os valores dos mockups são EXEMPLO e vêm marcados como exemplo.
+import type { ReactNode } from "react";
 
-// Divisão do exemplo: R$ 250,00 = 66% loja + 26% afiliada + 8% plataforma.
-const RECIBO = [
-  ["Lia Calçados", "loja", "R$ 165,00"],
-  ["Ana", "afiliada", "R$ 65,00"],
-  ["Staypse", "taxa", "R$ 20,00"],
+const Exemplo = ({ escuro = false }: { escuro?: boolean }) => (
+  <span
+    className={`rounded-full px-2.5 py-1 text-xs font-medium ${escuro ? "bg-petroleo text-gelo" : "bg-gelo text-petroleo"}`}
+  >
+    Exemplo
+  </span>
+);
+
+const BARRAS = [38, 52, 44, 66, 58, 80, 72];
+const VENDAS = [
+  ["Tênis Runner", "Loja R$ 165,00 | Ana R$ 65,00"],
+  ["Camiseta Lisa", "Loja R$ 48,00 | Caio R$ 12,00"],
+  ["Mochila Urbana", "Loja R$ 120,00 | Ana R$ 45,00"],
 ] as const;
 
-// ---------- a coisa memorável: o link vira etiqueta, a venda vira recibo ----------
-// "host": endereço do site sem https:// (vem de urlDoSite, nunca fixo no código)
-export function EtiquetaERecibo({ host }: { host: string }) {
+// ---------- mockup do hero: painel da loja + vitrine da afiliada no celular ----------
+export function MockupProduto({ host }: { host: string }) {
   return (
     <figure
       role="img"
-      aria-label="Exemplo: o link /@ana/tenis-runner numa etiqueta de preço de R$ 250,00 e o recibo da divisão do pagamento feita pela Lytex, com R$ 165,00 para a loja, R$ 65,00 para a afiliada e R$ 20,00 de taxa da Staypse. Valores de exemplo."
-      className="relative mx-auto w-full max-w-sm pb-4 lg:mx-0 lg:justify-self-end"
+      aria-label="Exemplo da Staypse: painel da loja com gráfico de vendas e lista de pedidos pagos, e, sobreposta, a vitrine de uma afiliada no celular com produtos e botão de compra. Valores de exemplo."
+      className="relative mx-auto w-full max-w-xl pb-10 lg:max-w-none"
     >
-      <div aria-hidden="true">
-        {/* barbante */}
-        <svg className="mx-auto -mb-3 block h-14 w-24 overflow-visible" viewBox="0 0 96 56" fill="none">
-          <path d="M8 0C20 30 48 40 62 50" stroke="#EEF6F5" strokeOpacity="0.55" strokeWidth="2" strokeLinecap="round" />
-        </svg>
-
-        {/* etiqueta de preço */}
-        <div
-          className="relative -rotate-3 bg-ciano px-6 pt-9 pb-6 text-petroleo"
-          style={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 22px 100%, 0 calc(100% - 22px))" }}
-        >
-          <span className="absolute top-3 left-1/2 h-4 w-4 -translate-x-1/2 rounded-full bg-petroleo" />
-          <p className="text-sm font-medium">O link que a Ana põe na bio</p>
-          <p className="mt-1 font-mono text-[0.95rem] leading-snug break-all">
-            {host}/@ana/<b className="font-medium underline decoration-2 underline-offset-4">tenis-runner</b>
-          </p>
-          <div className="mt-5 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-lg font-medium leading-tight">Tênis Runner</p>
-              <p className="text-sm">Lia Calçados, Recife</p>
-            </div>
-            <p className="text-4xl leading-none font-extrabold tracking-tight tabular-nums">R$&nbsp;250</p>
+      <div aria-hidden="true" className="relative">
+        {/* painel da loja */}
+        <div className="overflow-hidden rounded-2xl bg-branco text-petroleo shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)] ring-1 ring-gelo/20">
+          <div className="flex items-center gap-1.5 border-b border-petroleo/10 bg-gelo px-4 py-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+            <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+            <span className="h-2.5 w-2.5 rounded-full bg-petroleo/25" />
+            <span className="ml-3 truncate text-xs text-petroleo/75">{host}/painel</span>
+            <span className="ml-auto"><Exemplo /></span>
           </div>
-          <div
-            className="mt-5 h-8 opacity-80"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(90deg,#062c30 0 2px,transparent 2px 5px,#062c30 5px 6px,transparent 6px 10px,#062c30 10px 13px,transparent 13px 15px)",
-            }}
-          />
+          <div className="grid grid-cols-[3.25rem_1fr] sm:grid-cols-[9rem_1fr]">
+            <div className="flex flex-col gap-2 bg-petroleo p-2.5 text-xs text-gelo sm:p-4">
+              {["Vendas", "Produtos", "Afiliados", "Pagamentos"].map((n, i) => (
+                <span key={n} className={`truncate rounded-lg px-2 py-1.5 ${i === 0 ? "bg-ciano text-petroleo" : "text-gelo/85"}`}>
+                  <span className="hidden sm:inline">{n}</span>
+                  <span className="sm:hidden">{n.slice(0, 2)}</span>
+                </span>
+              ))}
+            </div>
+            <div className="p-3 sm:p-5">
+              <p className="text-sm font-bold">Vendas da loja</p>
+              <svg viewBox="0 0 280 90" className="mt-3 h-24 w-full" fill="none">
+                {BARRAS.map((h, i) => (
+                  <rect key={i} x={6 + i * 40} y={86 - h} width="26" height={h} rx="5" fill={i === 5 ? "#14D6C4" : "#EEF6F5"} />
+                ))}
+                <path d="M0 86H280" stroke="#062C30" strokeOpacity="0.2" />
+              </svg>
+              <ul className="mt-3 flex flex-col divide-y divide-petroleo/10 text-xs">
+                {VENDAS.map(([nome, split]) => (
+                  <li key={nome} className="flex items-center justify-between gap-2 py-2">
+                    <span className="min-w-0">
+                      <b className="block truncate text-[0.8125rem] font-medium">{nome}</b>
+                      <span className="block truncate text-petroleo/75">{split}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-gelo px-2 py-0.5 font-medium">Pago</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
-        {/* recibo da divisão */}
-        <div
-          className="relative z-10 -mt-3 ml-auto w-[92%] rotate-2 bg-branco px-5 pt-5 pb-8 font-mono text-[0.8125rem] leading-relaxed text-petroleo"
-          style={{
-            clipPath:
-              "polygon(0 0,100% 0,100% calc(100% - 8px),95% 100%,90% calc(100% - 8px),85% 100%,80% calc(100% - 8px),75% 100%,70% calc(100% - 8px),65% 100%,60% calc(100% - 8px),55% 100%,50% calc(100% - 8px),45% 100%,40% calc(100% - 8px),35% 100%,30% calc(100% - 8px),25% 100%,20% calc(100% - 8px),15% 100%,10% calc(100% - 8px),5% 100%,0 calc(100% - 8px))",
-          }}
-        >
-          <p className="font-sans text-base font-bold">Recibo da venda (exemplo)</p>
-          <p className="text-petroleo/75">Tênis Runner, 1 un.</p>
-          <ul className="mt-3 flex flex-col gap-1">
-            {RECIBO.map(([nome, papel, valor]) => (
-              <li key={nome} className="flex items-baseline gap-2">
-                <span>
-                  {nome} <span className="text-petroleo/75">({papel})</span>
-                </span>
-                <span className="mb-1 min-w-4 flex-1 self-end border-b border-dotted border-petroleo/50" />
-                <span className="tabular-nums">{valor}</span>
-              </li>
+        {/* vitrine da afiliada no celular */}
+        <div className="absolute -right-1 -bottom-10 w-[9.5rem] rotate-3 rounded-[1.6rem] border-[5px] border-petroleo bg-branco p-2.5 text-petroleo shadow-[0_24px_50px_-20px_rgba(0,0,0,0.8)] ring-1 ring-gelo/40 sm:right-4 sm:w-48 lg:-right-6">
+          <div className="mx-auto h-1 w-10 rounded-full bg-petroleo/20" />
+          <div className="mt-2 flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ciano text-xs font-bold">A</span>
+            <span className="text-xs font-bold">Vitrine da Ana</span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            {["#14D6C4", "#EEF6F5"].map((c) => (
+              <div key={c} className="rounded-lg bg-gelo p-1.5">
+                <div className="h-12 rounded-md sm:h-16" style={{ background: c }} />
+                <div className="mt-1.5 h-1.5 w-4/5 rounded bg-petroleo/30" />
+                <div className="mt-1 h-1.5 w-1/2 rounded bg-petroleo/20" />
+              </div>
             ))}
-          </ul>
-          <p className="mt-3 flex items-baseline justify-between border-t border-dashed border-petroleo/50 pt-2 font-medium">
-            <span>Total pago</span>
-            <span className="tabular-nums">R$ 250,00</span>
-          </p>
-          <p className="mt-2 text-petroleo/75">Dividido pela Lytex na hora do pagamento.</p>
+          </div>
+          <div className="mt-2 rounded-full bg-petroleo py-1.5 text-center text-xs font-medium text-branco">Comprar</div>
         </div>
       </div>
     </figure>
+  );
+}
+
+// ---------- visuais das seções alternadas ----------
+const Cartao = ({ children, rotulo }: { children: ReactNode; rotulo: string }) => (
+  <figure role="img" aria-label={rotulo} className="mx-auto w-full max-w-md">
+    <div aria-hidden="true" className="rounded-3xl bg-branco p-5 text-petroleo shadow-[0_24px_60px_-28px_rgba(6,44,48,0.45)] ring-1 ring-petroleo/10 sm:p-6">
+      <div className="mb-4 flex justify-end"><Exemplo /></div>
+      {children}
+    </div>
+  </figure>
+);
+
+export function VisualLoja() {
+  return (
+    <Cartao rotulo="Exemplo: cadastro de produto com preço, estoque, comissão do afiliado e modelos de loja oficial.">
+      <p className="text-lg font-bold">Novo produto</p>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        {[["Nome", "Tênis Runner"], ["Preço", "R$ 250,00"], ["Estoque", "40 un."], ["Comissão", "Definida por você"]].map(([k, v]) => (
+          <div key={k} className="rounded-xl bg-gelo p-3">
+            <p className="text-xs text-petroleo/75">{k}</p>
+            <p className="font-medium">{v}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-sm font-medium">Modelos da loja oficial</p>
+      <div className="mt-2 grid grid-cols-4 gap-2">
+        {["#062C30", "#14D6C4", "#EEF6F5", "#FFFFFF"].map((c, i) => (
+          <div key={c} className={`h-14 rounded-lg ring-1 ring-petroleo/20 ${i === 1 ? "outline-2 outline-offset-2 outline-petroleo" : ""}`} style={{ background: c }} />
+        ))}
+      </div>
+    </Cartao>
+  );
+}
+
+export function VisualAfiliado({ host }: { host: string }) {
+  return (
+    <Cartao rotulo="Exemplo: link curto de afiliada, código de indicação e comissão do produto.">
+      <p className="text-sm text-petroleo/75">Seu link para o Tênis Runner</p>
+      <p className="mt-1 rounded-xl bg-gelo px-3 py-3 font-mono text-sm break-all">
+        {host}/@ana/tenis-runner
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <div className="rounded-xl bg-gelo p-3">
+          <p className="text-xs text-petroleo/75">Comissão</p>
+          <p className="font-medium">Mostrada antes de divulgar</p>
+        </div>
+        <div className="rounded-xl bg-gelo p-3">
+          <p className="text-xs text-petroleo/75">Código de indicação</p>
+          <p className="font-medium">Seu, só seu</p>
+        </div>
+      </div>
+      <div className="mt-4 rounded-full bg-ciano py-3 text-center text-sm font-medium">Copiar link</div>
+    </Cartao>
+  );
+}
+
+export function VisualVendedor() {
+  return (
+    <Cartao rotulo="Exemplo: convite de uma loja para um vendedor, com a comissão combinada e as vendas do vendedor.">
+      <p className="text-sm text-petroleo/75">Convite da Lia Calçados</p>
+      <p className="text-lg font-bold">Vender pela loja</p>
+      <div className="mt-3 rounded-xl bg-gelo p-3 text-sm">
+        <p className="text-xs text-petroleo/75">Comissão combinada</p>
+        <p className="font-medium">Definida pela loja para você</p>
+      </div>
+      <ul className="mt-3 divide-y divide-petroleo/10 text-sm">
+        {["Venda pelo seu link", "Venda pelo seu link"].map((t, i) => (
+          <li key={i} className="flex items-center justify-between py-2.5">
+            <span>{t}</span>
+            <span className="rounded-full bg-gelo px-2 py-0.5 text-xs font-medium">Pago</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 rounded-full bg-petroleo py-3 text-center text-sm font-medium text-branco">Aceitar convite</div>
+    </Cartao>
+  );
+}
+
+export function VisualComprador() {
+  return (
+    <Cartao rotulo="Exemplo: pagamento na loja oficial com Pix ou cartão, CNPJ ativo, 7 dias para desistir e pagamento processado pela Lytex.">
+      <p className="text-lg font-bold">Tênis Runner</p>
+      <p className="text-sm text-petroleo/75">Lia Calçados, loja oficial</p>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-sm font-medium">
+        <span className="rounded-xl bg-petroleo py-3 text-center text-branco">Pix</span>
+        <span className="rounded-xl bg-gelo py-3 text-center">Cartão</span>
+      </div>
+      <ul className="mt-4 flex flex-col gap-2 text-sm">
+        {["Loja com CNPJ ativo e nota fiscal", "7 dias para desistir", "Pagamento processado pela Lytex"].map((t) => (
+          <li key={t} className="flex items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <circle cx="9" cy="9" r="9" fill="#14D6C4" />
+              <path d="M5 9.2l2.6 2.6L13 6.4" stroke="#062C30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t}
+          </li>
+        ))}
+      </ul>
+    </Cartao>
   );
 }
 
