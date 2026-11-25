@@ -53,7 +53,7 @@ export default async function ProdutosDaLoja({ searchParams }: PageProps<"/paine
         linhas={produtos.map((p) => ({
           chave: p.item_id,
           celulas: [
-            <Link key="n" href={`/painel/produtor/itens/${p.item_id}`} className="font-medium underline" data-produto={p.nome}>
+            <Link key="n" href={`/painel/produtor/itens/${p.item_id}`} className="inline-flex min-h-11 items-center font-medium underline" data-produto={p.nome}>
               {p.nome}
             </Link>,
             <span key="s" className={p.status_aprovacao === "recusado" ? "text-red-800" : ""}>

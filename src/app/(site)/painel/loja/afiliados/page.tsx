@@ -1,6 +1,7 @@
 // Afiliados da loja: pedidos pendentes (aprovar/recusar), desempenho por
 // afiliado no período e bloqueio. Por privacidade (LGPD), só o nome e o @ da
 // vitrine, nunca e-mail ou telefone do afiliado.
+import { BotaoConfirmar } from "@/components/painel/BotaoConfirmar";
 import Link from "next/link";
 import { connection } from "next/server";
 import { FiltroPeriodo, LinkCsv } from "@/components/painel/FiltroPeriodo";
@@ -70,7 +71,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">
                     {l.storefronts ? (
-                      <Link href={`/@${l.storefronts.slug}`} className="underline">
+                      <Link href={`/@${l.storefronts.slug}`} className="inline-flex min-h-11 items-center underline">
                         {l.storefronts.nome_exibicao || `@${l.storefronts.slug}`}
                       </Link>
                     ) : (
@@ -117,7 +118,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
                 </p>
                 <form action={revogarConviteAfiliacao}>
                   <input type="hidden" name="convite_id" value={c.id} />
-                  <button className="min-h-11 rounded-full px-4 text-sm font-medium text-red-800 underline">Revogar convite</button>
+                  <BotaoConfirmar pergunta="Revogar este convite?" className="min-h-11 rounded-full px-4 text-sm font-medium text-red-800 underline">Revogar convite</BotaoConfirmar>
                 </form>
               </li>
             ))}
@@ -151,7 +152,7 @@ export default async function AfiliadosDaLoja({ searchParams }: PageProps<"/pain
             celulas: [
               <span key="n" data-afiliado={a.vitrine_slug ?? ""}>
                 {a.vitrine_slug ? (
-                  <Link href={`/@${a.vitrine_slug}`} className="font-medium underline">
+                  <Link href={`/@${a.vitrine_slug}`} className="inline-flex min-h-11 items-center font-medium underline">
                     {a.vitrine_nome || `@${a.vitrine_slug}`}
                   </Link>
                 ) : (

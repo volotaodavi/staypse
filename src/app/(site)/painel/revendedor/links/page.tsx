@@ -1,6 +1,7 @@
 // "Minhas indicações": links de outras lojas (Shopee, Mercado Livre, TikTok Shop)
 // que aparecem na vitrine marcados como publicidade. A Staypse não ganha nada
 // com eles e nunca altera o endereço.
+import { BotaoConfirmar } from "@/components/painel/BotaoConfirmar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { exigirPapel } from "@/lib/papeis";
@@ -58,7 +59,7 @@ export default async function Links() {
                 </div>
                 <form action={removerLink}>
                   <input type="hidden" name="link_id" value={l.id} />
-                  <button className="rounded-full px-3 py-1.5 text-sm font-medium text-red-800 hover:bg-red-50">Remover</button>
+                  <BotaoConfirmar pergunta="Remover este link?" className="min-h-11 rounded-full px-4 text-sm font-medium text-red-800 hover:bg-red-50">Remover</BotaoConfirmar>
                 </form>
               </li>
             ))}

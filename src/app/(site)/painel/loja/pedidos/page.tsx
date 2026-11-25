@@ -96,7 +96,7 @@ export default async function PedidosDaLoja({ searchParams }: PageProps<"/painel
           return {
             chave: p.id,
             celulas: [
-              <Link key="c" href={`/painel/loja/pedidos/${p.codigo}`} className="font-medium underline" data-pedido={p.codigo}>
+              <Link key="c" href={`/painel/loja/pedidos/${p.codigo}`} className="inline-flex min-h-11 items-center font-medium underline" data-pedido={p.codigo}>
                 {p.codigo}
               </Link>,
               dataHora(p.criado_em),

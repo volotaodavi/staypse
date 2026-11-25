@@ -1,4 +1,5 @@
 // Entrega própria da loja: zonas (por CEP, cidade ou bairros) e entregadores.
+import { BotaoConfirmar } from "@/components/painel/BotaoConfirmar";
 import Link from "next/link";
 import { exigirPapel } from "@/lib/papeis";
 import { formatarPreco } from "@/lib/produtor";
@@ -106,7 +107,7 @@ export default async function EntregaPropria({ searchParams }: PageProps<"/paine
                     </form>
                     <form action={removerZona}>
                       <input type="hidden" name="id" value={z.id} />
-                      <button className={`${botao} text-red-800`}>Apagar</button>
+                      <BotaoConfirmar pergunta="Remover esta zona de entrega?" className={`${botao} text-red-800`}>Remover</BotaoConfirmar>
                     </form>
                   </div>
                 </li>
@@ -139,7 +140,7 @@ export default async function EntregaPropria({ searchParams }: PageProps<"/paine
                   </span>
                   <form action={removerEntregador}>
                     <input type="hidden" name="id" value={e.id} />
-                    <button className={`${botao} text-red-800`}>Remover</button>
+                    <BotaoConfirmar pergunta="Remover este entregador?" className={`${botao} text-red-800`}>Remover</BotaoConfirmar>
                   </form>
                 </li>
               ))}
