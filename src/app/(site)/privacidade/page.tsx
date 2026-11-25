@@ -8,6 +8,7 @@ import { CONTATO, EMPRESA, TERMOS_VERSAO } from "@/config/empresa";
 export const metadata: Metadata = {
   title: "Política de privacidade",
   description: "Como a Staypse trata dados pessoais, com quais bases legais e como exercer seus direitos (LGPD).",
+  alternates: { canonical: "/privacidade" },
 };
 
 // [finalidade, dados, base legal (LGPD, art. 7º), por quanto tempo guardamos]

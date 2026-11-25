@@ -9,6 +9,7 @@ import { TERMOS_VERSAO } from "@/config/empresa";
 export const metadata: Metadata = {
   title: "Política de reembolso",
   description: "Como desistir de uma compra em 7 dias, receber o reembolso, trocar produto com defeito e quem responde por cada etapa.",
+  alternates: { canonical: "/reembolso" },
 };
 
 const f = "font-medium";

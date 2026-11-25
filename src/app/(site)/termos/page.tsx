@@ -15,6 +15,7 @@ import {
 export const metadata: Metadata = {
   title: "Termos de uso",
   description: "Regras de uso da Staypse para quem compra, vende, indica e vende pela loja.",
+  alternates: { canonical: "/termos" },
 };
 
 const forte = "font-medium";

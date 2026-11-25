@@ -4,7 +4,11 @@ import { Cabecalho } from "@/components/Cabecalho";
 import { proximoSeguro } from "@/lib/redirecionamento";
 import { FormEntrar } from "./FormEntrar";
 
-export const metadata: Metadata = { title: "Entrar" };
+export const metadata: Metadata = {
+  title: "Entrar",
+  description: "Entre na sua conta Staypse para gerenciar sua loja, seus links de afiliado e suas vendas.",
+  alternates: { canonical: "/entrar" },
+};
 // Lê a sessão (cookie) a cada acesso: página sempre renderizada no servidor.
 export const instant = false;
 

@@ -8,6 +8,7 @@ import { Cabecalho } from "@/components/Cabecalho";
 export const metadata: Metadata = {
   title: "Produtos proibidos",
   description: "O que não pode ser vendido nem indicado na Staypse.",
+  alternates: { canonical: "/produtos-proibidos" },
 };
 
 // [categoria, o que inclui, por quê]

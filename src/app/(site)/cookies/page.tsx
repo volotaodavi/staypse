@@ -9,6 +9,7 @@ import { TERMOS_VERSAO } from "@/config/empresa";
 export const metadata: Metadata = {
   title: "Política de cookies",
   description: "Quais cookies a Staypse usa, para quê e por quanto tempo.",
+  alternates: { canonical: "/cookies" },
 };
 
 // [nome, para que serve, duração, tipo]

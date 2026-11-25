@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
+import { JsonLd } from "@/components/JsonLd";
+import { dadosOrganizacao } from "@/lib/seo";
 import { urlDoSite } from "@/lib/supabase/env";
 import "./globals.css";
 
@@ -14,7 +16,7 @@ const outfit = Outfit({
 // SEO + prévia de compartilhamento (WhatsApp/Instagram).
 // A imagem de prévia é gerada por src/app/opengraph-image.tsx.
 const descricao =
-  "Plataforma de afiliados para produtos físicos e digitais. Produtores cadastram, revendedores indicam pelo próprio link e o pagamento é dividido automaticamente entre as partes. Crie a sua conta grátis.";
+  "Plataforma de afiliados para produtos físicos e digitais. Lojas cadastram, afiliados indicam pelo próprio link e o pagamento é dividido automaticamente.";
 
 export const metadata: Metadata = {
   title: {
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     title: "Staypse: plataforma de afiliados para produtos físicos e digitais",
     description: descricao,
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", title: "Staypse: plataforma de afiliados", description: descricao },
 };
 
 export const viewport: Viewport = {
@@ -48,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#conteudo" className="pular-conteudo">
           Pular para o conteúdo
         </a>
+        <JsonLd dados={dadosOrganizacao()} />
         {children}
       </body>
     </html>

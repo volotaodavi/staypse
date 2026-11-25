@@ -4,7 +4,11 @@ import { Cabecalho } from "@/components/Cabecalho";
 import { proximoSeguro } from "@/lib/redirecionamento";
 import { FormCadastro } from "./FormCadastro";
 
-export const metadata: Metadata = { title: "Criar conta" };
+export const metadata: Metadata = {
+  title: "Criar conta grátis",
+  description: "Crie sua conta grátis na Staypse: cadastre sua loja ou divulgue produtos como afiliado, com pagamento dividido automaticamente.",
+  alternates: { canonical: "/cadastro" },
+};
 // lê ?proximo= (ex.: vindo de um convite de vendedor)
 export const instant = false;
 

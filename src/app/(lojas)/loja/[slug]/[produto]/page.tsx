@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import { JsonLd } from "@/components/JsonLd";
 import { GaleriaFotos } from "@/components/GaleriaFotos";
 import { classeBotaoLoja } from "@/components/loja";
 import { ProdutosRelacionados } from "@/components/loja-secoes";
@@ -18,6 +19,7 @@ import { comprasAbertas } from "@/lib/pedidos";
 import { semJurosAte } from "@/lib/pagamentos/juros";
 import { valorParcelaCentavos } from "@/lib/pagamentos/parcelas";
 import { buscarPoliticaParcelas } from "@/lib/pagamentos/parcelamento-publico";
+import { dadosMigalhas, dadosProduto, limitar } from "@/lib/seo";
 import { formatarCnpj, formatarPreco, urlFoto } from "@/lib/produtor";
 import { buscarEntrega, buscarLoja, buscarProduto, type EntregaProduto } from "@/lib/publico";
 import { supabaseUrl, urlDoSite } from "@/lib/supabase/env";
@@ -78,12 +80,13 @@ export async function generateMetadata({ params }: PageProps<"/loja/[slug]/[prod
   const { slug, produto } = await params;
   const [item, dados] = await Promise.all([buscarProduto(slug, produto), buscarLoja(slug)]);
   if (!item || !dados) return { title: "Produto não encontrado", robots: { index: false } };
-  const descricao = `${formatarPreco(item.preco_centavos)}, ${dados.loja.loja_nome}. ${item.descricao ?? ""}`.slice(0, 200);
+  const descricao = limitar(`${item.nome} por ${formatarPreco(item.preco_centavos)} na ${dados.loja.loja_nome}. ${item.descricao ?? ""}`, 155);
   return {
-    title: { absolute: `${item.nome} | ${dados.loja.loja_nome}` },
+    title: { absolute: limitar(`${item.nome} | ${dados.loja.loja_nome}`, 60) },
     description: descricao,
     alternates: { canonical: `/loja/${slug}/${produto}` },
-    openGraph: { type: "website", url: `/loja/${slug}/${produto}`, siteName: dados.loja.loja_nome, title: item.nome, description: descricao },
+    openGraph: { type: "website", url: `/loja/${slug}/${produto}`, siteName: dados.loja.loja_nome, title: item.nome, description: descricao, locale: "pt_BR" },
+    twitter: { card: "summary_large_image", title: item.nome, description: descricao },
   };
 }
 
@@ -125,6 +128,16 @@ export default async function PaginaProduto({ params }: PageProps<"/loja/[slug]/
 
   return (
     <main id="conteudo" tabIndex={-1} className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-2 md:pb-12">
+      <JsonLd
+        dados={[
+          dadosProduto({ nome: item.nome, slug: produto, lojaSlug: slug, lojaNome: loja.loja_nome, descricao: item.descricao, fotos, precoCentavos: item.preco_centavos, fisico: item.tipo === "fisico", categoria: item.categoria, comprasAbertas: abertas }),
+          dadosMigalhas([
+            { nome: "Staypse", caminho: "/" },
+            { nome: loja.loja_nome, caminho: `/loja/${slug}` },
+            { nome: item.nome, caminho: `/loja/${slug}/${produto}` },
+          ]),
+        ]}
+      />
       <nav aria-label="Você está em" className="text-sm text-neutral-700">
         <ol className="flex flex-wrap items-center gap-x-2">
           <li>

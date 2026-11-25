@@ -11,6 +11,7 @@ import { FormAtendimento } from "./FormAtendimento";
 export const metadata: Metadata = {
   title: "Atendimento",
   description: "Fale com a Staypse: pedidos, desistência da compra, dados pessoais (LGPD) e denúncias. Resposta em até 5 dias.",
+  alternates: { canonical: "/atendimento" },
 };
 export const instant = false;
 

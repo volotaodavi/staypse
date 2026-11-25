@@ -2,13 +2,25 @@
 // seções com ritmos diferentes, taxas, passos, perguntas e fecho.
 // Regras de texto: sem promessa de ganho, sorteio ou ganho por recrutamento;
 // a Staypse nunca "recebe" nem guarda o dinheiro, o split acontece na Lytex.
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { BarraFixa } from "@/components/BarraFixa";
 import { Cabecalho } from "@/components/Cabecalho";
-import { Perguntas, VisualHero } from "@/components/inicio";
+import { JsonLd } from "@/components/JsonLd";
+import { PERGUNTAS, Perguntas, VisualHero } from "@/components/inicio";
 import { TaxasDaInicial } from "@/components/inicio-taxas";
+import { PALAVRAS_CHAVE, dadosFaq } from "@/lib/seo";
 import { urlDoSite } from "@/lib/supabase/env";
+
+export const metadata: Metadata = {
+  title: { absolute: "Plataforma de afiliados para lojas | Staypse" },
+  description:
+    "Venda com afiliados: sua loja online com programa de afiliados e split de pagamento automático, para produtos físicos e digitais. Crie a conta grátis.",
+  keywords: PALAVRAS_CHAVE,
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 const PRIMARIO =
   "inline-flex min-h-14 items-center justify-center rounded-full bg-ciano px-8 py-4 text-lg font-medium text-petroleo hover:brightness-95";
@@ -43,6 +55,7 @@ export default function Inicio() {
   const host = urlDoSite().replace(/^https?:\/\//, "");
   return (
     <>
+      <JsonLd dados={dadosFaq(PERGUNTAS)} />
       <Cabecalho preLancamento />
       <main id="conteudo" tabIndex={-1} className="flex flex-1 flex-col">
         {/* ---------- hero ---------- */}
