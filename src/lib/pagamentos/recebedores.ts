@@ -4,6 +4,7 @@ import { despacharEmailsNotificacoes } from "@/lib/notificacoes";
 import "server-only";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { provedorPagamentos } from ".";
+import type { DadosRecebedorLytex } from "./dados-recebedor";
 import type { PapelRecebedor, StatusRecebedor } from "./tipos";
 
 export type MeuRecebedor = {
@@ -26,7 +27,7 @@ export const ROTULO_STATUS_RECEBEDOR: Record<StatusRecebedor, string> = {
 };
 
 // inicia (ou refaz) o cadastro de recebimento no provedor
-export async function iniciarRecebedor(dados: { userId: string; papel: PapelRecebedor; documento: string; nome: string; email: string }) {
+export async function iniciarRecebedor(dados: DadosRecebedorLytex) {
   const provedor = provedorPagamentos();
   const r = await provedor.criarRecebedor(dados);
   const { error } = await criarClienteAdmin().rpc("registrar_recebedor", {

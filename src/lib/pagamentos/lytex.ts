@@ -6,6 +6,7 @@
 //
 // Sem `import "server-only"` de propósito: o arquivo precisa rodar nos testes unitários (tsx).
 // Ele só é importado por ./index.ts, que é server-only, então não vai para o navegador.
+import { validarDadosRecebedor, type DadosRecebedorLytex } from "./dados-recebedor";
 import { IntegracaoPendente } from "./tipos";
 import type {
   Cobranca,
@@ -26,13 +27,7 @@ export const URL_SANDBOX = "https://sandbox-api-pay.lytex.com.br";
 //  * subconta: celular e endereço (POST /v2/sub-accounts → required: type,name,cellphone,email,address)
 //  * fatura: cliente com type, name e cpfCnpj (POST /v2/invoices → required: _clientId OU client)
 // Quem chama deve preenchê-los; sem eles o provedor recusa em vez de inventar valores.
-export type EnderecoLytex = { rua: string; bairro: string; cidade: string; uf: string; cep: string; numero?: string; complemento?: string };
-export type DadosRecebedorLytex = DadosRecebedor & {
-  celular?: string; // 10 ou 11 dígitos
-  endereco?: EnderecoLytex;
-  nomeFantasia?: string; // exigido para pj (fantasyName)
-  tipoEmpresa?: "mei" | "others" | "ei" | "eireli" | "slu" | "ltda" | "ss" | "sa"; // companyType, exigido para pj
-};
+export type { EnderecoLytex, DadosRecebedorLytex } from "./dados-recebedor";
 export type CompradorLytex = { nome: string; documento: string; email?: string };
 export type DadosCobrancaLytex = DadosCobranca & { comprador?: CompradorLytex };
 
@@ -367,14 +362,9 @@ export function criarLytex(opcoes: Opcoes = {}): ProvedorLytex {
 
     // SubAccountsController_create_v2: POST /v2/sub-accounts
     async criarRecebedor(dados: DadosRecebedorLytex): Promise<RecebedorNoProvedor> {
+      validarDadosRecebedor(dados);
       const doc = dados.documento.replace(/\D/g, "");
       const tipo = doc.length > 11 ? "pj" : "pf";
-      const faltando = [
-        !dados.celular && "celular",
-        !dados.endereco && "endereco",
-        tipo === "pj" && !dados.tipoEmpresa && "tipoEmpresa",
-      ].filter(Boolean);
-      if (faltando.length) throw new Error(`lytex_dados_recebedor_incompletos: ${faltando.join(",")}`);
       const end = dados.endereco!;
       const corpo = {
         type: tipo,

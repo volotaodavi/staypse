@@ -6,6 +6,7 @@ import "server-only";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { segredoDerivado } from "@/lib/ip";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
+import { validarDadosRecebedor, type DadosRecebedorLytex } from "./dados-recebedor";
 import { statusCobrancaValido } from "./status";
 import type { EventoPagamento, PaymentProvider, RecebedorNoProvedor, StatusCobranca, StatusRecebedor } from "./tipos";
 
@@ -35,6 +36,8 @@ async function dadosDaCobrancaSimulada(provedorId: string): Promise<{ status: St
 export const mock: PaymentProvider = {
   nome: "mock",
   async criarRecebedor(dados) {
+    // mesmas exigências da Lytex (celular, endereço, tipo de empresa em PJ)
+    validarDadosRecebedor(dados as DadosRecebedorLytex);
     const provedorId = `mock_rec_${randomUUID()}`;
     return {
       provedorId,

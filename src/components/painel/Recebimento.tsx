@@ -1,6 +1,6 @@
 // Situação do cadastro de recebimento (Lytex): só o STATUS e o motivo. Os
 // documentos e os dados bancários são informados direto na Lytex.
-import { completarRecebimento } from "@/app/(site)/painel/recebimento/acoes";
+import { FormRecebimento, type Sugestao } from "./FormRecebimento";
 import { dataHora } from "@/lib/pedidos";
 import { ROTULO_STATUS_RECEBEDOR, type MeuRecebedor } from "@/lib/pagamentos/recebedores";
 import type { PapelRecebedor } from "@/lib/pagamentos/tipos";
@@ -29,6 +29,15 @@ export function recebedorOk(r: MeuRecebedor | null) {
 export async function Recebimento({ papel, documentoSugerido, aviso }: { papel: PapelRecebedor; documentoSugerido?: string | null; aviso?: string }) {
   const r = await meuRecebedor(papel);
   const status = r?.status_recebedor ?? "nao_iniciado";
+  // loja: o cadastro da empresa já tem celular (WhatsApp) e endereço; o resto é pedido no formulário
+  let sugestao: Sugestao = {};
+  if (papel === "produtor") {
+    const { data: p } = await (await criarClienteServidor())
+      .from("producers")
+      .select("whatsapp, cep, logradouro, numero, complemento, bairro, cidade, uf")
+      .maybeSingle();
+    sugestao = { celular: p?.whatsapp ?? "", cep: p?.cep ?? "", logradouro: p?.logradouro ?? "", numero: p?.numero ?? "", complemento: p?.complemento ?? "", bairro: p?.bairro ?? "", cidade: p?.cidade ?? "", uf: p?.uf ?? "" };
+  }
   const divergente = Boolean(r?.documento_provedor && r.documento_provedor !== r.documento);
   const cor =
     status === "aprovado" && !divergente
@@ -50,31 +59,18 @@ export async function Recebimento({ papel, documentoSugerido, aviso }: { papel: 
         {r && <span className="block text-xs opacity-80">Atualizado em {dataHora(r.atualizado_em)}</span>}
       </p>
       {(status !== "aprovado" || divergente) && status !== "em_analise" && (
-        <form action={completarRecebimento} className="flex flex-col gap-2 text-sm">
-          <input type="hidden" name="papel" value={papel} />
-          {papel !== "produtor" && (
-            <label className="flex flex-col gap-1 font-medium">
-              CPF ou CNPJ de quem recebe
-              <input
-                name="documento"
-                inputMode="numeric"
-                required
-                maxLength={18}
-                defaultValue={documentoSugerido ?? r?.documento ?? ""}
-                className="min-h-11 rounded-xl border border-petroleo/60 bg-branco px-3 text-base font-normal"
-              />
-            </label>
-          )}
-          <button className="inline-flex min-h-11 w-fit items-center rounded-full bg-petroleo px-5 font-medium text-branco">
-            {status === "nao_iniciado" ? "Completar cadastro de recebimento" : "Refazer cadastro de recebimento"}
-          </button>
-        </form>
+        <FormRecebimento
+          papel={papel}
+          pedeDocumento={papel !== "produtor"}
+          sugestao={{ ...sugestao, documento: documentoSugerido ?? r?.documento ?? "" }}
+          rotuloBotao={status === "nao_iniciado" ? "Completar cadastro de recebimento" : "Refazer cadastro de recebimento"}
+        />
       )}
       {status === "em_analise" && (
         <p className="text-sm text-petroleo/80">A Lytex está analisando. Você recebe o resultado aqui, sem precisar fazer nada.</p>
       )}
       <p className="text-xs text-petroleo/75">
-        A Staypse não pede nem guarda documentos de identidade ou dados bancários: tudo isso é informado direto na Lytex.
+        A Staypse não pede nem guarda documentos de identidade ou dados bancários: tudo isso é informado direto na Lytex. Celular e endereço deste formulário são enviados só à Lytex e não ficam salvos aqui.
         Pagamentos processados pela Lytex.
       </p>
     </section>

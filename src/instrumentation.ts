@@ -3,17 +3,7 @@
 // LGPD: nada de dados pessoais, o caminho vai SEM a parte "?..." (que pode ter
 // o token do pedido) e a mensagem passa por um filtro de e-mails, CPFs e tokens.
 import type { Instrumentation } from "next";
-
-function limpar(texto: string): string {
-  return texto
-    .replace(/[^\s@]+@[^\s@]+\.[^\s@]+/g, "[e-mail]")
-    .replace(/\b[0-9a-f]{32,}\b/gi, "[token]")
-    .replace(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g, "[cpf]")
-    .replace(/\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b/g, "[cnpj]")
-    .replace(/\(?\b\d{2}\)?\s?9?\d{4}-?\d{4}\b/g, "[telefone]")
-    .replace(/Key \([^)]*\)=\([^)]*\)/g, "Key [dado]")
-    .slice(0, 1000);
-}
+import { limparMensagemErro as limpar } from "@/lib/erros-app-limpar";
 
 export const onRequestError: Instrumentation.onRequestError = async (erro, request, contexto) => {
   // só no servidor Node (o cliente com a chave secreta não roda no Edge)
