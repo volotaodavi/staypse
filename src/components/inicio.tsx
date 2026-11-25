@@ -43,7 +43,7 @@ export function VisualHero({ host }: { host: string }) {
     <figure className="m-0 [perspective:1600px]" aria-label="Exemplo de link, vitrine e divisão de uma venda">
       <div className="relative flex flex-col lg:block lg:h-[40rem] lg:[transform:rotateY(-6deg)_rotateX(2deg)] lg:[transform-style:preserve-3d]">
         {/* link da afiliada */}
-        <div className={`${VIDRO} relative z-20 px-5 py-4 lg:absolute lg:top-0 lg:left-0 lg:w-[68%]`}>
+        <div className={`${VIDRO} flutua relative z-20 px-5 py-4 lg:absolute lg:top-0 lg:left-0 lg:w-[68%]`}>
           <p className="text-sm text-gelo/75">Seu link de afiliada</p>
           <p className="mt-1 break-all text-lg font-semibold text-branco sm:text-xl">
             <span className="text-gelo/70">{host}</span>
@@ -86,8 +86,8 @@ export function VisualHero({ host }: { host: string }) {
             <span className="text-2xl font-semibold text-branco tabular-nums">R$ 200,00</span>
           </p>
           <div className="mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden="true">
-            <span className="w-[78%] bg-gelo/45" />
-            <span className="w-[19.5%] bg-ciano" />
+            <span className="barra-cresce w-[78%] bg-gelo/45" />
+            <span className="barra-cresce w-[19.5%] bg-ciano" style={{ "--atraso": "1.3s" } as React.CSSProperties} />
             <span className="w-[6%] bg-branco" />
           </div>
           <ul className="mt-4 flex flex-col gap-2 text-sm">

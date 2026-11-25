@@ -127,3 +127,10 @@
   animation: hero-entrada 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: var(--atraso, 0s);
 }
+
+/* Landing: o link flutua e a barra da divisão cresce (só uma vez); respeita movimento reduzido */
+@keyframes flutua { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.flutua { animation: flutua 6s ease-in-out infinite; }
+@keyframes barra-cresce { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.barra-cresce { transform-origin: left; animation: barra-cresce 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) var(--atraso, 1s) both; }
+@media (prefers-reduced-motion: reduce) { .flutua, .barra-cresce { animation: none; } }
