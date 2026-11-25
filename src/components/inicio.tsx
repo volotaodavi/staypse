@@ -1,3 +1,4 @@
+import { AparecerNaTela } from "./AparecerNaTela";
 // Peças da página inicial. Tudo é HTML, CSS e SVG de servidor (sem JavaScript de cliente).
 
 // Visual do hero: três cartões de vidro com coisas reais da Staypse (link, vitrine, recibo da divisão).
@@ -40,10 +41,10 @@ const PARTES = [
 
 export function VisualHero({ host }: { host: string }) {
   return (
-    <figure className="m-0 [perspective:1600px]" aria-label="Exemplo de link, vitrine e divisão de uma venda">
-      <div className="relative flex flex-col lg:block lg:h-[40rem] lg:[transform:rotateY(-6deg)_rotateX(2deg)] lg:[transform-style:preserve-3d]">
+    <AparecerNaTela><figure className="m-0" aria-label="Exemplo de link, vitrine e divisão de uma venda">
+      <div className="relative flex flex-col lg:block lg:h-[40rem]">
         {/* link da afiliada */}
-        <div className={`${VIDRO} flutua relative z-20 px-5 py-4 lg:absolute lg:top-0 lg:left-0 lg:w-[68%]`}>
+        <div className={`${VIDRO} notif relative z-20 px-5 py-4 lg:absolute lg:top-0 lg:left-0 lg:w-[68%]`}>
           <p className="text-sm text-gelo/75">Seu link de afiliada</p>
           <p className="mt-1 break-all text-lg font-semibold text-branco sm:text-xl">
             <span className="text-gelo/70">{host}</span>
@@ -52,7 +53,7 @@ export function VisualHero({ host }: { host: string }) {
         </div>
 
         {/* vitrine com dois produtos */}
-        <div className={`${VIDRO} relative z-10 -mt-3 ml-6 p-4 lg:absolute lg:top-[6rem] lg:right-0 lg:left-auto lg:m-0 lg:w-[84%]`}>
+        <div className={`${VIDRO} notif [--atraso:0.25s] relative z-10 -mt-3 ml-6 p-4 lg:absolute lg:top-[6rem] lg:right-0 lg:left-auto lg:m-0 lg:w-[84%]`}>
           <div className="mb-3 flex items-center justify-between px-1">
             <p className="font-semibold text-branco">Vitrine da Ana</p>
             <p className="rounded-full border border-white/20 px-2.5 py-0.5 text-xs text-gelo/80">exemplo</p>
@@ -76,7 +77,7 @@ export function VisualHero({ host }: { host: string }) {
         </div>
 
         {/* recibo da divisão */}
-        <div className={`${VIDRO} relative z-30 -mt-6 mr-6 bg-[#0a3a40]/95 p-5 lg:absolute lg:bottom-0 lg:left-0 lg:m-0 lg:w-[60%]`}>
+        <div className={`${VIDRO} notif [--atraso:0.5s] relative z-30 -mt-6 mr-6 bg-[#0a3a40]/95 p-5 lg:absolute lg:bottom-0 lg:left-0 lg:m-0 lg:w-[60%]`}>
           <div className="flex items-center justify-between">
             <p className="font-semibold text-branco">Divisão da venda</p>
             <p className="rounded-full border border-white/20 px-2.5 py-0.5 text-xs text-gelo/80">exemplo</p>
@@ -87,7 +88,7 @@ export function VisualHero({ host }: { host: string }) {
           </p>
           <div className="mt-3 flex h-2 overflow-hidden rounded-full" aria-hidden="true">
             <span className="barra-cresce w-[78%] bg-gelo/45" />
-            <span className="barra-cresce w-[19.5%] bg-ciano" style={{ "--atraso": "1.3s" } as React.CSSProperties} />
+            <span className="barra-cresce w-[19.5%] bg-ciano" />
             <span className="w-[6%] bg-branco" />
           </div>
           <ul className="mt-4 flex flex-col gap-2 text-sm">
@@ -104,7 +105,7 @@ export function VisualHero({ host }: { host: string }) {
           <p className="mt-3 border-t border-white/10 pt-3 text-xs text-gelo/70">Cada parte recebe direto no pagamento.</p>
         </div>
       </div>
-    </figure>
+    </figure></AparecerNaTela>
   );
 }
 
