@@ -12,7 +12,6 @@ import type {
   Cobranca,
   DadosCobranca,
   DadosPagamento,
-  DadosRecebedor,
   EventoPagamento,
   PaymentProvider,
   RecebedorNoProvedor,
