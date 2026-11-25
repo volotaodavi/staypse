@@ -21,7 +21,7 @@ const WRAP = "mx-auto max-w-6xl px-4";
 
 const DIFERENCIAIS = [
   ["Sem mensalidade", "Criar conta é grátis. A taxa é por venda e já vem descontada na divisão."],
-  ["Split na Lytex", "O pagamento sai dividido na hora, direto para cada parte."],
+  ["Split automático", "O pagamento sai dividido na hora, direto para cada parte."],
   ["Loja oficial pronta", "Escolha um dos 8 modelos e publique seus produtos."],
   ["Código de indicação", "Cada afiliado tem vitrine, links curtos e código próprio."],
 ] as const;
@@ -29,11 +29,11 @@ const DIFERENCIAIS = [
 const PASSOS = [
   ["A loja cadastra os produtos", "Foto, preço, estoque e a comissão de cada produto. Quem decide quanto o afiliado leva é a loja."],
   ["Afiliados e vendedores divulgam", "Cada um usa o seu link ou a sua vitrine. Quem clica cai na loja oficial."],
-  ["O cliente paga e a Lytex divide", "Pix ou cartão: o valor já sai repartido entre loja, afiliado e Staypse. A nota fiscal é da loja."],
+  ["O cliente paga e o valor se divide", "Pix ou cartão: o valor já sai repartido entre loja, afiliado e Staypse. A nota fiscal é da loja."],
 ] as const;
 
 const REGRAS = [
-  ["Split na Lytex", "Cada parte recebe a sua direto. Nada passa pela mão da Staypse."],
+  ["Split automático", "Cada parte recebe a sua direto. Nada passa pela mão da Staypse."],
   ["Lojas com CNPJ", "Só entra loja com CNPJ ativo e nota fiscal em toda venda. Todo produto passa por análise."],
   ["7 dias para desistir", "O comprador pede de volta tudo o que pagou, e a devolução segue a proporção do split."],
   ["Sem pirâmide", "A comissão vem só das vendas do próprio afiliado. Sem taxa de adesão nem comissão por recrutar."],
@@ -55,7 +55,7 @@ export default function Inicio() {
               <div className="flex flex-col gap-6 lg:col-span-5">
                 <p className="max-w-md text-xl text-gelo/90">
                   A Staypse junta lojas, afiliados e vendedores da loja. Cada venda tem um link, e o pagamento já sai
-                  dividido na hora, pela Lytex.
+                  dividido na hora.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Link href="/cadastro" className={PRIMARIO}>
@@ -65,7 +65,7 @@ export default function Inicio() {
                     Entrar
                   </Link>
                 </div>
-                <p className="text-sm text-gelo/80">Pagamentos processados pela Lytex. Sem mensalidade.</p>
+                <p className="text-sm text-gelo/80">Sem mensalidade.</p>
               </div>
               <div className="lg:col-span-6 lg:col-start-7">
                 <LinkDividido host={host} />
@@ -266,7 +266,7 @@ export default function Inicio() {
         <section id="fim" className="bg-ciano text-petroleo">
           <div className={`${WRAP} flex flex-col items-start gap-8 py-16 sm:py-24`}>
             <h2 className="max-w-3xl text-6xl leading-[0.9] tracking-[-0.05em] sm:text-8xl">Crie a sua conta hoje</h2>
-            <p className="max-w-md text-lg">Grátis, sem mensalidade. Pagamentos processados pela Lytex.</p>
+            <p className="max-w-md text-lg">Grátis, sem mensalidade.</p>
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <Link
                 href="/cadastro"

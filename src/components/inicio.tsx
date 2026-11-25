@@ -26,7 +26,7 @@ export function LinkDividido({ host }: { host: string }) {
           ))}
         </ul>
       </div>
-      <figcaption className="mt-4 text-sm text-gelo/80">Um link, três partes. Quem divide é a Lytex.</figcaption>
+      <figcaption className="mt-4 text-sm text-gelo/80">Um link, três partes.</figcaption>
     </figure>
   );
 }
@@ -35,7 +35,7 @@ export function LinkDividido({ host }: { host: string }) {
 export const PERGUNTAS: [string, string][] = [
   ["O que é a Staypse?", "Uma plataforma de afiliados para produtos físicos e digitais. Lojas e fábricas cadastram os produtos e definem a comissão; afiliados divulgam pelo próprio link; o pagamento é dividido automaticamente entre as partes."],
   ["Criar conta custa alguma coisa?", "Não. Criar conta é grátis, sem taxa de adesão nem mensalidade. A Staypse cobra uma taxa por venda, paga pelo produtor e já descontada na divisão do pagamento. Os percentuais estão na página de taxas."],
-  ["Como funciona o pagamento?", "Pagamentos processados pela Lytex. O split acontece na Lytex: no momento da compra, ela divide o valor entre loja, afiliado e Staypse, e cada parte recebe a sua direto. A Staypse nunca recebe nem guarda o dinheiro de ninguém."],
+  ["Como funciona o pagamento?", "O split acontece na Lytex: no momento da compra, ela divide o valor entre loja, afiliado e Staypse, e cada parte recebe a sua direto. A Staypse nunca recebe nem guarda o dinheiro de ninguém."],
   ["Preciso de estoque ou de muitos seguidores para ser afiliado?", "Não. Você divulga pelo seu link e a loja envia o pedido. Os resultados variam: dependem dos produtos que você escolher e de como divulgar."],
   ["Ganho por trazer outras pessoas?", "Não. A comissão vem só das vendas feitas pelo próprio afiliado. Não existe taxa de adesão nem comissão por recrutar."],
   ["Trabalho em uma loja. Como entro?", "A loja convida você como vendedor pelo e-mail e combina a sua comissão. Ao aceitar o convite, a sua conta já fica ligada a ela."],
