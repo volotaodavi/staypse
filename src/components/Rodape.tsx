@@ -24,6 +24,20 @@ export function Rodape() {
               </Link>
             )}
           </address>
+          {/* Instagram oficial: só o ícone, com nome acessível */}
+          <a
+            href="https://www.instagram.com/staypse/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram da Staypse"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-gelo/30 hover:border-ciano hover:text-ciano"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
         </div>
 
         <nav aria-label="Informações legais" className="flex flex-col gap-2 text-sm">
