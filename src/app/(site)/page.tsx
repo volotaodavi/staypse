@@ -25,7 +25,7 @@ const SECUNDARIO =
 const DIFERENCIAIS = [
   ["Sem mensalidade", "Criar conta é grátis. A taxa é por venda e já vem descontada na divisão."],
   ["Split automático na Lytex", "O pagamento sai dividido na hora, direto para cada parte."],
-  ["Loja oficial pronta", "Escolha um dos 4 modelos e publique seus produtos."],
+  ["Loja oficial pronta", "Escolha um dos 8 modelos e publique seus produtos."],
   ["Link e código de indicação", "Cada afiliado tem vitrine, links curtos e código próprio."],
 ] as const;
 
