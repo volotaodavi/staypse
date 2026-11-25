@@ -48,3 +48,18 @@ describe("mensagemErroRecebedor", () => {
     assert.match(mensagemErroRecebedor(new Error("outro")), /equipe já foi avisada/);
   });
 });
+
+import { deduzirTipoEmpresa, mapearCnpj } from "../cnpj-brasilapi";
+describe("cnpj brasilapi", () => {
+  it("deduz o tipo de empresa e mapeia os campos", () => {
+    assert.equal(deduzirTipoEmpresa({ opcao_pelo_mei: true }), "mei");
+    assert.equal(deduzirTipoEmpresa({ natureza_juridica: "Sociedade Empresária Limitada" }), "ltda");
+    assert.equal(deduzirTipoEmpresa({ natureza_juridica: "Sociedade Limitada Unipessoal" }), "slu");
+    assert.equal(deduzirTipoEmpresa({ natureza_juridica: "Empresário (Individual)" }), "ei");
+    assert.equal(deduzirTipoEmpresa({ natureza_juridica: "Sociedade Anônima Fechada" }), "sa");
+    const d = mapearCnpj({ razao_social: "ACME LTDA", cep: "01001000", municipio: "SAO PAULO", ddd_telefone_1: "1133334444" });
+    assert.equal(d.nomeFantasia, "ACME LTDA");
+    assert.equal(d.cidade, "SAO PAULO");
+    assert.equal(d.celular, "1133334444");
+  });
+});

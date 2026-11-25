@@ -48,12 +48,16 @@ export async function completarRecebimento(f: FormData) {
     if (!p) erro("Cadastre a empresa antes do recebimento.");
     documento = p!.cnpj;
     nome = p!.razao_social;
-    nomeFantasia = p!.loja_nome ?? p!.razao_social;
+    nomeFantasia = String(f.get("nomeFantasia") ?? "").trim() || (p!.loja_nome ?? p!.razao_social);
   } else if (documento.length !== 11 && documento.length !== 14) {
     erro("Informe o CPF ou o CNPJ de quem vai receber (o mesmo que será usado na Lytex).");
   }
 
   // Celular, endereço e tipo de empresa só vão para a Lytex: a Staypse não guarda (LGPD, minimização).
+  if (papel !== "produtor" && documento.length === 14) {
+    nome = String(f.get("razaoSocial") ?? "").trim() || nome;
+    nomeFantasia = String(f.get("nomeFantasia") ?? "").trim() || nome;
+  }
   const dados = esquemaDados.safeParse({
     celular: f.get("celular"),
     cep: f.get("cep"),

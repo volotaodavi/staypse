@@ -31,12 +31,14 @@ export async function Recebimento({ papel, documentoSugerido, aviso }: { papel: 
   const status = r?.status_recebedor ?? "nao_iniciado";
   // loja: o cadastro da empresa já tem celular (WhatsApp) e endereço; o resto é pedido no formulário
   let sugestao: Sugestao = {};
+  let cnpjFixo: string | undefined;
   if (papel === "produtor") {
     const { data: p } = await (await criarClienteServidor())
       .from("producers")
-      .select("whatsapp, cep, logradouro, numero, complemento, bairro, cidade, uf")
+      .select("cnpj, razao_social, whatsapp, cep, logradouro, numero, complemento, bairro, cidade, uf")
       .maybeSingle();
-    sugestao = { celular: p?.whatsapp ?? "", cep: p?.cep ?? "", logradouro: p?.logradouro ?? "", numero: p?.numero ?? "", complemento: p?.complemento ?? "", bairro: p?.bairro ?? "", cidade: p?.cidade ?? "", uf: p?.uf ?? "" };
+    cnpjFixo = p?.cnpj;
+    sugestao = { razaoSocial: p?.razao_social ?? "", celular: p?.whatsapp ?? "", cep: p?.cep ?? "", logradouro: p?.logradouro ?? "", numero: p?.numero ?? "", complemento: p?.complemento ?? "", bairro: p?.bairro ?? "", cidade: p?.cidade ?? "", uf: p?.uf ?? "" };
   }
   const divergente = Boolean(r?.documento_provedor && r.documento_provedor !== r.documento);
   const cor =
@@ -62,6 +64,7 @@ export async function Recebimento({ papel, documentoSugerido, aviso }: { papel: 
         <FormRecebimento
           papel={papel}
           pedeDocumento={papel !== "produtor"}
+          cnpjFixo={cnpjFixo}
           sugestao={{ ...sugestao, documento: documentoSugerido ?? r?.documento ?? "" }}
           rotuloBotao={status === "nao_iniciado" ? "Completar cadastro de recebimento" : "Refazer cadastro de recebimento"}
         />

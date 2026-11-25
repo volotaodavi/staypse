@@ -6,14 +6,38 @@ import { useState } from "react";
 import { completarRecebimento } from "@/app/(site)/painel/recebimento/acoes";
 import { TIPOS_EMPRESA } from "@/lib/pagamentos/dados-recebedor";
 
-export type Sugestao = Partial<Record<"documento" | "celular" | "cep" | "logradouro" | "numero" | "complemento" | "bairro" | "cidade" | "uf", string>>;
+export type Sugestao = Partial<Record<"documento" | "razaoSocial" | "celular" | "cep" | "logradouro" | "numero" | "complemento" | "bairro" | "cidade" | "uf", string>>;
 
 const campo = "min-h-11 rounded-xl border border-petroleo/60 bg-branco px-3 text-base font-normal";
 
-export function FormRecebimento({ papel, pedeDocumento, sugestao, rotuloBotao }: { papel: string; pedeDocumento: boolean; sugestao: Sugestao; rotuloBotao: string }) {
+export function FormRecebimento({ papel, pedeDocumento, sugestao, rotuloBotao, cnpjFixo }: { papel: string; pedeDocumento: boolean; sugestao: Sugestao; rotuloBotao: string; cnpjFixo?: string }) {
   const [doc, setDoc] = useState(sugestao.documento ?? "");
   const [aviso, setAviso] = useState("");
   const cnpj = doc.replace(/\W/g, "").length === 14 || !pedeDocumento;
+  const [ultimoCnpj, setUltimoCnpj] = useState("");
+
+  const preencher = (form: HTMLFormElement, campos: Record<string, string | undefined>) => {
+    for (const [nome, v] of Object.entries(campos)) {
+      const el = form.elements.namedItem(nome) as HTMLInputElement | HTMLSelectElement | null;
+      if (el && v && !el.value) el.value = v;
+    }
+  };
+
+  // CNPJ completo: dados públicos da Receita (BrasilAPI, pela rota do servidor). Falhou? Segue manual.
+  async function buscarCnpj(valor: string, form: HTMLFormElement | null) {
+    const n = valor.replace(/\D/g, "");
+    if (n.length !== 14 || !form || n === ultimoCnpj) return;
+    setUltimoCnpj(n);
+    try {
+      const r = await fetch(`/api/cnpj/${n}`);
+      if (r.status !== 200) return;
+      const d = (await r.json()) as Record<string, string>;
+      preencher(form, d);
+      setAviso("Dados da empresa preenchidos pela Receita (via BrasilAPI). Confira e corrija se precisar.");
+    } catch {
+      /* silencioso */
+    }
+  }
 
   async function buscarCep(cep: string, form: HTMLFormElement | null) {
     const n = cep.replace(/\D/g, "");
@@ -50,14 +74,21 @@ export function FormRecebimento({ papel, pedeDocumento, sugestao, rotuloBotao }:
       {pedeDocumento && (
         <label className="flex flex-col gap-1 font-medium">
           CPF ou CNPJ de quem recebe
-          <input name="documento" inputMode="numeric" required maxLength={18} value={doc} onChange={(e) => setDoc(e.target.value)} className={campo} />
+          <input name="documento" inputMode="numeric" required maxLength={18} value={doc} className={campo}
+            onChange={(e) => { setDoc(e.target.value); void buscarCnpj(e.target.value, e.currentTarget.form); }} />
         </label>
+      )}
+      {cnpj && (
+        <div ref={(el) => { if (el && cnpjFixo) void buscarCnpj(cnpjFixo, el.closest("form")); }} className="flex flex-col gap-3">
+          {input("razaoSocial", "Razão social", { required: true, maxLength: 200, defaultValue: sugestao.razaoSocial ?? "" })}
+          {input("nomeFantasia", "Nome fantasia", { maxLength: 200 })}
+        </div>
       )}
       {input("celular", "Celular com DDD", { inputMode: "tel", required: true, maxLength: 16, autoComplete: "tel" })}
       <label className="flex flex-col gap-1 font-medium">
         CEP
         <input name="cep" defaultValue={sugestao.cep ?? ""} inputMode="numeric" required maxLength={9} autoComplete="postal-code" className={campo}
-          onBlur={(e) => buscarCep(e.currentTarget.value, e.currentTarget.form)} />
+          onChange={(e) => buscarCep(e.currentTarget.value, e.currentTarget.form)} />
       </label>
       <p role="status" className="text-xs text-petroleo/75">{aviso || "Ao sair do CEP, o número vai ao serviço gratuito BrasilAPI para preencher o endereço. Se preferir, preencha à mão."}</p>
       {input("logradouro", "Rua", { required: true, maxLength: 200, autoComplete: "address-line1" })}
