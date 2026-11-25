@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   description: descricao,
   // endereço do site (domínio próprio ou, enquanto não houver, o da Vercel)
   metadataBase: new URL(urlDoSite()),
+  // verificação de propriedade no Google Search Console
+  verification: { google: "JNtglYBBrUUToOp4YyQ3iRyJdyyR2712N6SKapt3N7A" },
   openGraph: {
     type: "website",
     locale: "pt_BR",
