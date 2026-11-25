@@ -4,6 +4,7 @@
 // só a parte fixa (o mapa nunca quebra o build).
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { ARTIGOS } from "@/conteudo/blog";
 import { supabaseChavePublica, supabaseUrl, urlDoSite } from "@/lib/supabase/env";
 
 type Linha = { tipo: "loja" | "produto" | "vitrine"; slug: string; loja_slug: string | null; atualizado_em: string };
@@ -23,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixas: MetadataRoute.Sitemap = [
     { url: `${base}/`, priority: 1 },
     { url: `${base}/cadastro`, priority: 0.8 },
+    { url: `${base}/blog`, priority: 0.7 },
+    ...ARTIGOS.map((a) => ({ url: `${base}/blog/${a.slug}`, lastModified: new Date(a.atualizadoEm), priority: 0.6 })),
     { url: `${base}/entrar`, priority: 0.5 },
     { url: `${base}/termos` },
     { url: `${base}/privacidade` },

@@ -7,6 +7,7 @@ const ATALHOS = [
   ["Para lojas", "/#para-lojas"],
   ["Para afiliados", "/#para-afiliados"],
   ["Taxas", "/#taxas"],
+  ["Blog", "/blog"],
   ["Perguntas", "/#faq"],
 ] as const;
 
